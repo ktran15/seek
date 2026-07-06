@@ -15,7 +15,7 @@ import { useEffect } from 'react';
 import { useSession } from '@/features/auth/useSession';
 import { isOnboarded, useProfile } from '@/features/profile/useProfile';
 import { AppProviders } from '@/providers/AppProviders';
-import { colors } from '@/theme';
+import { colors, fontFamilies } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,6 +43,10 @@ function RootNavigator() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.textPrimary,
+        headerTitleStyle: { fontFamily: fontFamilies.header },
+        headerShadowVisible: false,
       }}
     >
       <Stack.Protected guard={!signedIn}>
@@ -54,7 +58,10 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected guard={onboarded}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="add-friends" options={{ headerShown: true, title: 'Add Friends' }} />
+        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
+        <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
       </Stack.Protected>
     </Stack>
   );

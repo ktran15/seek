@@ -4,33 +4,24 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M1 — Auth & onboarding** (spec §15, §5, §7.8)
+## Current milestone: **M2 -- Navigation & screen skeletons** (spec sec 15, sec 5)
 
 | # | Sub-step | Status |
 |---|----------|--------|
-| 1 | DB: `profiles` + `invites` + `app_settings` tables, RLS + column grants, signup trigger | ✅ authored — **founder must apply** (see below) |
-| 2 | Session plumbing: React Query + session hook, route groups, auth redirects | ✅ done |
-| 3 | Email auth (sign up / sign in screens) | ✅ done |
-| 4 | Apple + Google sign-in | ✅ done (needs founder provider config; Apple needs a dev build — not Expo Go) |
-| 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ✅ done |
-| 6 | Onboarding step 4: avatar creation (skin/eyes/hair/hair color; persists) | ✅ done |
-| 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ✅ done |
+| 1 | Main tab shell: bottom bar (Profile/Home/Challenge), persistent top bar (Add Friends, Notifications), stub screens (add-friends, notifications, settings w/ sign-out) | ✅ done |
+| 2 | Home: 3-feed horizontal swipe (Friends / Friends-of-friends / Explore) | ⬜ not started |
+| 3 | Challenge: Mountain <-> Leaderboard horizontal swipe, 7-stop mountain placeholder | ⬜ not started |
+| 4 | Profile: header/tabs skeleton, swipe -> Shop w/ translucent edge hint, error boundaries per major screen | ⬜ not started |
 
-**Next step:** M1 complete — founder review, then M2 (navigation & skeletons) after approval.
+**Next step:** M2 sub-step 2 -- Home 3-feed swipe.
 
-### ⚠️ Founder action required before testing sign-up
-The Supabase MCP is configured **read-only** and the Supabase CLI isn't logged
-in, so the migration could not be applied from this session. Apply it one of
-these ways (takes ~1 minute):
-- **Dashboard:** SQL Editor → paste `supabase/migrations/20260706000001_m1_profiles_invites_app_settings.sql` → Run; **or**
-- **CLI:** `! npx supabase login` then `! npx supabase link --project-ref aducawlftwdowvsnryar` then `! npx supabase db push`; **or**
-- Flip the Supabase MCP server to write mode and ask Claude to apply it.
+<details><summary>M1 -- Auth & onboarding (complete, founder-verified)</summary>
 
-Also required for social login (Supabase Dashboard → Authentication → Providers):
-- **Apple:** enable; add bundle ID `com.smokeysummit.seek` as client ID.
-- **Google:** enable; create Google OAuth client (iOS type), add its client ID/secret.
-- **Redirect URLs:** add `seek://**` and (for Expo Go testing) `exp://**` under Authentication → URL Configuration.
-- **Email:** consider disabling "Confirm email" for the beta so signup is instant.
+M1 exit criteria confirmed by founder 2026-07-06. DB migration applied.
+Sub-steps: DB schema+RLS / session plumbing / email auth / Apple+Google /
+onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
+
+</details>
 
 <details><summary>M0 — Foundation & scaffolding (complete, awaiting founder review)</summary>
 
@@ -54,8 +45,9 @@ Also required for social login (Supabase Dashboard → Authentication → Provid
 
 ## Milestone status
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
-- M1: **complete — awaiting founder review** (founder must apply the migration + provider config above before testing)
-- M2–M14: not started (do not work ahead — founder reviews after each milestone)
+- M1: **complete — founder-verified**
+- M2: **in progress**
+- M3–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Invite coin reward (+50) NOT paid yet — coins ledger is M7; the invite row is recorded now.
