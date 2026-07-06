@@ -1,0 +1,49 @@
+# Secrets / environment — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.key
+*.keystore
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+credentials.json
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native prebuild output (managed workflow — regenerated)
+ios/
+android/
+
+# EAS
+.easignore
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Testing
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.orig.*
