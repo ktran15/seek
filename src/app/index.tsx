@@ -1,8 +1,9 @@
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 
+import { getAsset } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
-import { colors, spacing, textStyles } from '@/theme';
+import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
  * M0 boot screen — proves the themed shell end-to-end: tokens, fonts,
@@ -12,6 +13,11 @@ import { colors, spacing, textStyles } from '@/theme';
 export default function BootScreen() {
   return (
     <View style={styles.container}>
+      <Image
+        source={getAsset('appLogo')}
+        style={styles.logo}
+        accessibilityLabel={`${config.appName} logo placeholder`}
+      />
       <Text style={[textStyles.heroXL, styles.title]}>{config.appName}</Text>
       <Text style={[textStyles.body, styles.tagline]}>
         Do hard things. Together.
@@ -35,6 +41,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.background,
     padding: spacing.lg,
+  },
+  logo: {
+    width: 96,
+    height: 96,
+    borderRadius: radii.card,
+    marginBottom: spacing.md,
   },
   title: {
     color: colors.textPrimary,

@@ -13,10 +13,10 @@
 | 3 | Supabase wiring: client module, env vars, .env.example (client-safe keys only) | ✅ done |
 | 4 | Typed central config module (app name, beta start date, EST tz, TUNE values, flags) | ✅ done |
 | 5 | Design tokens (palette roles, 4-font type system incl. Archivo timer style, spacing/radii/motion) + 3D-press button + themed boot screen | ✅ done |
-| 6 | Asset registry (`assets/registry.ts`) + labeled placeholders for all slots | ⬜ not started |
+| 6 | Asset registry (`assets/registry.ts`) + labeled placeholders for all slots | ✅ done |
 | 7 | EAS → TestFlight pipeline config (eas.json, bundle ID; founder does interactive Apple login) | ⬜ not started |
 
-**Next step:** sub-step 6 — asset registry + placeholders.
+**Next step:** sub-step 7 — EAS → TestFlight pipeline config.
 
 ## Milestone status
 - M0: **in progress**
