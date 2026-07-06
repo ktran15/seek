@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { getAsset } from '@/assets/registry';
+import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { colors, spacing, textStyles } from '@/theme';
-import { Image } from 'react-native';
 
-/** Welcome / sign-in. Auth methods land in M1 sub-steps 3–4. */
+/** Welcome / sign-in entry. Apple + Google land in M1 sub-step 4. */
 export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
@@ -19,9 +20,10 @@ export default function WelcomeScreen() {
         Do hard things. Together.
       </Text>
       <View style={styles.buttons}>
-        <Text style={[textStyles.caption, styles.placeholder]}>
-          Sign-in buttons land in the next sub-step.
-        </Text>
+        <PressButton
+          label="CONTINUE WITH EMAIL"
+          onPress={() => router.push('/(auth)/email')}
+        />
       </View>
     </View>
   );
