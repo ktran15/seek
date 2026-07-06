@@ -97,6 +97,11 @@ export const config = {
   invites: {
     /** TUNE: one-time invite push nudge (spec §7.8, §13). */
     nudge: { betaDay: 2, friendThreshold: 3 },
+    /**
+     * FOUNDER-SET: where invite links land (TestFlight/App Store, spec §7.8).
+     * Placeholder until the TestFlight link exists (M14).
+     */
+    shareUrl: 'https://testflight.apple.com/join/SEEK-TBD',
   },
 
   notifications: {

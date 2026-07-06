@@ -14,9 +14,9 @@
 | 4 | Apple + Google sign-in | ✅ done (needs founder provider config; Apple needs a dev build — not Expo Go) |
 | 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ✅ done |
 | 6 | Onboarding step 4: avatar creation (skin/eyes/hair/hair color; persists) | ✅ done |
-| 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ⬜ not started |
+| 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ✅ done |
 
-**Next step:** M1 sub-step 7 — invite step + finish.
+**Next step:** M1 complete — founder review, then M2 (navigation & skeletons) after approval.
 
 ### ⚠️ Founder action required before testing sign-up
 The Supabase MCP is configured **read-only** and the Supabase CLI isn't logged
@@ -54,8 +54,15 @@ Also required for social login (Supabase Dashboard → Authentication → Provid
 
 ## Milestone status
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
-- M1: **in progress**
+- M1: **complete — awaiting founder review** (founder must apply the migration + provider config above before testing)
 - M2–M14: not started (do not work ahead — founder reviews after each milestone)
+
+## Visible stubs (reported per spec §2.1)
+- Invite coin reward (+50) NOT paid yet — coins ledger is M7; the invite row is recorded now.
+- An invites row is created even if the user cancels the share sheet (client cannot delete; harmless, redeemed_by stays null).
+- Invite share URL is a FOUNDER-SET placeholder until the TestFlight link exists (M14).
+- Notifications step only requests permission; scheduling/push wiring is M11.
+- joined_beta_day computes from app_settings.beta — keep in sync with src/config beta.startDate.
 
 ## Notes / decisions this milestone
 - Git was already initialized (`a815b86 Initial commit`); spec docs committed in sub-step 1.
