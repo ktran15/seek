@@ -68,7 +68,7 @@ Also required for social login (Supabase Dashboard → Authentication → Provid
 - Git was already initialized (`a815b86 Initial commit`); spec docs committed in sub-step 1.
 - App name config string: `"Seek"` (single source of truth in config module).
 - Bundle ID: `com.smokeysummit.seek` (founder can change in `app.config.ts` before first EAS build).
-- Expo SDK 57 (default template: Expo Router + TS strict, React Native 0.86, Reanimated 4.5). Template demo app removed; minimal boot screen at `src/app/index.tsx` (themed in sub-step 5).
+- Expo SDK **54** (downgraded from 57 so the founder's Expo Go can run it: RN 0.81.5, React 19.1, expo-router 6, Reanimated 4.1, TS 5.9). Template demo app removed. Unused template packages pruned (@expo/ui, expo-glass-effect, expo-symbols, expo-device, expo-image).
 - App name lives ONCE in `app-name.json` (read by both `app.config.ts` and `src/config` — app.config.ts can't import TS modules).
 - Supabase project `aducawlftwdowvsnryar` wired with the modern `sb_publishable_` key (client-safe by design; RLS is the boundary). No schema yet — tables start in M3/M4.
 - eas.json env block carries only the EXPO_PUBLIC (client-safe) vars; real secrets go in Edge Function env later, never in the repo.
