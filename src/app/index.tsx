@@ -1,11 +1,29 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
-// Placeholder boot screen — themed in M0 sub-step 5 (design tokens).
+import { PressButton } from '@/components/ui/PressButton';
+import { config } from '@/config';
+import { colors, spacing, textStyles } from '@/theme';
+
+/**
+ * M0 boot screen — proves the themed shell end-to-end: tokens, fonts,
+ * the 3D-press button, and config. Replaced by the real Loading→Auth
+ * flow in M1.
+ */
 export default function BootScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Seek</Text>
-      <Text style={styles.subtitle}>M0 foundation shell</Text>
+      <Text style={[textStyles.heroXL, styles.title]}>{config.appName}</Text>
+      <Text style={[textStyles.body, styles.tagline]}>
+        Do hard things. Together.
+      </Text>
+
+      <Text style={[textStyles.timer, styles.timer]}>0:42</Text>
+
+      <PressButton
+        label="BEGIN"
+        onPress={() => Alert.alert(config.appName, 'M0 themed shell is alive.')}
+        style={styles.button}
+      />
     </View>
   );
 }
@@ -15,16 +33,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5ECE3',
+    backgroundColor: colors.background,
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#233837',
+    color: colors.textPrimary,
   },
-  subtitle: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#3D4625',
+  tagline: {
+    marginTop: spacing.xs,
+    color: colors.textSecondary,
+  },
+  timer: {
+    marginTop: spacing.xl,
+    color: colors.textPrimary,
+  },
+  button: {
+    marginTop: spacing.xl,
+    alignSelf: 'stretch',
   },
 });
