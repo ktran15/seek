@@ -1,6 +1,6 @@
--- M1: profiles, app_settings, invites — RLS on every table (spec §2.1, §6)
+-- M1: profiles, app_settings, invites -- RLS on every table (spec sec 2.1, sec 6)
 --
--- APPLY (founder): Supabase Dashboard → SQL Editor → paste this whole file →
+-- APPLY (founder): Supabase Dashboard -> SQL Editor -> paste this whole file ->
 -- Run. (Or: `npx supabase login`, `npx supabase link --project-ref
 -- aducawlftwdowvsnryar`, `npx supabase db push`.)
 
@@ -21,7 +21,7 @@ revoke insert, update, delete on table public.app_settings from authenticated, a
 insert into public.app_settings (key, value) values
   ('beta', '{"start_date": "2026-07-13", "timezone": "America/New_York", "length_days": 7}');
 
--- profiles (spec §6)
+-- profiles (spec sec 6)
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text unique check (username ~ '^[a-zA-Z0-9_]{3,20}$'),
@@ -74,7 +74,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- invites (spec §6, §7.8)
+-- invites (spec sec 6, sec 7.8)
 create table public.invites (
   id uuid primary key default gen_random_uuid(),
   inviter_id uuid not null references public.profiles (id) on delete cascade,
