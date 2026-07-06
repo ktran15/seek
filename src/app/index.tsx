@@ -1,35 +1,30 @@
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { getAsset } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { useSession } from '@/features/auth/useSession';
+import { useProfile } from '@/features/profile/useProfile';
+import { supabase } from '@/lib/supabase';
+import { colors, spacing, textStyles } from '@/theme';
 
-/**
- * M0 boot screen — proves the themed shell end-to-end: tokens, fonts,
- * the 3D-press button, and config. Replaced by the real Loading→Auth
- * flow in M1.
- */
-export default function BootScreen() {
+/** Post-onboarding home placeholder — the real Main App shell is M2. */
+export default function HomeScreen() {
+  const { session } = useSession();
+  const { data: profile } = useProfile(session?.user.id);
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) Alert.alert('Sign out failed', error.message);
+  };
+
   return (
     <View style={styles.container}>
-      <Image
-        source={getAsset('appLogo')}
-        style={styles.logo}
-        accessibilityLabel={`${config.appName} logo placeholder`}
-      />
-      <Text style={[textStyles.heroXL, styles.title]}>{config.appName}</Text>
-      <Text style={[textStyles.body, styles.tagline]}>
-        Do hard things. Together.
+      <Text style={[textStyles.hero, styles.title]}>{config.appName}</Text>
+      <Text style={[textStyles.body, styles.subtitle]}>
+        Welcome{profile?.display_name ? `, ${profile.display_name}` : ''}! The
+        main app (navigation, feeds, mountain) is built in M2+.
       </Text>
-
-      <Text style={[textStyles.timer, styles.timer]}>0:42</Text>
-
-      <PressButton
-        label="BEGIN"
-        onPress={() => Alert.alert(config.appName, 'M0 themed shell is alive.')}
-        style={styles.button}
-      />
+      <PressButton label="SIGN OUT" variant="info" onPress={signOut} style={styles.button} />
     </View>
   );
 }
@@ -42,22 +37,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
-  logo: {
-    width: 96,
-    height: 96,
-    borderRadius: radii.card,
-    marginBottom: spacing.md,
-  },
   title: {
     color: colors.textPrimary,
   },
-  tagline: {
-    marginTop: spacing.xs,
+  subtitle: {
+    marginTop: spacing.sm,
     color: colors.textSecondary,
-  },
-  timer: {
-    marginTop: spacing.xl,
-    color: colors.textPrimary,
+    textAlign: 'center',
   },
   button: {
     marginTop: spacing.xl,

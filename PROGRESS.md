@@ -9,14 +9,14 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | DB: `profiles` + `invites` + `app_settings` tables, RLS + column grants, signup trigger | ✅ authored — **founder must apply** (see below) |
-| 2 | Session plumbing: React Query + session hook, route groups, auth redirects | ⬜ not started |
+| 2 | Session plumbing: React Query + session hook, route groups, auth redirects | ✅ done |
 | 3 | Email auth (sign up / sign in screens) | ⬜ not started |
 | 4 | Apple + Google sign-in | ⬜ not started |
 | 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ⬜ not started |
 | 6 | Onboarding step 4: avatar creation (skin/eyes/hair/hair color; persists) | ⬜ not started |
 | 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ⬜ not started |
 
-**Next step:** M1 sub-step 2 — session plumbing.
+**Next step:** M1 sub-step 3 — email auth screens.
 
 ### ⚠️ Founder action required before testing sign-up
 The Supabase MCP is configured **read-only** and the Supabase CLI isn't logged

@@ -12,9 +12,53 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { useSession } from '@/features/auth/useSession';
+import { isOnboarded, useProfile } from '@/features/profile/useProfile';
+import { AppProviders } from '@/providers/AppProviders';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { session, isLoading: sessionLoading } = useSession();
+  const { data: profile, isLoading: profileLoading } = useProfile(
+    session?.user.id,
+  );
+
+  const ready = !sessionLoading && (!session || !profileLoading);
+
+  useEffect(() => {
+    if (ready) {
+      SplashScreen.hideAsync();
+    }
+  }, [ready]);
+
+  if (!ready) return null;
+
+  const signedIn = !!session;
+  const onboarded = signedIn && isOnboarded(profile);
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={signedIn && !onboarded}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={onboarded}>
+        <Stack.Screen name="index" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -27,27 +71,16 @@ export default function RootLayout() {
     Archivo_800ExtraBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
-  // Keep the native splash up until fonts resolve (or fail — then system
-  // fonts render rather than blocking the app forever).
+  // Wait for fonts (or a font failure — then render with system fonts rather
+  // than blocking forever). The splash stays up via RootNavigator readiness.
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <>
+    <AppProviders>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      />
-    </>
+      <RootNavigator />
+    </AppProviders>
   );
 }
