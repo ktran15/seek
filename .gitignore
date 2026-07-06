@@ -24,6 +24,8 @@ expo-env.d.ts
 # Native prebuild output (managed workflow — regenerated)
 ios/
 android/
+.kotlin/
+*.jks
 
 # EAS
 .easignore
