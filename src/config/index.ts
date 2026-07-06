@@ -18,9 +18,11 @@ export interface DropRates {
   legendary: number;
 }
 
+import { appName } from '../../app-name.json';
+
 export const config = {
-  /** App name — the ONLY place it is defined; app.config.ts reads it too. */
-  appName: 'Seek',
+  /** App name — defined ONCE in app-name.json (app.config.ts reads it too). */
+  appName,
 
   beta: {
     /** TUNE (FOUNDER-SET): first day of the fixed 7-day global beta (day 1). */
