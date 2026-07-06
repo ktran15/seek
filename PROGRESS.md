@@ -12,11 +12,11 @@
 | 2 | Session plumbing: React Query + session hook, route groups, auth redirects | ✅ done |
 | 3 | Email auth (sign up / sign in screens) | ✅ done |
 | 4 | Apple + Google sign-in | ✅ done (needs founder provider config; Apple needs a dev build — not Expo Go) |
-| 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ⬜ not started |
+| 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ✅ done |
 | 6 | Onboarding step 4: avatar creation (skin/eyes/hair/hair color; persists) | ⬜ not started |
 | 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ⬜ not started |
 
-**Next step:** M1 sub-step 5 — onboarding steps 1–3 + username/profile.
+**Next step:** M1 sub-step 6 — avatar creation step.
 
 ### ⚠️ Founder action required before testing sign-up
 The Supabase MCP is configured **read-only** and the Supabase CLI isn't logged
