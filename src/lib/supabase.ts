@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
+import type { Database } from './database.types';
+
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -17,7 +19,7 @@ if (!supabaseUrl || !supabasePublishableKey) {
 // The publishable key is client-safe by design; RLS is the security boundary.
 // All privileged writes (ledgers, crates, H2H, votes, payouts) go through
 // Edge Functions — never this client.
-export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabasePublishableKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
