@@ -11,12 +11,12 @@
 | 1 | DB: `profiles` + `invites` + `app_settings` tables, RLS + column grants, signup trigger | ✅ authored — **founder must apply** (see below) |
 | 2 | Session plumbing: React Query + session hook, route groups, auth redirects | ✅ done |
 | 3 | Email auth (sign up / sign in screens) | ✅ done |
-| 4 | Apple + Google sign-in | ⬜ not started |
+| 4 | Apple + Google sign-in | ✅ done (needs founder provider config; Apple needs a dev build — not Expo Go) |
 | 5 | Onboarding steps 1–3 (notifications, social proof, what-Seek-is) + username/profile step | ⬜ not started |
 | 6 | Onboarding step 4: avatar creation (skin/eyes/hair/hair color; persists) | ⬜ not started |
 | 7 | Onboarding step 5–6: invite-a-friend (soft, share sheet, invites row) + hook/begin | ⬜ not started |
 
-**Next step:** M1 sub-step 4 — Apple + Google sign-in.
+**Next step:** M1 sub-step 5 — onboarding steps 1–3 + username/profile.
 
 ### ⚠️ Founder action required before testing sign-up
 The Supabase MCP is configured **read-only** and the Supabase CLI isn't logged
@@ -29,6 +29,7 @@ these ways (takes ~1 minute):
 Also required for social login (Supabase Dashboard → Authentication → Providers):
 - **Apple:** enable; add bundle ID `com.smokeysummit.seek` as client ID.
 - **Google:** enable; create Google OAuth client (iOS type), add its client ID/secret.
+- **Redirect URLs:** add `seek://**` and (for Expo Go testing) `exp://**` under Authentication → URL Configuration.
 - **Email:** consider disabling "Confirm email" for the beta so signup is instant.
 
 <details><summary>M0 — Foundation & scaffolding (complete, awaiting founder review)</summary>

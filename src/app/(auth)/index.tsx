@@ -1,13 +1,38 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Image, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { getAsset } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
-import { colors, spacing, textStyles } from '@/theme';
+import {
+  AuthCancelled,
+  signInWithApple,
+  signInWithGoogle,
+} from '@/features/auth/socialAuth';
+import { colors, radii, spacing, textStyles } from '@/theme';
 
-/** Welcome / sign-in entry. Apple + Google land in M1 sub-step 4. */
 export default function WelcomeScreen() {
+  const [busy, setBusy] = useState(false);
+
+  const runSocial = async (method: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await method();
+      // Session change flips the root guard into onboarding.
+    } catch (e) {
+      if (!(e instanceof AuthCancelled)) {
+        Alert.alert(
+          'Sign-in failed',
+          e instanceof Error ? e.message : 'Something went wrong. Try again.',
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -19,9 +44,26 @@ export default function WelcomeScreen() {
       <Text style={[textStyles.body, styles.tagline]}>
         Do hard things. Together.
       </Text>
+
       <View style={styles.buttons}>
+        {Platform.OS === 'ios' && (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={radii.pill}
+            style={styles.appleButton}
+            onPress={() => runSocial(signInWithApple)}
+          />
+        )}
+        <PressButton
+          label="CONTINUE WITH GOOGLE"
+          variant="info"
+          disabled={busy}
+          onPress={() => runSocial(signInWithGoogle)}
+        />
         <PressButton
           label="CONTINUE WITH EMAIL"
+          disabled={busy}
           onPress={() => router.push('/(auth)/email')}
         />
       </View>
@@ -40,7 +82,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 96,
     height: 96,
-    borderRadius: 16,
+    borderRadius: radii.card,
     marginBottom: spacing.md,
   },
   title: {
@@ -55,8 +97,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     gap: spacing.sm,
   },
-  placeholder: {
-    color: colors.textSecondary,
-    textAlign: 'center',
+  appleButton: {
+    height: 52,
   },
 });

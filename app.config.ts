@@ -17,6 +17,7 @@ const expoConfig: ExpoConfig = {
     icon: './assets/expo.icon',
     supportsTablet: false,
     bundleIdentifier: 'com.smokeysummit.seek',
+    usesAppleSignIn: true,
   },
   android: {
     adaptiveIcon: {
@@ -33,6 +34,7 @@ const expoConfig: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    'expo-apple-authentication',
     [
       'expo-splash-screen',
       {
