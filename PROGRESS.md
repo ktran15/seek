@@ -9,12 +9,12 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | DB migration: challenges table + 7 seeded rows, submissions (one-attempt unique, state machine columns), proofs storage bucket + owner policies | ✅ authored -- **founder must apply** |
-| 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ⬜ not started |
+| 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ✅ done (34 tests total) |
 | 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ⬜ not started |
 | 4 | Capture types: timer-bound recording w/ big clock + auto-stop, photo, video, screenshot+count, multi-photo<=25; local persistence + upload retry | ⬜ not started |
 | 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ⬜ not started |
 
-**Next step:** M4 sub-step 2 -- calendar + state machine + tests.
+**Next step:** M4 sub-step 3 -- challenge flow (reveal/begin/attempt hooks).
 
 ### ⚠️ Founder action before testing M4
 Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
