@@ -13,6 +13,12 @@ import {
 import { useSession } from '@/features/auth/useSession';
 import { AvatarPreview } from '@/features/avatar/AvatarPreview';
 import { useMySubmissions } from '@/features/challenge/useChallenge';
+import { InventorySection } from '@/features/economy/InventorySection';
+import {
+  useCoinsEarned,
+  useH2HRecord,
+  useMyCrates,
+} from '@/features/economy/useEconomy';
 import { useFriendCount } from '@/features/friends/useFriends';
 import { sendInvite } from '@/features/invites/sendInvite';
 import { useProfile } from '@/features/profile/useProfile';
@@ -21,18 +27,22 @@ import { colors, radii, spacing, textStyles } from '@/theme';
 const SECTIONS = ['Stats', 'Badges', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
-/** LOCKED stat set (spec §11); H2H/votes/coins values wire up in M5–M9. */
-const PENDING_STATS = ['H2H record (W-L)', 'Votes won', 'Coins earned'];
-
 export function ProfileView() {
   const { session } = useSession();
-  const { data: profile } = useProfile(session?.user.id);
-  const friendCount = useFriendCount(session?.user.id);
-  const { data: submissions } = useMySubmissions(session?.user.id);
+  const userId = session?.user.id;
+  const { data: profile } = useProfile(userId);
+  const friendCount = useFriendCount(userId);
+  const { data: submissions } = useMySubmissions(userId);
   const completedCount = (submissions ?? []).filter(
     (s) => s.state === 'submitted',
   ).length;
   const [section, setSection] = useState<Section>('Stats');
+
+  // LOCKED stat set (spec §11), all live as of M7.
+  const { data: coinsEarned } = useCoinsEarned(userId);
+  const { data: h2hRecord } = useH2HRecord(userId);
+  const { data: crates } = useMyCrates(userId);
+  const votesWon = (crates ?? []).filter((c) => c.source === 'vote_win').length;
 
   const invite = async () => {
     if (!session) return;
@@ -131,15 +141,22 @@ export function ProfileView() {
               {completedCount}
             </Text>
           </View>
-          {PENDING_STATS.map((stat) => (
-            <View key={stat} style={styles.statRow}>
-              <Text style={[textStyles.body, styles.statLabel]}>{stat}</Text>
-              <Text style={[textStyles.headerS, styles.statValue]}>—</Text>
-            </View>
-          ))}
-          <Text style={[textStyles.caption, styles.sectionNote]}>
-            H2H, votes and coins wire up as their systems land (M5–M9).
-          </Text>
+          <View style={styles.statRow}>
+            <Text style={[textStyles.body, styles.statLabel]}>H2H record (W-L)</Text>
+            <Text style={[textStyles.headerS, styles.statValueLive]}>
+              {h2hRecord ? `${h2hRecord.wins}-${h2hRecord.losses}` : '—'}
+            </Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={[textStyles.body, styles.statLabel]}>Votes won</Text>
+            <Text style={[textStyles.headerS, styles.statValueLive]}>{votesWon}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={[textStyles.body, styles.statLabel]}>Coins earned</Text>
+            <Text style={[textStyles.headerS, styles.statValueLive]}>
+              {coinsEarned ?? '—'}
+            </Text>
+          </View>
         </View>
       )}
       {section === 'Badges' && (
@@ -163,12 +180,7 @@ export function ProfileView() {
       )}
       {section === 'Inventory' && (
         <View style={styles.sectionBody}>
-          <Text style={[textStyles.body, styles.emptyInventory]}>
-            Unopened crates and your cosmetics live here.
-          </Text>
-          <Text style={[textStyles.caption, styles.sectionNote]}>
-            Crate opening (M7) and cosmetic equip (M8) land here.
-          </Text>
+          <InventorySection userId={userId} />
         </View>
       )}
     </ScrollView>
@@ -294,10 +306,6 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptyInventory: {
-    color: colors.textPrimary,
     textAlign: 'center',
   },
   sectionNote: {

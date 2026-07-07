@@ -317,6 +317,96 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      coins_ledger: {
+        Row: {
+          id: string;
+          user_id: string;
+          delta: number;
+          reason:
+            | 'completion'
+            | 'h2h_win'
+            | 'vote_placement'
+            | 'weekly_payout'
+            | 'solo_weekly_payout'
+            | 'crate_purchase'
+            | 'dupe_refund'
+            | 'invite_reward';
+          ref_id: string | null;
+          created_at: string;
+        };
+        /** Append-only, server-written (triggers/RPCs/Edge Fns — spec §2.1). */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      points_ledger: {
+        Row: {
+          id: string;
+          user_id: string;
+          beta_week: number;
+          delta: number;
+          reason: 'completion' | 'h2h_win' | 'vote_placement';
+          ref_id: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      crates: {
+        Row: {
+          id: string;
+          user_id: string;
+          tier: 'wood' | 'blue' | 'red' | 'yellow' | 'gold';
+          source:
+            | 'completion'
+            | 'h2h_win'
+            | 'vote_top3'
+            | 'vote_win'
+            | 'weekly_prize'
+            | 'purchase'
+            | 'invite_reward';
+          opened: boolean;
+          opened_at: string | null;
+          created_at: string;
+        };
+        /** Awarded server-side; opened via the crate-open Edge Function. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      cosmetics: {
+        Row: {
+          id: string;
+          slot:
+            | 'boots'
+            | 'pants'
+            | 'backpack'
+            | 'hats'
+            | 'sunglasses'
+            | 'shirts'
+            | 'jacket'
+            | 'pet';
+          name: string;
+          rarity: 'common' | 'rare' | 'epic' | 'legendary';
+          asset_slot_name: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      user_cosmetics: {
+        Row: {
+          id: string;
+          user_id: string;
+          cosmetic_id: string;
+          created_at: string;
+        };
+        /** Written only by open_crate_apply (dupes refund instead). */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       invites: {
         Row: {
           id: string;
@@ -375,6 +465,10 @@ export interface Database {
       can_view_comment: {
         Args: { cid: string };
         Returns: boolean;
+      };
+      buy_crate: {
+        Args: { tier_in: string };
+        Returns: string;
       };
     };
     Enums: Record<string, never>;

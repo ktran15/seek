@@ -19,8 +19,8 @@ interface PostSubmitSequenceProps {
  * Post-submit sequence (spec §1.3, LOCKED order):
  * success → coins → crate-to-inventory → climb → posted-to-feed.
  * M4 renders the staged screens; expressive animation is the M13 pass.
- * Coin/crate amounts shown from config — actual ledger/crate awards are
- * wired server-side in M7 (visible stub), feed post lands in M6.
+ * Amounts shown from config mirror the real award (M7): the submissions
+ * trigger pays coins/points and drops the wooden crate server-side.
  */
 export function PostSubmitSequence({ day, onDone }: PostSubmitSequenceProps) {
   const [index, setIndex] = useState(0);
@@ -45,7 +45,7 @@ export function PostSubmitSequence({ day, onDone }: PostSubmitSequenceProps) {
           </Text>
           <Text style={[textStyles.headerL, styles.title]}>coins earned</Text>
           <Text style={[textStyles.caption, styles.copy]}>
-            (Coin balance goes live with the shop economy in M7.)
+            Spend them in the Shop — swipe left from Profile.
           </Text>
         </>
       )}
@@ -57,7 +57,7 @@ export function PostSubmitSequence({ day, onDone }: PostSubmitSequenceProps) {
             Wooden crate added to your inventory
           </Text>
           <Text style={[textStyles.caption, styles.copy]}>
-            Open it from Profile → Inventory. (Crate opening lands in M7.)
+            Open it from Profile → Inventory.
           </Text>
         </>
       )}

@@ -9,11 +9,37 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | DB migration: coins_ledger + points_ledger (append-only, balance trigger), crates, cosmetics catalog (seeded) + user_cosmetics, completion/invite award triggers, buy_crate + open_crate_apply RPCs, economy in app_settings, award backfill | ✅ authored — **founder must apply** |
-| 2 | Pure logic, unit-tested: gacha rarity roll (injectable RNG), vote-placement → reward mapping, drop-rate validation, dupe refund | ⬜ not started |
-| 3 | Edge Functions: crate-open (the roll); award wiring into h2h-pair/day-close (H2H win → blue crate + coins/points; CV placements → red/yellow crates + coins/points) | ⬜ not started |
-| 4 | Client: Shop grid (buy w/ live coin balance), Inventory (unopened crates → open reveal, owned cosmetics), post-submit sequence on real award rows | ⬜ not started |
+| 2 | Pure logic, unit-tested: gacha rarity roll (injectable RNG), vote-placement → reward mapping, drop-rate validation, dupe refund (78 tests total) | ✅ done |
+| 3 | Edge Functions: crate-open (CSPRNG roll + atomic open_crate_apply); award wiring into h2h-pair/day-close (ref-deduped — re-runs never double-pay) | ✅ authored — **founder must deploy** |
+| 4 | Client: Shop grid (buy w/ live coin balance), Inventory (unopened crates → open reveal w/ dupe messaging, owned cosmetics), Profile stats live (H2H W-L, votes won, coins earned), post-submit copy updated | ✅ done |
 
-**Next step:** M7 sub-step 2 — pure gacha/placement logic + unit tests.
+**Next step:** M7 complete — founder review (actions below), then M8 after approval.
+
+### ⚠️ Founder actions before testing M6/M6.1/M7 (consolidated)
+1. ⬜ **Apply THREE migrations in order** — Dashboard → SQL Editor, paste + Run each:
+   1. `20260707000002_m6_feed_reactions_comments_reports.sql`
+   2. `20260707000003_m6_1_comment_threads_likes_media.sql`
+   3. `20260707000004_m7_economy_crates_cosmetics.sql`
+2. ⬜ **Deploy the three NEW functions** (after `npx supabase login` if needed):
+   ```
+   npx supabase functions deploy feed --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy comments --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy crate-open --project-ref aducawlftwdowvsnryar
+   ```
+3. ⬜ **REDEPLOY the two M5 functions** — their shared code now pays awards:
+   ```
+   npx supabase functions deploy h2h-pair --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   ```
+
+### M7 test guide
+- **Completion award:** submit a challenge → Profile coins +50, wooden crate in Inventory, `coins_ledger`/`points_ledger` rows (reason `completion`). Re-running/day-close never double-pays.
+- **H2H win:** winner gets +30 coins, +5 points, a blue crate (check after a pairing resolves; beating the mascot pays too — losing to it pays nothing).
+- **Vote placement (day 3 close):** 1st = +50/+5 + yellow crate; 2nd/3rd = +30/+3 / +20/+2 + red crate; tie-sharers each get the full purse.
+- **Shop:** balance pill shows real coins; BUY confirms, deducts, crate appears in Inventory; buying beyond your balance fails server-side ("Not enough coins"); gold isn't purchasable anywhere.
+- **Crate open:** Inventory → OPEN → reveal shows name + rarity color chip; a **duplicate** shows "Converted to +20 coins" and the balance rises; the crate is gone either way (check `crates.opened`). Rolls are server-side — repeat opens to sanity-check rarity spread.
+- **Stats:** Profile → Stats now shows live H2H W-L, votes won, coins earned.
+- **Invite reward:** sharing an invite pays +50 (ledger reason `invite_reward`). Past invites/submissions were retro-paid by the migration backfill.
 
 ### M7 decisions so far (flag for founder)
 - **Completion award pays on submission, pass or fail** (a failed day-2 Wordle or missed day-6 photo still "did the challenge"; spec §9.1 says "complete daily challenge"). Easy to flip to passed-only — say the word.
@@ -173,12 +199,15 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M3: **complete**
 - M4: **complete — founder-verified** (review feedback fixed in M5 branch)
 - M5: **complete** — all founder actions done (migration, functions, cron)
-- M6: **complete — awaiting founder review** (apply migration, deploy `feed` function)
-- M7–M14: not started (do not work ahead — founder reviews after each milestone)
+- M6: **complete — awaiting founder review** (incl. M6.1 feedback pass)
+- M7: **complete — awaiting founder review** (apply migrations + deploy/redeploy functions, see actions above)
+- M8–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
-- **H2H/vote rewards not paid yet:** resolution records win/placement + notification; bonus coins, blue crate, and points ledger writes are M7 (server-authoritative). UI says so.
-- Post-submit sequence shows +50 coins and "wooden crate added" from config — ledger + crate rows are M7 (display only).
+- Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
+- Cosmetics list in Inventory is display-only; equip/preview on the avatar is M8.
+- Weekly leaderboard payout + gold crate are M9 (points ledger already accumulates).
+- Post-submit "+50 coins" screen shows the config amount rather than reading the ledger row it just triggered (amounts always match; purely cosmetic shortcut).
 - Comments/users are reportable at the DB level (reports table takes post/comment/user targets); the client UI reports **posts** — comment-report UI + the admin removal path are M10.
 - Blocked-users list w/ unblock in Settings is M10 (blocks themselves fully enforced since M3; block UI on posts shipped in M6).
 - vote-feed still reads day-3 submissions directly (it predates feed_posts and its vote semantics are per-submission) — harmless duplication, unify if it ever drifts.
