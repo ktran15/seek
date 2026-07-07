@@ -62,6 +62,7 @@ function RootNavigator() {
         <Stack.Screen name="add-friends" options={{ headerShown: true, title: 'Add Friends' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
+        <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: false }} />
       </Stack.Protected>
     </Stack>
   );

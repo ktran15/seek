@@ -10,14 +10,17 @@
 |---|----------|--------|
 | 1 | DB migration: challenges table + 7 seeded rows, submissions (one-attempt unique, state machine columns), proofs storage bucket + owner policies | ✅ authored -- **founder must apply** |
 | 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ✅ done (34 tests total) |
-| 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ⬜ not started |
+| 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ✅ done (+ mountain wired to real calendar/submissions) |
 | 4 | Capture types: timer-bound recording w/ big clock + auto-stop, photo, video, screenshot+count, multi-photo<=25; local persistence + upload retry | ⬜ not started |
 | 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ⬜ not started |
 
-**Next step:** M4 sub-step 3 -- challenge flow (reveal/begin/attempt hooks).
+**Next step:** M4 sub-step 4 -- capture types.
 
-### ⚠️ Founder action before testing M4
-Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
+### ⚠️ Founder actions before testing M4
+1. Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
+2. The beta starts 2026-07-13, so every day is "locked" until then. To play a challenge today, set the start date to today in BOTH places:
+   - `src/config/index.ts` -> `beta.startDate: '2026-07-06'`
+   - SQL Editor: `update app_settings set value = jsonb_set(value, '{start_date}', '"2026-07-06"') where key = 'beta';`
 
 <details><summary>M3 -- Friend graph & social core (complete)</summary>
 

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
@@ -11,31 +12,28 @@ import {
 } from 'react-native';
 
 import { getAsset } from '@/assets/registry';
+import { useSession } from '@/features/auth/useSession';
+import { useMySubmissions } from '@/features/challenge/useChallenge';
+import { currentBetaDay, dayState, type DayState } from '@/lib/betaCalendar';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
-import {
-  START_FLAG_POSITION,
-  STOP_POSITIONS,
-  type StopState,
-} from './stops';
+import { START_FLAG_POSITION, STOP_POSITIONS } from './stops';
 
 const STOP_SIZE = 52;
+type StopState = DayState;
 
-/**
- * M2 skeleton: mock progression (days 1–2 completed, day 3 current) so all
- * stop states render. The real global-calendar state machine lands in M4.
- */
-const MOCK_CURRENT_DAY = 3;
-
-function mockStateFor(day: number): StopState {
-  if (day < MOCK_CURRENT_DAY) return 'completed';
-  if (day === MOCK_CURRENT_DAY) return 'current';
-  return 'locked';
-}
-
-/** The 7-stop mountain (spec §5, §8) over registry art slots. */
+/** The 7-stop mountain (spec §5, §8): real calendar + submission state. */
 export function MountainView() {
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const { session } = useSession();
+  const { data: submissions } = useMySubmissions(session?.user.id);
+
+  const today = currentBetaDay();
+  const submittedDays = new Set(
+    (submissions ?? [])
+      .filter((s) => s.state === 'submitted')
+      .map((s) => s.beta_day),
+  );
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -44,9 +42,11 @@ export function MountainView() {
 
   const onStopPress = (day: number, state: StopState) => {
     if (state === 'current') {
-      Alert.alert(`Day ${day}`, 'The challenge flow lands in M4.');
+      router.push(`/challenge-flow/${day}`);
     } else if (state === 'locked') {
-      Alert.alert('Locked', 'Future days unlock on their date.');
+      Alert.alert('Locked', 'This day unlocks on its date.');
+    } else if (state === 'missed') {
+      Alert.alert('Missed', 'This day has passed — no makeups.');
     }
   };
 
@@ -71,7 +71,7 @@ export function MountainView() {
               accessibilityLabel="Start flag"
             />
             {STOP_POSITIONS.map(({ day, x, y }) => {
-              const state = mockStateFor(day);
+              const state = dayState(day, today, submittedDays);
               return (
                 <Pressable
                   key={day}
