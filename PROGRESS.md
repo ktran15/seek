@@ -50,7 +50,7 @@
 ### ⚠️ Founder actions before testing M5
 1. ✅ **Migration applied** (founder, 2026-07-07).
 2. ✅ **Edge Functions deployed** (2026-07-07): h2h-pair + vote-feed (JWT-verified), day-close (no-verify-jwt; validates the service-role key itself). Redeploy after any change: `npx supabase functions deploy <name>` (day-close adds `--no-verify-jwt`).
-3. ⬜ **Schedule day-close** — one paste in Dashboard → SQL Editor. Replace `PASTE_KEY_HERE` with the `service_role` key (Project Settings → API keys; the long `eyJ…` one). The key is stored encrypted in the DB vault, never in the repo:
+3. ✅ **day-close scheduled** (verified in cron.job 2026-07-07 — `seek-day-close`, daily 04:05 UTC). Original SQL kept below for reference. Replace `PASTE_KEY_HERE` with the `service_role` key (Project Settings → API keys; the long `eyJ…` one). The key is stored encrypted in the DB vault, never in the repo:
    ```sql
    create extension if not exists pg_cron;
    create extension if not exists pg_net;
@@ -142,7 +142,7 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M2: **complete — founder-verified**
 - M3: **complete**
 - M4: **complete — founder-verified** (review feedback fixed in M5 branch)
-- M5: **complete — awaiting founder review** (cron scheduling still open)
+- M5: **complete** — all founder actions done (migration, functions, cron)
 - M6: **complete — awaiting founder review** (apply migration, deploy `feed` function)
 - M7–M14: not started (do not work ahead — founder reviews after each milestone)
 
