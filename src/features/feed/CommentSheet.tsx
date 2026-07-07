@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   Keyboard,
+  LayoutAnimation,
   Platform,
   Pressable,
   StyleSheet,
@@ -15,6 +16,7 @@ import {
   View,
   type KeyboardEvent,
 } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
 
@@ -45,12 +47,23 @@ const MAX_COMMENT_LENGTH = 500;
  *    height; the keyboard is tracked in the same window coordinates.
  */
 
-/** Keyboard overlap height in window coordinates (0 when hidden). */
-function useKeyboardHeight(): number {
+/**
+ * Keyboard overlap height in window coordinates (0 when hidden). The dock's
+ * padding tracks this value; the layout change is animated with the
+ * keyboard's own duration/curve so the dock RIDES the keyboard instead of
+ * jumping (founder polish fix 2) — skipped under reduced motion.
+ */
+function useKeyboardHeight(reducedMotion: boolean): number {
   const [height, setHeight] = useState(0);
   useEffect(() => {
     const onFrame = (event: KeyboardEvent) => {
       const windowHeight = Dimensions.get('window').height;
+      if (Platform.OS === 'ios' && !reducedMotion && event.duration > 0) {
+        LayoutAnimation.configureNext({
+          duration: event.duration,
+          update: { duration: event.duration, type: 'keyboard' },
+        });
+      }
       setHeight(Math.max(0, windowHeight - event.endCoordinates.screenY));
     };
     if (Platform.OS === 'ios') {
@@ -64,7 +77,7 @@ function useKeyboardHeight(): number {
       show.remove();
       hide.remove();
     };
-  }, []);
+  }, [reducedMotion]);
   return height;
 }
 
@@ -96,6 +109,12 @@ export interface CommentSheetProps {
   /** Both return a local URI, or null if the user cancels. */
   onPickImage: () => Promise<string | null>;
   onTakePhoto: () => Promise<string | null>;
+  /**
+   * Input focus/blur — the route uses it to expand the sheet to the full
+   * detent while typing (founder polish fix 3: tapping the input bar is a
+   * second, equivalent full-expansion trigger).
+   */
+  onInputFocusChange?: (focused: boolean) => void;
   /** Dev preview only: raise the keyboard on mount. */
   autoFocusInput?: boolean;
 }
@@ -179,6 +198,7 @@ export function CommentSheet({
   onSend,
   onPickImage,
   onTakePhoto,
+  onInputFocusChange,
   autoFocusInput = false,
 }: CommentSheetProps) {
   const [draft, setDraft] = useState('');
@@ -188,13 +208,19 @@ export function CommentSheet({
   const [dockHeight, setDockHeight] = useState(0);
 
   const insets = useSafeAreaInsets();
-  const keyboardHeight = useKeyboardHeight();
+  const reducedMotion = useReducedMotion();
+  const keyboardHeight = useKeyboardHeight(reducedMotion);
   const { height: windowHeight } = useWindowDimensions();
 
-  // Idle: flush above the home indicator. Keyboard up: the dock is lifted
-  // onto the keyboard, so only a hair of padding remains (iMessage feel).
+  // Idle: flush above the home indicator. Keyboard up: the keyboard's whole
+  // height becomes dock PADDING (not a translate), so the dock's surface
+  // paints continuously from the input pill down behind the keyboard — no
+  // seam can appear against the keyboard's top edge at any size or mid-
+  // animation (founder polish fix 2).
   const dockPadBottom =
-    keyboardHeight > 0 ? spacing.xs : Math.max(insets.bottom, spacing.xs);
+    keyboardHeight > 0
+      ? keyboardHeight + spacing.xs
+      : Math.max(insets.bottom, spacing.xs);
 
   const topLevel = (comments ?? []).filter((c) => c.parent_comment_id === null);
   const repliesOf = (id: string) =>
@@ -247,8 +273,9 @@ export function CommentSheet({
         style={[styles.list, { height: windowHeight }]}
         contentContainerStyle={[
           styles.listContent,
-          // Keep the thread's tail clear of the floating dock + keyboard.
-          { paddingBottom: dockHeight + keyboardHeight + spacing.sm },
+          // Keep the thread's tail clear of the floating dock (whose height
+          // already includes the keyboard-height padding while typing).
+          { paddingBottom: dockHeight + spacing.sm },
         ]}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
@@ -315,13 +342,7 @@ export function CommentSheet({
       <FullWindowOverlay>
         <View style={styles.overlayRoot} pointerEvents="box-none">
           <View
-            style={[
-              styles.dock,
-              {
-                paddingBottom: dockPadBottom,
-                transform: [{ translateY: -keyboardHeight }],
-              },
-            ]}
+            style={[styles.dock, { paddingBottom: dockPadBottom }]}
             onLayout={(e) => setDockHeight(e.nativeEvent.layout.height)}
           >
             {replyTo && (
@@ -369,6 +390,8 @@ export function CommentSheet({
                   maxLength={MAX_COMMENT_LENGTH}
                   multiline
                   autoFocus={autoFocusInput}
+                  onFocus={() => onInputFocusChange?.(true)}
+                  onBlur={() => onInputFocusChange?.(false)}
                   accessibilityLabel="Comment text"
                 />
                 {draft.trim().length === 0 && imageUri === null ? (

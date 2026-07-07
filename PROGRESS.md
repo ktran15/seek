@@ -4,6 +4,13 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Comment-sheet polish pass (founder-directed, pre-M9) — on `main`
+1. **Tap-outside-to-dismiss** — backdrop now dimmed at every detent (removed `sheetLargestUndimmedDetentIndex: 0`): UIKit's scrim natively dismisses on tap with the same slide-down as a swipe. Trade-off: the post behind is dimmed (it was undimmed before) — that dimming is what makes the tap land on the scrim instead of the feed.
+2. **Keyboard gap** — the dock no longer translates above the keyboard; the keyboard's height becomes dock **padding**, so the dock surface paints continuously down behind the keyboard (no seam possible at any size/mid-animation); layout change animates with the keyboard's own duration, skipped under reduced motion.
+3. **Tap-to-expand** — focusing the input sets `sheetAllowedDetents: [0.95]` (native slide-up to full, keyboard already up); blur restores `[0.6, 0.95]` so the sheet stays large but can be dragged back down.
+
+**On-device checks:** tap the dimmed post → sheet slides down; focus input at partial height → sheet slides to full with keyboard attached, zero gap above the keyboard while typing; dismiss keyboard → bar settles flush above the home indicator; iOS Reduce Motion on → no keyboard-ride animation, everything still lands in place.
+
 ## Current milestone: **M8 — Avatar & cosmetics** (spec §10, §15) — branch `m8-avatar-and-cosmetics`
 
 | # | Sub-step | Status |

@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useSession } from '@/features/auth/useSession';
@@ -27,6 +27,17 @@ export default function CommentsScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { data: myProfile } = useProfile(userId);
+  const navigation = useNavigation();
+
+  // Founder polish fix 3: tapping the input bar expands the sheet to the
+  // full detent (native slide-up — respects system reduce-motion) with the
+  // keyboard already focused. Restoring both detents on blur keeps the
+  // sheet large but lets the user drag back down to the partial height.
+  const onInputFocusChange = (focused: boolean) => {
+    navigation.setOptions({
+      sheetAllowedDetents: focused ? [0.95] : [0.6, 0.95],
+    });
+  };
 
   const { data: comments, isLoading, error, refetch, isRefetching } = useComments(postId);
   const addComment = useAddComment(userId);
@@ -65,6 +76,7 @@ export default function CommentsScreen() {
         }}
         onPickImage={pickCommentImage}
         onTakePhoto={takeCommentPhoto}
+        onInputFocusChange={onInputFocusChange}
       />
     </ErrorBoundary>
   );

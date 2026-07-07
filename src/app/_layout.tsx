@@ -20,15 +20,18 @@ import { colors, fontFamilies, radii } from '@/theme';
 SplashScreen.preventAutoHideAsync();
 
 /** Comment sheet presentation (M6.1): partial-height over the feed — the
- *  post stays visible above and shows more as the sheet is dragged down.
- *  Shared with the dev preview route so its geometry can never drift. */
+ *  post stays visible (dimmed) above and shows more as the sheet is dragged
+ *  down. Every detent is dimmed (no sheetLargestUndimmedDetentIndex): UIKit's
+ *  dim scrim is what makes TAP-OUTSIDE dismiss the sheet with the native
+ *  slide-down (founder polish fix 1) — an undimmed backdrop passes taps to
+ *  the feed instead. Shared with the dev preview route so geometry can't
+ *  drift. */
 const commentSheetOptions = {
   presentation: 'formSheet' as const,
   sheetAllowedDetents: [0.6, 0.95],
   sheetInitialDetentIndex: 0,
   sheetGrabberVisible: true,
   sheetCornerRadius: radii.card,
-  sheetLargestUndimmedDetentIndex: 0,
 };
 
 function RootNavigator() {
