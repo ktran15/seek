@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { Alert, Image, Modal, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getAsset, type AssetSlot } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
+import { AvatarPreview } from '@/features/avatar/AvatarPreview';
+import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
+import type { AvatarConfig } from '@/lib/database.types';
 import { colors, elevation, radii, spacing, textStyles } from '@/theme';
 
 import {
+  useCosmeticsCatalog,
   useMyCosmetics,
   useMyCrates,
   useOpenCrate,
+  type Cosmetic,
   type Crate,
   type CrateOpenResult,
   type CrateTier,
@@ -68,17 +73,99 @@ function RevealModal({
 }
 
 /**
- * Profile → Inventory (spec §9.3 LOCKED gacha pattern): unopened crates open
- * deliberately here; owned cosmetics list below (equip arrives in M8).
+ * Equip preview (spec §10): tap a cosmetic → see it ON the avatar →
+ * confirm = equip (persists to avatar_config.equipped); unequip reverts to
+ * the base gear. The preview shows the full current look with this one
+ * slot swapped, so layering (incl. jacket-closed) is what you'll get.
+ */
+function EquipPreviewModal({
+  cosmetic,
+  config,
+  catalog,
+  saving,
+  onEquip,
+  onUnequip,
+  onClose,
+}: {
+  cosmetic: Cosmetic;
+  config: AvatarConfig;
+  catalog: Cosmetic[];
+  saving: boolean;
+  onEquip: () => void;
+  onUnequip: () => void;
+  onClose: () => void;
+}) {
+  const isEquipped = config.equipped?.[cosmetic.slot] === cosmetic.id;
+  const draft: AvatarConfig = {
+    ...config,
+    equipped: { ...(config.equipped ?? {}), [cosmetic.slot]: cosmetic.id },
+  };
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.revealBackdrop}>
+        <View style={[styles.revealCard, elevation.card]}>
+          <View style={[styles.rarityChip, { backgroundColor: colors.rarity[cosmetic.rarity] }]}>
+            <Text style={[textStyles.caption, styles.rarityChipLabel]}>
+              {cosmetic.rarity.toUpperCase()}
+            </Text>
+          </View>
+          <Text style={[textStyles.headerL, styles.revealName]}>{cosmetic.name}</Text>
+          <AvatarPreview config={draft} cosmetics={catalog} />
+          <PressButton
+            label={saving ? 'SAVING…' : isEquipped ? 'UNEQUIP' : 'EQUIP'}
+            disabled={saving}
+            onPress={isEquipped ? onUnequip : onEquip}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close preview"
+            onPress={onClose}
+            style={styles.cancelButton}
+          >
+            <Text style={[textStyles.bodyEmphasis, styles.cancelLabel]}>Cancel</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/**
+ * Profile → Inventory (spec §9.3 LOCKED gacha pattern, §10): unopened crates
+ * open deliberately here; owned cosmetics below — tap to preview/equip.
  */
 export function InventorySection({ userId }: { userId: string | undefined }) {
   const { data: crates } = useMyCrates(userId);
   const { data: cosmetics } = useMyCosmetics(userId);
+  const { data: catalog } = useCosmeticsCatalog();
+  const { data: profile } = useProfile(userId);
+  const updateProfile = useUpdateProfile(userId);
   const openCrate = useOpenCrate(userId);
   const [reveal, setReveal] = useState<CrateOpenResult | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState<Cosmetic | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const unopened = (crates ?? []).filter((c) => !c.opened);
+  const avatarConfig = profile?.avatar_config ?? {};
+
+  const setEquipped = async (slot: string, cosmeticId: string | undefined) => {
+    setSaving(true);
+    try {
+      const equipped = { ...(avatarConfig.equipped ?? {}) };
+      if (cosmeticId) {
+        equipped[slot] = cosmeticId;
+      } else {
+        delete equipped[slot];
+      }
+      await updateProfile({ avatar_config: { ...avatarConfig, equipped } });
+      setPreviewing(null);
+    } catch (e) {
+      Alert.alert('Could not save', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const open = (crate: Crate) => {
     setOpeningId(crate.id);
@@ -123,33 +210,61 @@ export function InventorySection({ userId }: { userId: string | undefined }) {
       </Text>
       {(cosmetics ?? []).length === 0 ? (
         <Text style={[textStyles.caption, styles.note]}>
-          Open crates to collect cosmetics. Equipping lands in M8.
+          Open crates to collect cosmetics — tap one here to try it on.
         </Text>
       ) : (
         <View style={styles.cosmeticList}>
-          {(cosmetics ?? []).map(({ id, cosmetic }) => (
-            <View key={id} style={styles.cosmeticRow}>
-              <View
-                style={[
-                  styles.rarityDot,
-                  { backgroundColor: colors.rarity[cosmetic.rarity] },
-                ]}
-              />
-              <View style={styles.cosmeticText}>
-                <Text style={[textStyles.bodyEmphasis, styles.cosmeticName]}>
-                  {cosmetic.name}
-                </Text>
-                <Text style={[textStyles.caption, styles.note]}>
-                  {cosmetic.slot} · {cosmetic.rarity}
-                </Text>
-              </View>
-            </View>
-          ))}
+          {(cosmetics ?? []).map(({ id, cosmetic }) => {
+            const equipped = avatarConfig.equipped?.[cosmetic.slot] === cosmetic.id;
+            return (
+              <Pressable
+                key={id}
+                accessibilityRole="button"
+                accessibilityLabel={`Preview ${cosmetic.name}`}
+                accessibilityState={{ selected: equipped }}
+                onPress={() => setPreviewing(cosmetic)}
+                style={styles.cosmeticRow}
+              >
+                <View
+                  style={[
+                    styles.rarityDot,
+                    { backgroundColor: colors.rarity[cosmetic.rarity] },
+                  ]}
+                />
+                <View style={styles.cosmeticText}>
+                  <Text style={[textStyles.bodyEmphasis, styles.cosmeticName]}>
+                    {cosmetic.name}
+                  </Text>
+                  <Text style={[textStyles.caption, styles.note]}>
+                    {cosmetic.slot} · {cosmetic.rarity}
+                  </Text>
+                </View>
+                {equipped && (
+                  <View style={styles.equippedBadge}>
+                    <Text style={[textStyles.caption, styles.equippedLabel]}>
+                      EQUIPPED
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       )}
 
       {reveal && (
         <RevealModal result={reveal} onClose={() => setReveal(null)} />
+      )}
+      {previewing && (
+        <EquipPreviewModal
+          cosmetic={previewing}
+          config={avatarConfig}
+          catalog={catalog ?? []}
+          saving={saving}
+          onEquip={() => void setEquipped(previewing.slot, previewing.id)}
+          onUnequip={() => void setEquipped(previewing.slot, undefined)}
+          onClose={() => setPreviewing(null)}
+        />
       )}
     </View>
   );
@@ -247,5 +362,23 @@ const styles = StyleSheet.create({
   dupeNote: {
     color: colors.celebration,
     textAlign: 'center',
+  },
+  equippedBadge: {
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceSecondary,
+  },
+  equippedLabel: {
+    color: colors.textPrimary,
+  },
+  cancelButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+  },
+  cancelLabel: {
+    color: colors.textSecondary,
   },
 });
