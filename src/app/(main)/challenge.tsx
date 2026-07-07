@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { H2HStatusCard } from '@/features/h2h/H2HStatusCard';
 import { LeaderboardPlaceholder } from '@/features/leaderboard/LeaderboardPlaceholder';
 import { MountainView } from '@/features/mountain/MountainView';
 import { VoteCountdown } from '@/features/vote/VoteCountdown';
@@ -19,6 +20,7 @@ export default function ChallengeScreen() {
     <ErrorBoundary screen="Challenge">
       <View style={styles.container}>
         <VoteCountdown />
+        <H2HStatusCard />
         <View style={styles.switcher}>
           {PAGES.map((page, index) => {
             const active = index === activeIndex;

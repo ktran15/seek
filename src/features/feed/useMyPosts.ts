@@ -52,7 +52,7 @@ export function useMyPosts(userId: string | undefined) {
         .from('proofs')
         .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
       if (error) throw error;
-      const entries: Array<[string, string]> = [];
+      const entries: [string, string][] = [];
       for (const d of data) {
         if (d.path && d.signedUrl && !d.error) entries.push([d.path, d.signedUrl]);
       }

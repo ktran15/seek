@@ -20,6 +20,7 @@ import {
   type Submission,
 } from '@/features/challenge/useChallenge';
 import { CameraCapture } from '@/features/capture/CameraCapture';
+import { requestPairing } from '@/features/h2h/useH2H';
 import { uploadProofs } from '@/features/capture/mediaUpload';
 import { MultiPhotoCapture } from '@/features/capture/MultiPhotoCapture';
 import { ScreenshotCount } from '@/features/capture/ScreenshotCount';
@@ -181,6 +182,14 @@ export default function ChallengeFlowScreen() {
         score,
         mediaPaths: paths,
       });
+      // H2H days: ask the server to pair right away (spec §7.6). Fire-and-
+      // forget — the day-close sweep pairs anything the client misses.
+      const isH2H =
+        challenge.mode === 'H2H' ||
+        (challenge.has_difficulty && difficulty === 'hard');
+      if (isH2H) {
+        requestPairing(day).catch((e) => console.warn('[h2h-pair]', e));
+      }
       setStep('done');
     } catch (e) {
       // Media stays local; the attempt is NOT burned (spec §7.4).

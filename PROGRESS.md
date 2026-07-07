@@ -4,25 +4,71 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M4 -- Challenge engine** (spec sec 15, sec 7, sec 8)
+## Current milestone: **M5 — H2H & community vote** (spec §7.6, §7.7, §7.9, §15) — branch `m5-h2h-community-vote`
 
 | # | Sub-step | Status |
 |---|----------|--------|
-| 1 | DB migration: challenges table + 7 seeded rows, submissions (one-attempt unique, state machine columns), proofs storage bucket + owner policies | ✅ authored -- **founder must apply** |
-| 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ✅ done (34 tests total) |
-| 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ✅ done (+ mountain wired to real calendar/submissions) |
-| 4 | Capture types: timer-bound recording w/ big clock + auto-stop, photo, video, screenshot+count, multi-photo<=25; local persistence + upload retry | ✅ done |
-| 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ✅ done |
+| 0 | M4 review fixes: camera flip toggle, status-bar safe-area in challenge flow, own posts render in Friends feed | ✅ done |
+| 1 | DB migration: h2h_matches, h2h_history, votes + cast_vote RPC, notifications, mascot targets in app_settings | ✅ authored — **founder must apply** |
+| 2 | Pure logic, unit-tested: victor rules per day, friend cycling w/ pool reset, mascot targets, CV tie-sharing tally, EST clock math (31 new tests; 68 total) | ✅ done |
+| 3 | Edge Functions: h2h-pair (submit-time pairing + friend sweep), day-close (re-pair sweep → mascot fallback; CV tally) | ✅ authored — **founder must deploy** |
+| 4 | CV day 3: vote-feed Edge Fn (signed friend posts), pinned EST countdown on Challenge, /vote screen w/ one changeable vote | ✅ done |
+| 5 | Client H2H surfaces: pairing call on submit, H2H status card on Challenge, results in Notifications (auto mark-read) | ✅ done |
 
-**Next step:** M4 complete -- founder review (apply migration + set start date first), then M5 after approval.
+**Next step:** M5 complete — founder review (apply migration + deploy functions + schedule cron below), then M6 after approval.
 
-### ⚠️ Founder actions before testing M4
-1. Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
-2. The beta starts 2026-07-13, so every day is "locked" until then. To play a challenge today, set the start date to today in BOTH places:
-   - `src/config/index.ts` -> `beta.startDate: '2026-07-06'`
-   - SQL Editor: `update app_settings set value = jsonb_set(value, '{start_date}', '"2026-07-06"') where key = 'beta';`
+### ⚠️ Founder actions before testing M5
+1. **Apply the migration** `supabase/migrations/20260707000001_m5_h2h_votes_notifications.sql` via Dashboard → SQL Editor (paste the whole file).
+2. **Deploy the Edge Functions** (needs `npx supabase login` + `npx supabase link --project-ref aducawlftwdowvsnryar` once):
+   ```
+   npx supabase functions deploy h2h-pair
+   npx supabase functions deploy vote-feed
+   npx supabase functions deploy day-close --no-verify-jwt
+   ```
+   (day-close validates the service-role key itself — it is cron/founder-invoked, never user-invoked.)
+3. **Schedule day-close** (SQL Editor; replace `<SERVICE_ROLE_KEY>` from Dashboard → Settings → API — never commit it):
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select cron.schedule(
+     'seek-day-close',
+     '5 4 * * *',  -- 04:05 UTC = 00:05 America/New_York during EDT (the beta)
+     $$
+     select net.http_post(
+       url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/day-close',
+       headers := jsonb_build_object('Content-Type','application/json',
+                                     'Authorization','Bearer <SERVICE_ROLE_KEY>'),
+       body := '{}'::jsonb,
+       timeout_milliseconds := 30000
+     );
+     $$
+   );
+   ```
+4. **Manual close for testing** (don't wait for midnight — close any day on demand):
+   ```
+   curl -X POST 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/day-close' \
+     -H 'Authorization: Bearer <SERVICE_ROLE_KEY>' \
+     -H 'Content-Type: application/json' -d '{"beta_day": 1}'
+   ```
 
-<details><summary>M3 -- Friend graph & social core (complete)</summary>
+### M5 test guide (3 accounts: A + B friends, C friendless)
+- **H2H pairing:** on an H2H day (1, 2, 5 — or 4 choosing Hard), A submits → Challenge screen shows "Rival search…". B submits → both resolve; Challenge shows victory/defeat per the day's rule; both get a Notifications entry. Verify the winner matches the rule (day 1 lower time, day 2 fewer guesses / X loses, day 5 higher count w/ earlier-submit tiebreak).
+- **Cycling:** with A friending both B and C', A's next H2H day should pair the not-yet-faced friend (check `h2h_history`).
+- **Mascot:** C (no friends) submits → stays pending → run the manual day-close curl → C resolves vs. mascot target and gets notified.
+- **Vote (day 3):** blue countdown banner pinned on Challenge all day (EST clock). Tap → friends' food photos; vote, then change the vote (last write wins; `votes` has one row per voter). After close, cast_vote errors ("Voting is closed"); day-close writes vote_result notifications with tie-sharing placements.
+- **M4 fixes:** camera flip button on day-1/photo/video capture (hidden while recording); reveal screen no longer under the status bar; your own submitted proof appears as a real post card in Home → Friends (photos render, videos play, day-5 strip swipes).
+
+<details><summary>M4 — Challenge engine (complete; review fixes shipped in M5 sub-step 0)</summary>
+
+DB migration (challenges seeded, submissions one-attempt + crash-safe, proofs
+bucket), beta calendar + attempt state machine (unit-tested), reveal→begin
+flow w/ day-4 difficulty, all 5 capture types, upload retry, post-submit
+sequence, mountain on real calendar state. Founder feedback fixed: camera
+flip, safe-area bleed, own posts in Friends feed.
+
+</details>
+
+<details><summary>M3 — Friend graph & social core (complete)</summary>
 
 friendships+blocks migration (applied), block-aware graph SQL functions,
 16 unit tests, Add Friends search+requests, Notifications accept/decline,
@@ -30,7 +76,7 @@ Profile friends count + invite entry.
 
 </details>
 
-<details><summary>M2 -- Navigation & skeletons (complete, founder-verified; tabs reordered Challenge/Home/Profile)</summary>
+<details><summary>M2 — Navigation & skeletons (complete, founder-verified; tabs reordered Challenge/Home/Profile)</summary>
 
 Tab shell + top bar, Home 3-feed swipe, Challenge Mountain<->Leaderboard swipe
 w/ data-driven 7-stop mountain, Profile skeleton + swipe->Shop, error
@@ -38,7 +84,7 @@ boundaries, stub screens (add-friends / notifications / settings).
 
 </details>
 
-<details><summary>M1 -- Auth & onboarding (complete, founder-verified)</summary>
+<details><summary>M1 — Auth & onboarding (complete, founder-verified)</summary>
 
 M1 exit criteria confirmed by founder 2026-07-06. DB migration applied.
 Sub-steps: DB schema+RLS / session plumbing / email auth / Apple+Google /
@@ -46,54 +92,49 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 
 </details>
 
-<details><summary>M0 — Foundation & scaffolding (complete, awaiting founder review)</summary>
+<details><summary>M0 — Foundation & scaffolding (complete)</summary>
 
-| # | Sub-step | Status |
-|---|----------|--------|
-| 1 | Repo hygiene: .gitignore (env/secrets covered), PROGRESS.md, commit spec docs | ✅ done |
-| 2 | Expo + TypeScript (strict) + Expo Router project init; boots | ✅ done |
-| 3 | Supabase wiring: client module, env vars, .env.example (client-safe keys only) | ✅ done |
-| 4 | Typed central config module (app name, beta start date, EST tz, TUNE values, flags) | ✅ done |
-| 5 | Design tokens (palette roles, 4-font type system incl. Archivo timer style, spacing/radii/motion) + 3D-press button + themed boot screen | ✅ done |
-| 6 | Asset registry (`assets/registry.ts`) + labeled placeholders for all slots | ✅ done |
-| 7 | EAS → TestFlight pipeline config (eas.json, bundle ID; founder does interactive Apple login) | ✅ done (code side) |
+Repo hygiene, Expo+TS strict+Router init, Supabase wiring, typed config
+module, design tokens + 3D-press button, asset registry + placeholders,
+EAS pipeline config. Founder still owes the interactive EAS login steps:
+`npx eas-cli login`, `npx eas-cli init`, then a development build when ready.
 
 </details>
 
-### Founder actions to finish the EAS pipeline (interactive logins — can't be automated)
-1. `! npx eas-cli login` — log in / create an Expo account.
-2. `! npx eas-cli init` — links the repo to an EAS project (writes `extra.eas.projectId`; commit that change).
-3. When ready for a device build: `! npx eas-cli build --profile development --platform ios` (needs Apple Developer account; EAS walks through signing). TestFlight submission itself is the M14 pass.
-4. Optional: upgrade Node to ≥ 20.19.4 (current: 20.15.1) — Expo tooling warns; everything works today but newer CLIs may require it.
-
 ## Milestone status
-- M0: **complete** (founder still owes the 3 interactive EAS login steps above)
+- M0: **complete** (founder still owes the 3 interactive EAS login steps)
 - M1: **complete — founder-verified**
 - M2: **complete — founder-verified**
-- M3: **complete** (migration applied; founder testing in parallel)
-- M4: **complete — awaiting founder review** (apply migration 20260706000003 + set beta start date to test)
-- M5–M14: not started (do not work ahead — founder reviews after each milestone)
+- M3: **complete**
+- M4: **complete — founder-verified** (review feedback fixed in M5 branch)
+- M5: **complete — awaiting founder review** (apply migration, deploy functions, schedule cron)
+- M6–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
-- Post-submit sequence shows +50 coins and "wooden crate added" from config, but the actual ledger write + crate row are M7 (server-authoritative) — display only today.
-- "Posted to your friends' feed" confirm screen: the feed_posts row + real feed land in M6.
-- H2H days (1, 2, 4-Hard, 5) capture + submit fully; pairing/resolution is M5 — no winner yet. Day 3 photo submits; voting window is M5.
-- Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is the M13 pass.
-- Profile header shows a single mutual **Friends** count + Invite action (spec §11 says Following/Followers, but the friendship model is mutual — they would always be equal; flagged for founder).
-- Block/report UI (post overflow menu) lands in M6 with the feed; blocks table + enforcement plumbing are live now.
+- **H2H/vote rewards not paid yet:** resolution records win/placement + notification; bonus coins, blue crate, and points ledger writes are M7 (server-authoritative). UI says so.
+- Post-submit sequence shows +50 coins and "wooden crate added" from config — ledger + crate rows are M7 (display only).
+- Friends feed shows **own** posts only (M4 review ask); friends'/FoF/Explore posts, likes, comments, carousel gallery, report/block UI land in M6 (feed_posts rows too — vote-feed reads submissions directly until then).
+- Day-3 countdown is pinned on the Challenge screen; the "countdown on day-3 feed posts" half arrives with the feed in M6.
+- Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is M13.
+- Push notifications (incl. "voting closes in 2h") are M11 — in-app Notifications screen carries results today.
+- Profile header shows a single mutual **Friends** count (mutual friendship model; flagged for founder).
 - Declined requests show as "REQUESTED" to the requester (silent decline — no re-request in v1).
-- Invite coin reward (+50) NOT paid yet — coins ledger is M7; the invite row is recorded now.
-- An invites row is created even if the user cancels the share sheet (client cannot delete; harmless, redeemed_by stays null).
-- Invite share URL is a FOUNDER-SET placeholder until the TestFlight link exists (M14).
-- Notifications step only requests permission; scheduling/push wiring is M11.
-- joined_beta_day computes from app_settings.beta — keep in sync with src/config beta.startDate.
+- Invite coin reward (+50) not paid yet (M7); invite row recorded now. Share URL is a founder-set placeholder until TestFlight (M14).
+- joined_beta_day + vote window compute from app_settings.beta — keep in sync with src/config beta.startDate. Mascot targets likewise (app_settings.mascot ↔ src/config mascot.targets).
 
-## Notes / decisions this milestone
-- Git was already initialized (`a815b86 Initial commit`); spec docs committed in sub-step 1.
-- App name config string: `"Seek"` (single source of truth in config module).
-- Bundle ID: `com.smokeysummit.seek` (founder can change in `app.config.ts` before first EAS build).
-- Expo SDK **54** (downgraded from 57 so the founder's Expo Go can run it: RN 0.81.5, React 19.1, expo-router 6, Reanimated 4.1, TS 5.9). Template demo app removed. Unused template packages pruned (@expo/ui, expo-glass-effect, expo-symbols, expo-device, expo-image).
-- App name lives ONCE in `app-name.json` (read by both `app.config.ts` and `src/config` — app.config.ts can't import TS modules).
-- Supabase project `aducawlftwdowvsnryar` wired with the modern `sb_publishable_` key (client-safe by design; RLS is the boundary). Schema: profiles/app_settings/invites live (M1 migration applied by founder).
-- eas.json env block carries only the EXPO_PUBLIC (client-safe) vars; real secrets go in Edge Function env later, never in the repo.
-- Zustand installed but unused so far (first real consumer expected M4 capture flows); React Query in use since M1.
+## Notes / decisions this milestone (founder can veto any of these)
+- **Friend-match ties → earlier submission wins** (extends the day-5 LOCKED tie rule to all H2H days; a resolved match must always have a winner — the schema has no draw state).
+- **Ties vs. the mascot's target → user wins** (spec §7.9 framing: friendly rival, never punishment).
+- **Zero votes never places** in the CV tally (otherwise a friend group where nobody voted would all "win 1st").
+- Pairing runs at submit (h2h-pair, which also fulfills friends' pending matches) AND at day close (sweep) — a client crash can never orphan a match.
+- day-close is idempotent: resolved matches are never re-resolved; the CV tally is skipped if results already exist.
+- Edge Functions share pure logic from `supabase/functions/_shared/` (jest-covered); Deno entry files are excluded from the app's tsc and get type-checked at deploy.
+- expo-video added (proof playback in feed cards; needed for M6 anyway).
+
+## Earlier notes (M0–M4)
+- Git save system: commit per sub-step; `a815b86 Initial commit`.
+- App name `"Seek"` lives ONCE in `app-name.json`. Bundle ID `com.smokeysummit.seek`.
+- Expo SDK **54** (Expo Go compatible: RN 0.81.5, React 19.1, expo-router 6).
+- Supabase project `aducawlftwdowvsnryar`, `sb_publishable_` key client-side (RLS is the boundary).
+- Beta start date currently **2026-07-06** in BOTH `src/config` and `app_settings` (set for M4 testing).
+- Zustand installed but still unused (React Query covers everything so far).
