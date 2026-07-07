@@ -15,7 +15,7 @@ import { useEffect } from 'react';
 import { useSession } from '@/features/auth/useSession';
 import { isOnboarded, useProfile } from '@/features/profile/useProfile';
 import { AppProviders } from '@/providers/AppProviders';
-import { colors, fontFamilies } from '@/theme';
+import { colors, fontFamilies, radii } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -64,9 +64,18 @@ function RootNavigator() {
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: false }} />
         <Stack.Screen name="vote" options={{ headerShown: true, title: 'Community Vote' }} />
+        {/* Comment sheet (M6.1): partial-height over the feed — the post stays
+            visible above and shows more as the sheet is dragged down. */}
         <Stack.Screen
           name="comments/[postId]"
-          options={{ headerShown: true, title: 'Comments' }}
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.6, 0.95],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+            sheetCornerRadius: radii.card,
+            sheetLargestUndimmedDetentIndex: 0,
+          }}
         />
       </Stack.Protected>
     </Stack>

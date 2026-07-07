@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -9,10 +10,20 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { colors, durations, easings, radii, spacing, textStyles } from '@/theme';
 
 import type { FeedMedia } from './useFeed';
 
@@ -98,14 +109,59 @@ function GalleryModal({
  * Post media (spec §11): single photo/video renders plain; multi-photo (day 5)
  * renders an auto-advancing, swipeable carousel — tap opens the fullscreen
  * gallery. Auto-advance stops on first touch and under reduced motion.
+ * Double-tap likes (M6.1) on photos; videos keep their native controls.
  */
-export function MediaCarousel({ media }: { media: FeedMedia[] }) {
+export function MediaCarousel({
+  media,
+  onDoubleTap,
+}: {
+  media: FeedMedia[];
+  onDoubleTap?: () => void;
+}) {
   const reducedMotion = useReducedMotion();
   const listRef = useRef<FlatList<FeedMedia>>(null);
   const [pageWidth, setPageWidth] = useState(0);
   const [page, setPage] = useState(0);
   const [touched, setTouched] = useState(false);
   const [galleryAt, setGalleryAt] = useState<number | null>(null);
+
+  // Heart pop on double-tap (IG-style). Calm variant under reduced motion:
+  // fade only, no scale burst (aesthetic §8).
+  const heartOpacity = useSharedValue(0);
+  const heartScale = useSharedValue(1);
+  const heartStyle = useAnimatedStyle(() => ({
+    opacity: heartOpacity.value,
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  const handleDoubleTap = () => {
+    if (!onDoubleTap) return;
+    onDoubleTap();
+    heartOpacity.value = withSequence(
+      withTiming(1, { duration: durations.press }),
+      withDelay(400, withTiming(0, { duration: durations.base })),
+    );
+    if (!reducedMotion) {
+      heartScale.value = 0.6;
+      heartScale.value = withTiming(1.1, {
+        duration: durations.base,
+        easing: Easing.bezier(...easings.bounce),
+      });
+    }
+  };
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(250)
+    .onEnd((_event, success) => {
+      if (success) runOnJS(handleDoubleTap)();
+    });
+
+  const heartOverlay = (
+    <Animated.View pointerEvents="none" style={[styles.heartOverlay, heartStyle]}>
+      <Ionicons name="heart" size={96} color={colors.textOnDark} />
+    </Animated.View>
+  );
 
   const autoAdvance =
     media.length > 1 && !touched && !reducedMotion && galleryAt === null;
@@ -139,10 +195,17 @@ export function MediaCarousel({ media }: { media: FeedMedia[] }) {
         </View>
       );
     }
-    return mediaKind(first.path) === 'video' ? (
-      <VideoProof url={first.url} />
-    ) : (
-      <Image source={{ uri: first.url }} style={styles.media} resizeMode="cover" />
+    // Videos keep native controls — a tap gesture on top would fight them.
+    if (mediaKind(first.path) === 'video') {
+      return <VideoProof url={first.url} />;
+    }
+    return (
+      <GestureDetector gesture={doubleTap}>
+        <View>
+          <Image source={{ uri: first.url }} style={styles.media} resizeMode="cover" />
+          {heartOverlay}
+        </View>
+      </GestureDetector>
     );
   }
 
@@ -161,25 +224,41 @@ export function MediaCarousel({ media }: { media: FeedMedia[] }) {
             setPage(Math.round(e.nativeEvent.contentOffset.x / pageWidth));
           }
         }}
-        renderItem={({ item, index }) => (
-          <Pressable
-            accessibilityRole="imagebutton"
-            accessibilityLabel={`Open photo ${index + 1} of ${media.length}`}
-            onPress={() => setGalleryAt(index)}
-            style={{ width: pageWidth || 1 }}
-          >
-            {item.url ? (
-              <Image source={{ uri: item.url }} style={styles.media} resizeMode="cover" />
-            ) : (
-              <View style={[styles.media, styles.mediaEmpty]}>
-                <Text style={[textStyles.caption, styles.mutedText]}>
-                  Photo unavailable
-                </Text>
+        renderItem={({ item, index }) => {
+          // Single tap opens the gallery only after the double-tap (like)
+          // window has passed, so a double-tap never opens the gallery.
+          const openTap = Gesture.Tap()
+            .requireExternalGestureToFail(doubleTap)
+            .onEnd((_event, success) => {
+              if (success) runOnJS(setGalleryAt)(index);
+            });
+          return (
+            <GestureDetector gesture={Gesture.Exclusive(doubleTap, openTap)}>
+              <View
+                accessible
+                accessibilityRole="imagebutton"
+                accessibilityLabel={`Open photo ${index + 1} of ${media.length}`}
+                style={{ width: pageWidth || 1 }}
+              >
+                {item.url ? (
+                  <Image
+                    source={{ uri: item.url }}
+                    style={styles.media}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={[styles.media, styles.mediaEmpty]}>
+                    <Text style={[textStyles.caption, styles.mutedText]}>
+                      Photo unavailable
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
-          </Pressable>
-        )}
+            </GestureDetector>
+          );
+        }}
       />
+      {heartOverlay}
       <View style={styles.dots} pointerEvents="none">
         {media.map((m, i) => (
           <View key={m.path} style={[styles.dot, i === page && styles.dotActive]} />
@@ -209,6 +288,15 @@ const styles = StyleSheet.create({
   },
   mutedText: {
     color: colors.textSecondary,
+  },
+  heartOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: MEDIA_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dots: {
     flexDirection: 'row',

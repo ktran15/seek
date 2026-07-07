@@ -110,27 +110,34 @@ export function useToggleLike(userId: string | undefined) {
   });
 }
 
-export interface Comment {
+/** One comment as served by the comments Edge Function (signed media). */
+export interface CommentView {
   id: string;
   post_id: string;
   user_id: string;
+  username: string;
+  display_name: string;
   body: string;
-  removed: boolean;
+  media_url: string | null;
+  parent_comment_id: string | null;
+  like_count: number;
+  viewer_liked: boolean;
   created_at: string;
 }
 
-/** Comments for one post, oldest first (RLS scopes to visible posts). */
+/** A post's thread (top-level + one-level replies), oldest first. */
 export function useComments(postId: string) {
   return useQuery({
     queryKey: feedKeys.comments(postId),
-    queryFn: async (): Promise<Comment[]> => {
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+    staleTime: 30 * 1000,
+    queryFn: async (): Promise<CommentView[]> => {
+      const { data, error } = await supabase.functions.invoke('comments', {
+        body: { post_id: postId },
+      });
       if (error) throw error;
-      return data;
+      const payload = data as { comments?: CommentView[]; error?: string };
+      if (payload.error) throw new Error(payload.error);
+      return payload.comments ?? [];
     },
   });
 }
@@ -138,11 +145,20 @@ export function useComments(postId: string) {
 export function useAddComment(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { postId: string; body: string }) => {
+    mutationFn: async (input: {
+      postId: string;
+      body: string;
+      parentId?: string;
+      mediaPath?: string;
+    }) => {
       if (!userId) throw new Error('Not signed in');
-      const { error } = await supabase
-        .from('comments')
-        .insert({ post_id: input.postId, user_id: userId, body: input.body });
+      const { error } = await supabase.from('comments').insert({
+        post_id: input.postId,
+        user_id: userId,
+        body: input.body,
+        parent_comment_id: input.parentId,
+        media_path: input.mediaPath,
+      });
       if (error) throw error;
     },
     onSuccess: (_data, input) => {
@@ -150,6 +166,49 @@ export function useAddComment(userId: string | undefined) {
       // comment_count on the cards comes from the counter trigger.
       void queryClient.invalidateQueries({ queryKey: feedKeys.all });
     },
+  });
+}
+
+/** Flip one comment's like in the post's cached thread (optimistic). */
+function setCommentLikeInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  postId: string,
+  commentId: string,
+  liked: boolean,
+) {
+  queryClient.setQueryData<CommentView[]>(feedKeys.comments(postId), (comments) =>
+    comments?.map((c) =>
+      c.id === commentId && c.viewer_liked !== liked
+        ? { ...c, viewer_liked: liked, like_count: Math.max(0, c.like_count + (liked ? 1 : -1)) }
+        : c,
+    ),
+  );
+}
+
+/** Like/unlike a comment — optimistic with rollback (mirror of post likes). */
+export function useToggleCommentLike(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { postId: string; commentId: string; liked: boolean }) => {
+      if (!userId) throw new Error('Not signed in');
+      if (input.liked) {
+        const { error } = await supabase
+          .from('comment_reactions')
+          .delete()
+          .eq('comment_id', input.commentId)
+          .eq('user_id', userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('comment_reactions')
+          .insert({ comment_id: input.commentId, user_id: userId });
+        if (error && error.code !== '23505') throw error;
+      }
+    },
+    onMutate: (input) =>
+      setCommentLikeInCache(queryClient, input.postId, input.commentId, !input.liked),
+    onError: (_e, input) =>
+      setCommentLikeInCache(queryClient, input.postId, input.commentId, input.liked),
   });
 }
 

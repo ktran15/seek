@@ -12,15 +12,24 @@
 | 2 | `feed` Edge Function: friends / FoF / explore visibility, explore like-count sort (current-day) w/ recency tiebreak, block-aware, signs ALL media paths | ✅ authored — **founder must deploy** |
 | 3 | Client: useFeed hook, PostCard v2 (like toggle, comment count, day-5 carousel + tap-to-gallery, overflow report/block, day-3 vote chip) | ✅ done |
 | 4 | Comments screen, friend suggestions woven into feeds, Home wired to real 3 feeds | ✅ done |
+| 5 | M6.1 founder feedback: double-tap like, comment bottom sheet (formSheet detents), comment replies + likes, image/camera comment replies, keyboard fix | ✅ done — needs migration + `comments` fn deploy |
 
-**Next step:** M6 complete — founder review (apply migration + deploy `feed` function below), then M7 after approval.
+**Next step:** founder retests M6.1, M7 underway (founder pre-approved continuing).
 
-### ⚠️ Founder actions before testing M6
-1. ⬜ **Apply the migration** — Dashboard → SQL Editor → paste all of
-   `supabase/migrations/20260707000002_m6_feed_reactions_comments_reports.sql` → Run.
-   (It backfills feed_posts from every already-submitted proof.)
-2. ⬜ **Deploy the feed function** — same flow as M5: `npx supabase functions deploy feed`
-   (JWT-verified, the default; no flag needed).
+### ⚠️ Founder actions before testing M6 / M6.1
+1. ⬜ **Apply BOTH migrations** — Dashboard → SQL Editor → paste + Run, in order:
+   `supabase/migrations/20260707000002_m6_feed_reactions_comments_reports.sql`, then
+   `supabase/migrations/20260707000003_m6_1_comment_threads_likes_media.sql`.
+2. ⬜ **Deploy both functions** (after `npx supabase login` if needed):
+   `npx supabase functions deploy feed --project-ref aducawlftwdowvsnryar`
+   `npx supabase functions deploy comments --project-ref aducawlftwdowvsnryar`
+
+### M6.1 retest list (on top of the M6 guide below)
+- **Double-tap like:** double-tap a photo post → heart pops on the media, like sticks (double-tap never unlikes; the heart button toggles). On a day-5 carousel a single tap still opens the gallery, slightly delayed. Videos keep native play controls (no double-tap there).
+- **Comment sheet:** tapping the bubble opens comments as a ~60%-height sheet — the post stays visible above; drag the grabber down to see more of the post or dismiss; drag up for near-full height. Scroll inside for long threads.
+- **Keyboard:** tapping the input raises the keyboard WITHOUT covering the input or send control.
+- **Composer:** left = your mini avatar; empty input shows gallery + camera icons inside the bar; typing (or attaching) swaps them for the orange send arrow. Gallery asks photo permission → pick → preview thumb with ✕ → send. Camera asks permission → shoot → iOS retake/use-photo → send. Image-only comments (no text) allowed.
+- **Replies + comment likes:** "Reply" under any comment → "Replying to …" bar (✕ cancels) → reply lands indented under the thread (one level, IG-style). Small heart on each comment toggles with count.
 
 ### M6 test guide (3 accounts: A + B friends, C friends B only)
 - **Friends feed:** A sees A's own + B's posts with real media (photos render, videos play). C's posts do NOT appear for A.
@@ -168,6 +177,7 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - Day-3 posts carry a **VOTE chip** (→ /vote) while the EST window is open — the persistent countdown itself stays pinned on Challenge per spec §5.
 - Day-5 carousel auto-advance (3s) stops on first touch and under reduced motion; tap opens the fullscreen gallery.
 - New `colors.scrim` token for gallery chrome (no inline rgba on screens).
+- **M6.1 (founder-directed):** comment replies are **one level deep** (IG model — replying to a reply lands in the same thread, no @mention); **double-tap only ever likes**, never unlikes; videos keep native controls so no double-tap on video posts; comment sheet = native formSheet, detents [0.6, 0.95], feed undimmed at the low detent; comment images live in a private `comment-media` bucket (owner-folder RLS) and are signed by the new `comments` Edge Function; image-only comments allowed (body may be empty when media present).
 
 ## Earlier notes / decisions (M5) (✅ founder-approved 2026-07-07)
 - **Friend-match ties → earlier submission wins** (extends the day-5 LOCKED tie rule to all H2H days; a resolved match must always have a winner — the schema has no draw state).

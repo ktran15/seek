@@ -260,6 +260,11 @@ export interface Database {
           post_id: string;
           user_id: string;
           body: string;
+          /** One-level replies (IG-style); null = top-level (M6.1). */
+          parent_comment_id: string | null;
+          /** Image comment in the comment-media bucket (owner folder). */
+          media_path: string | null;
+          like_count: number;
           removed: boolean;
           created_at: string;
         };
@@ -267,8 +272,25 @@ export interface Database {
           post_id: string;
           user_id: string;
           body: string;
+          parent_comment_id?: string;
+          media_path?: string;
         };
         /** No client edits in v1; removal is the admin path (spec §12). */
+        Update: never;
+        Relationships: [];
+      };
+      comment_reactions: {
+        Row: {
+          id: string;
+          comment_id: string;
+          user_id: string;
+          type: 'like';
+          created_at: string;
+        };
+        Insert: {
+          comment_id: string;
+          user_id: string;
+        };
         Update: never;
         Relationships: [];
       };
@@ -348,6 +370,10 @@ export interface Database {
       };
       can_view_post: {
         Args: { pid: string };
+        Returns: boolean;
+      };
+      can_view_comment: {
+        Args: { cid: string };
         Returns: boolean;
       };
     };
