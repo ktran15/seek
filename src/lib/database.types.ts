@@ -152,6 +152,77 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      h2h_matches: {
+        Row: {
+          id: string;
+          challenge_id: string;
+          beta_day: number;
+          protagonist_id: string;
+          opponent_id: string | null;
+          vs_mascot: boolean;
+          protagonist_submission: string;
+          opponent_submission: string | null;
+          mascot_target_score: number | null;
+          /** null + status 'resolved' = the mascot won (spec §6). */
+          winner_user_id: string | null;
+          status: 'pending' | 'resolved';
+          resolved_at: string | null;
+          created_at: string;
+        };
+        /** Edge Functions (service role) only — never the client. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      h2h_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          faced_user_id: string;
+          beta_week: number;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      votes: {
+        Row: {
+          id: string;
+          submission_id: string;
+          voter_id: string;
+          beta_day: number;
+          created_at: string;
+          updated_at: string;
+        };
+        /** All writes go through the cast_vote RPC (spec §7.7). */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type:
+            | 'h2h_result'
+            | 'vote_result'
+            | 'vote_countdown'
+            | 'weekly_result'
+            | 'daily_challenge'
+            | 'invite_nudge'
+            | 'friend_accepted';
+          payload: Record<string, unknown>;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: never;
+        /** Client may only flip the read flag (column grant). */
+        Update: {
+          read: boolean;
+        };
+        Relationships: [];
+      };
       invites: {
         Row: {
           id: string;
@@ -198,6 +269,10 @@ export interface Database {
       is_blocked_pair: {
         Args: { a: string; b: string };
         Returns: boolean;
+      };
+      cast_vote: {
+        Args: { target_submission_id: string };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;
