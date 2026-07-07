@@ -36,6 +36,23 @@ const expoConfig: ExpoConfig = {
     'expo-router',
     'expo-apple-authentication',
     [
+      'expo-camera',
+      {
+        cameraPermission:
+          'Seek uses the camera to capture proof of your daily challenge.',
+        microphonePermission:
+          'Seek records audio with your challenge videos.',
+        recordAudioAndroid: true,
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission:
+          'Seek needs your photo library to upload challenge proof like screenshots and selfies.',
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         backgroundColor: '#F5ECE3',
