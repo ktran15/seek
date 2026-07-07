@@ -9,11 +9,24 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | Pure layer-resolution logic + unit tests: 8-slot z-order, jacket-closed rule (jacket occludes shirt), base shirt/pants/backpack fallbacks, stale-cosmetic-id safety (7 tests) | ✅ done |
-| 2 | AvatarPreview v2: renders equipped cosmetics as placeholder layers (rarity-tinted, slot-shaped) over the base; onboarding usage unchanged | ⬜ not started |
-| 3 | Inventory equip/preview: tap cosmetic → preview on avatar → EQUIP/UNEQUIP persists to `avatar_config.equipped` (client-updatable column, M1 grants) | ⬜ not started |
-| 4 | Settings → Edit avatar base screen (skin/eyes/hair/hair color pickers + live preview, SAVE persists) | ⬜ not started |
+| 2 | AvatarPreview v2: renders equipped cosmetics as placeholder layers (rarity-tinted, slot-shaped) over the base; onboarding usage unchanged | ✅ done |
+| 3 | Inventory equip/preview: tap cosmetic → try-on modal → EQUIP/UNEQUIP persists to `avatar_config.equipped` (client-updatable column, M1 grants) | ✅ done |
+| 4 | Settings → Edit avatar base screen (skin/eyes/hair/hair color pickers + live full-look preview, SAVE preserves equipped gear) | ✅ done |
 
-**Next step:** M8 sub-step 2 — AvatarPreview v2 (cosmetic layers).
+**Next step:** M8 complete — founder review, then M9 after approval. **No migrations or function deploys needed for M8** (pure client; persistence uses the M1 avatar_config grant). The two M7 deploys (crate-open, day-close) are still open below and are needed to TEST M8 (you open crates to get cosmetics).
+
+### M8 test guide
+- **Get cosmetics:** deploy `crate-open` (below) → Inventory → open a few crates.
+- **Equip:** Profile → Inventory → tap an owned cosmetic → modal shows it ON your avatar → EQUIP → row shows EQUIPPED; the Profile header avatar updates immediately and survives an app restart (persistence).
+- **Layers render correctly:** equip boots/hat/sunglasses/pet → each draws in its own place (rarity-colored placeholder shapes until the M12 art pass); equip pants/shirt/backpack → the base gear recolors to the cosmetic.
+- **Jacket-closed rule (LOCKED):** equip a shirt, then a jacket → the shirt layer disappears entirely (preview and Profile); unequip the jacket → shirt returns.
+- **Unequip:** tap an equipped cosmetic → UNEQUIP → base gear returns (or the slot empties for hats/boots/etc.).
+- **Edit base:** Settings → "Edit avatar base" → change skin/eyes/hair/hair color with live preview → SAVE → Profile reflects it and **equipped cosmetics stay on**.
+
+### M8 decisions (flag for founder)
+- Cosmetic layers are **code-drawn placeholder shapes tinted by rarity color** (same approach as the M1 base avatar) — real layer art replaces them in M12 per the Rig Bible; ids/slots are already wired.
+- Onboarding's legacy `equipped: BASE_EQUIPPED` marker ids (`baseShirt` etc.) resolve as "nothing equipped" in the new resolver → base gear renders; no data migration needed.
+- Layer z-order + jacket-closed rule live in pure, unit-tested `resolveLayers` (7 tests; 85 total).
 
 <details><summary>M7 comment-section bug-fix pass (complete — merged to main via PR #1)</summary>
 
@@ -249,7 +262,6 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 
 ## Visible stubs (reported per spec §2.1)
 - Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
-- Cosmetics list in Inventory is display-only; equip/preview on the avatar is M8.
 - Weekly leaderboard payout + gold crate are M9 (points ledger already accumulates).
 - Post-submit "+50 coins" screen shows the config amount rather than reading the ledger row it just triggered (amounts always match; purely cosmetic shortcut).
 - Comments/users are reportable at the DB level (reports table takes post/comment/user targets); the client UI reports **posts** — comment-report UI + the admin removal path are M10.

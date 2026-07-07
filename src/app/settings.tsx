@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -11,9 +12,8 @@ interface StubRow {
   lands: string;
 }
 
-/** Settings rows per spec §5; every stub is labeled with its milestone. */
+/** Settings rows per spec §5; every remaining stub is labeled with its milestone. */
 const STUB_ROWS: StubRow[] = [
-  { label: 'Edit avatar base', lands: 'M8' },
   { label: 'Blocked users', lands: 'M10' },
   { label: 'Privacy Policy', lands: 'M10' },
   { label: 'Terms', lands: 'M10' },
@@ -34,6 +34,17 @@ export default function SettingsScreen() {
     <ErrorBoundary screen="Settings">
       <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
         <Text style={[textStyles.headerL, styles.title]}>Settings</Text>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/edit-avatar')}
+          style={styles.row}
+        >
+          <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
+            Edit avatar base
+          </Text>
+          <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
+        </Pressable>
 
         {STUB_ROWS.map((row) => (
           <Pressable
