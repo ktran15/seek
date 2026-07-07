@@ -1,17 +1,39 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { colors, spacing, textStyles } from '@/theme';
+import { FeedPlaceholder } from '@/features/feed/FeedPlaceholder';
+import { FEEDS, FeedTabs } from '@/features/feed/FeedTabs';
+import { spacing } from '@/theme';
 
-/** Home tab — 3-feed swipe lands in M2 sub-step 2. */
+/** Home (spec §5): horizontal swipe between Friends / FoF / Explore feeds. */
 export default function HomeScreen() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const pagerRef = useRef<PagerView>(null);
+
   return (
     <ErrorBoundary screen="Home">
       <View style={styles.container}>
-        <Text style={[textStyles.headerL, styles.title]}>Home</Text>
-        <Text style={[textStyles.body, styles.copy]}>
-          Friends / FoF / Explore feeds land next sub-step.
-        </Text>
+        <FeedTabs
+          activeIndex={activeIndex}
+          onSelect={(index) => {
+            setActiveIndex(index);
+            pagerRef.current?.setPage(index);
+          }}
+        />
+        <PagerView
+          ref={pagerRef}
+          style={styles.pager}
+          initialPage={0}
+          onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
+        >
+          {FEEDS.map((feed) => (
+            <View key={feed} style={styles.page}>
+              <FeedPlaceholder feedName={feed} />
+            </View>
+          ))}
+        </PagerView>
       </View>
     </ErrorBoundary>
   );
@@ -20,11 +42,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-    gap: spacing.xs,
+    paddingTop: spacing.xs,
   },
-  title: { color: colors.textPrimary },
-  copy: { color: colors.textSecondary, textAlign: 'center' },
+  pager: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+  },
 });
