@@ -52,6 +52,41 @@ export interface Database {
         };
         Relationships: [];
       };
+      friendships: {
+        Row: {
+          id: string;
+          requester_id: string;
+          addressee_id: string;
+          status: 'pending' | 'accepted' | 'declined';
+          created_at: string;
+          responded_at: string | null;
+        };
+        /** Client sends requests only; status starts 'pending' via default. */
+        Insert: {
+          requester_id: string;
+          addressee_id: string;
+        };
+        /** Addressee responds (RLS enforces); column grants limit the rest. */
+        Update: {
+          status: 'accepted' | 'declined';
+          responded_at?: string;
+        };
+        Relationships: [];
+      };
+      blocks: {
+        Row: {
+          id: string;
+          blocker_id: string;
+          blocked_id: string;
+          created_at: string;
+        };
+        Insert: {
+          blocker_id: string;
+          blocked_id: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       invites: {
         Row: {
           id: string;
@@ -72,7 +107,34 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_friend_ids: {
+        Args: Record<string, never>;
+        Returns: string[];
+      };
+      get_fof_profiles: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          username: string | null;
+          display_name: string | null;
+          avatar_config: AvatarConfig;
+        }[];
+      };
+      search_profiles: {
+        Args: { term: string };
+        Returns: {
+          id: string;
+          username: string | null;
+          display_name: string | null;
+          avatar_config: AvatarConfig;
+        }[];
+      };
+      is_blocked_pair: {
+        Args: { a: string; b: string };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

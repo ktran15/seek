@@ -4,16 +4,27 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M2 -- Navigation & screen skeletons** (spec sec 15, sec 5)
+## Current milestone: **M3 -- Friend graph & social core** (spec sec 15, sec 7.10, sec 11)
 
 | # | Sub-step | Status |
 |---|----------|--------|
-| 1 | Main tab shell: bottom bar (Profile/Home/Challenge), persistent top bar (Add Friends, Notifications), stub screens (add-friends, notifications, settings w/ sign-out) | ✅ done |
-| 2 | Home: 3-feed horizontal swipe (Friends / Friends-of-friends / Explore) | ✅ done |
-| 3 | Challenge: Mountain <-> Leaderboard horizontal swipe, 7-stop mountain placeholder | ✅ done |
-| 4 | Profile: header/tabs skeleton, swipe -> Shop w/ translucent edge hint, error boundaries per major screen | ✅ done |
+| 1 | DB migration: friendships + blocks tables (RLS, column grants), security-definer graph functions (friends / FoF / search, block-aware) | ✅ authored -- **founder must apply** (SQL Editor, same as M1) |
+| 2 | Pure TS graph helpers + jest setup + unit tests (friend/FoF/block set logic, request-state derivation) | ⬜ not started |
+| 3 | Add Friends screen: username search, request states (Add/Requested/Accept/Friends), invite entry point | ⬜ not started |
+| 4 | Notifications screen: pending requests w/ accept-decline; Profile friends count + invite button | ⬜ not started |
 
-**Next step:** M2 complete -- founder review, then M3 (friend graph & social core) after approval.
+**Next step:** M3 sub-step 2 -- graph helpers + unit tests.
+
+### ⚠️ Founder action before testing M3
+Apply `supabase/migrations/20260706000002_m3_friendships_blocks_graph.sql` via Dashboard -> SQL Editor (copy from the file on disk, not from chat).
+
+<details><summary>M2 -- Navigation & skeletons (complete, founder-verified; tabs reordered Challenge/Home/Profile)</summary>
+
+Tab shell + top bar, Home 3-feed swipe, Challenge Mountain<->Leaderboard swipe
+w/ data-driven 7-stop mountain, Profile skeleton + swipe->Shop, error
+boundaries, stub screens (add-friends / notifications / settings).
+
+</details>
 
 <details><summary>M1 -- Auth & onboarding (complete, founder-verified)</summary>
 
@@ -46,8 +57,9 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 ## Milestone status
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
 - M1: **complete — founder-verified**
-- M2: **complete — awaiting founder review**
-- M3–M14: not started (do not work ahead — founder reviews after each milestone)
+- M2: **complete — founder-verified**
+- M3: **in progress**
+- M4–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Invite coin reward (+50) NOT paid yet — coins ledger is M7; the invite row is recorded now.
