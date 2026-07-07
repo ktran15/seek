@@ -5,6 +5,7 @@ import PagerView from 'react-native-pager-view';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { FeedPlaceholder } from '@/features/feed/FeedPlaceholder';
 import { FEEDS, FeedTabs } from '@/features/feed/FeedTabs';
+import { FriendsFeed } from '@/features/feed/FriendsFeed';
 import { spacing } from '@/theme';
 
 /** Home (spec §5): horizontal swipe between Friends / FoF / Explore feeds. */
@@ -28,9 +29,9 @@ export default function HomeScreen() {
           initialPage={0}
           onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
         >
-          {FEEDS.map((feed) => (
+          {FEEDS.map((feed, index) => (
             <View key={feed} style={styles.page}>
-              <FeedPlaceholder feedName={feed} />
+              {index === 0 ? <FriendsFeed /> : <FeedPlaceholder feedName={feed} />}
             </View>
           ))}
         </PagerView>
