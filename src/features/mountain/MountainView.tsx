@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { getAsset } from '@/assets/registry';
+import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
 import { useMySubmissions } from '@/features/challenge/useChallenge';
 import { currentBetaDay, dayState, type DayState } from '@/lib/betaCalendar';
@@ -52,6 +53,13 @@ export function MountainView() {
 
   return (
     <View style={styles.container} onLayout={onLayout}>
+      <Text style={[textStyles.headerS, styles.dayBanner]}>
+        {today === 0
+          ? `Beta starts ${config.beta.startDate} — check your device date`
+          : today > config.beta.lengthDays
+            ? 'Beta complete — thanks for climbing'
+            : `Day ${today} of ${config.beta.lengthDays}`}
+      </Text>
       <ImageBackground
         source={getAsset('mountainBackground')}
         style={styles.mountain}
@@ -117,6 +125,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     margin: spacing.md,
+  },
+  dayBanner: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
   },
   mountain: {
     flex: 1,
