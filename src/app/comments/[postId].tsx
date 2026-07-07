@@ -1,4 +1,6 @@
 import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Keyboard } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useSession } from '@/features/auth/useSession';
@@ -29,15 +31,36 @@ export default function CommentsScreen() {
   const { data: myProfile } = useProfile(userId);
   const navigation = useNavigation();
 
-  // Founder polish fix 3: tapping the input bar expands the sheet to the
-  // full detent (native slide-up — respects system reduce-motion) with the
-  // keyboard already focused. Restoring both detents on blur keeps the
-  // sheet large but lets the user drag back down to the partial height.
+  // Tap-to-expand, smooth (founder refinement 1): UIKit already slides the
+  // sheet up WITH the keyboard using the sheet's own spring — the same
+  // animator as the comment-button open. Changing detents mid-animation is
+  // what caused the instant jump, so we pin the full detent only AFTER the
+  // keyboard animation settles (a visual no-op by then; it just keeps the
+  // sheet expanded). Native animations respect system Reduce Motion.
+  //
+  // Two-stage collapse (refinement 2): while typing, the sheet's dismiss
+  // gesture is disabled — a downward swipe can only scroll the list, whose
+  // keyboardDismissMode drops the keyboard (stage 1, sheet stays expanded).
+  // On blur the gesture returns and the pinned single detent means the next
+  // swipe-down closes the whole sheet (stage 2) — never both in one swipe.
+  const pinSub = useRef<{ remove: () => void } | null>(null);
   const onInputFocusChange = (focused: boolean) => {
-    navigation.setOptions({
-      sheetAllowedDetents: focused ? [0.95] : [0.6, 0.95],
-    });
+    if (focused) {
+      pinSub.current?.remove();
+      const sub = Keyboard.addListener('keyboardDidShow', () => {
+        sub.remove();
+        pinSub.current = null;
+        navigation.setOptions({
+          sheetAllowedDetents: [0.95],
+          gestureEnabled: false,
+        });
+      });
+      pinSub.current = sub;
+    } else {
+      navigation.setOptions({ gestureEnabled: true });
+    }
   };
+  useEffect(() => () => pinSub.current?.remove(), []);
 
   const { data: comments, isLoading, error, refetch, isRefetching } = useComments(postId);
   const addComment = useAddComment(userId);

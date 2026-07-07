@@ -11,6 +11,15 @@
 
 **On-device checks:** tap the dimmed post → sheet slides down; focus input at partial height → sheet slides to full with keyboard attached, zero gap above the keyboard while typing; dismiss keyboard → bar settles flush above the home indicator; iOS Reduce Motion on → no keyboard-ride animation, everything still lands in place.
 
+### Round 2 refinements (founder-directed, pre-M9) — on `main`
+1. **Smooth tap-to-expand** — the jump came from changing detents mid-keyboard-animation. Now UIKit's own keyboard-driven sheet slide (the same spring as the sheet open) does the expansion; the full-detent pin applies only after `keyboardDidShow` (visual no-op that keeps the sheet expanded).
+2. **Two-stage collapse, in order** — while typing, the sheet's dismiss gesture is OFF and the list uses `keyboardDismissMode="on-drag"`: swipe #1 drops only the keyboard (sheet stays expanded). On blur the gesture returns and the sheet is pinned to the single full detent, so swipe #2 closes the whole sheet. Never both in one swipe.
+3. **Posting feedback** — a sent comment appears immediately as a dimmed row with a spinner + "Posting…", placed in its thread (replies auto-expand their thread), then settles into the real row via an ease layout transition when the server thread catches up; failure removes it and alerts. Empty state suppressed while the first comment posts.
+4. **Collapsed replies** — threads show the first reply only; "View X more replies" (with divider rule, IG-style) expands the rest with an ease transition.
+All LayoutAnimation transitions are skipped under Reduce Motion (`useReducedMotion`); native sheet/keyboard animations follow the system setting.
+
+**On-device checks (round 2):** tap input at partial height → one continuous slide to full, identical feel to the button-open; swipe down while typing → keyboard drops, sheet stays big; swipe down again → sheet closes; post a comment → dimmed "Posting…" row → settles solid; post a reply into a collapsed thread → thread expands and shows it; a thread with 3 replies shows 1 + "View 2 more replies".
+
 ## Current milestone: **M8 — Avatar & cosmetics** (spec §10, §15) — branch `m8-avatar-and-cosmetics`
 
 | # | Sub-step | Status |

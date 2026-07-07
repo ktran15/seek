@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -85,6 +86,16 @@ interface ReplyTarget {
   /** Top-level thread the reply lands in (replies to replies stay flat). */
   threadId: string;
   name: string;
+}
+
+/** A just-sent comment shown at reduced opacity until the server row lands
+ *  (founder refinement 3 — IG-style posting feedback, no hard cut). */
+interface PendingComment {
+  body: string;
+  imageUri: string | null;
+  threadId?: string;
+  /** Thread count at send time — the pending row clears once it grows. */
+  countAtSend: number;
 }
 
 export interface CommentSendInput {
@@ -206,6 +217,10 @@ export function CommentSheet({
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [sending, setSending] = useState(false);
   const [dockHeight, setDockHeight] = useState(0);
+  const [pending, setPending] = useState<PendingComment | null>(null);
+  // Threads showing all replies (founder refinement 4 — default is first
+  // reply + "View X more replies").
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
 
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
@@ -225,6 +240,26 @@ export function CommentSheet({
   const topLevel = (comments ?? []).filter((c) => c.parent_comment_id === null);
   const repliesOf = (id: string) =>
     (comments ?? []).filter((c) => c.parent_comment_id === id);
+
+  // Settle the pending row once the refetched thread includes the new
+  // comment — a soft layout transition instead of a hard cut (skipped under
+  // reduced motion; the swap still happens, just without animation).
+  const commentCount = comments?.length ?? 0;
+  useEffect(() => {
+    if (pending && commentCount > pending.countAtSend) {
+      if (!reducedMotion) {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+      setPending(null);
+    }
+  }, [commentCount, pending, reducedMotion]);
+
+  const expandThread = (threadId: string) => {
+    if (!reducedMotion) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setExpandedThreads((prev) => new Set(prev).add(threadId));
+  };
 
   const startReply = (comment: CommentView) =>
     setReplyTo({
@@ -246,21 +281,60 @@ export function CommentSheet({
   const send = async () => {
     if (!canSend) return;
     setSending(true);
+    const staged: PendingComment = {
+      body: draft.trim(),
+      imageUri,
+      threadId: replyTo?.threadId,
+      countAtSend: commentCount,
+    };
+    // The comment appears immediately as a dimmed "posting" row and settles
+    // when the server thread catches up (founder refinement 3).
+    if (!reducedMotion) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setPending(staged);
+    // A reply into a collapsed thread must be visible right away.
+    if (staged.threadId) expandThread(staged.threadId);
     try {
       await onSend({
-        body: draft.trim(),
-        parentThreadId: replyTo?.threadId,
-        imageUri,
+        body: staged.body,
+        parentThreadId: staged.threadId,
+        imageUri: staged.imageUri,
       });
       setDraft('');
       setImageUri(null);
       setReplyTo(null);
     } catch (e) {
+      setPending(null);
       Alert.alert('Comment not posted', e instanceof Error ? e.message : 'Try again.');
     } finally {
       setSending(false);
     }
   };
+
+  const pendingRow = (staged: PendingComment) => (
+    <View style={[styles.row, staged.threadId ? styles.rowReply : null, styles.rowPending]}>
+      <View style={[styles.avatar, staged.threadId ? styles.avatarSmall : null]}>
+        <Text style={[textStyles.headerS, styles.avatarLetter]}>{myInitial}</Text>
+      </View>
+      <View style={styles.commentBlock}>
+        <View style={styles.postingLine}>
+          <ActivityIndicator size="small" color={colors.textSecondary} />
+          <Text style={[textStyles.caption, styles.name]}>Posting…</Text>
+        </View>
+        {staged.body.length > 0 && (
+          <Text style={[textStyles.body, styles.body]}>{staged.body}</Text>
+        )}
+        {staged.imageUri && (
+          <Image
+            source={{ uri: staged.imageUri }}
+            style={styles.commentImage}
+            resizeMode="cover"
+          />
+        )}
+      </View>
+    </View>
+  );
 
   return (
     <>
@@ -278,32 +352,64 @@ export function CommentSheet({
           { paddingBottom: dockHeight + spacing.sm },
         ]}
         keyboardShouldPersistTaps="handled"
+        // Stage-1 collapse (founder refinement 2): while typing the sheet's
+        // dismiss gesture is off, so a downward drag scrolls the list and
+        // this drops ONLY the keyboard.
+        keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={[textStyles.headerS, styles.title]}>Comments</Text>
           </View>
         }
         stickyHeaderIndices={[0]}
-        renderItem={({ item }) => (
-          <View style={styles.thread}>
-            <CommentRow
-              comment={item}
-              isReply={false}
-              onLike={() => onToggleLike(item)}
-              onReply={() => startReply(item)}
-            />
-            {repliesOf(item.id).map((reply) => (
+        renderItem={({ item }) => {
+          // Collapsed threads (founder refinement 4): first reply inline,
+          // the rest behind "View X more replies".
+          const replies = repliesOf(item.id);
+          const expanded = expandedThreads.has(item.id);
+          const visibleReplies = expanded ? replies : replies.slice(0, 1);
+          const hiddenCount = replies.length - visibleReplies.length;
+          return (
+            <View style={styles.thread}>
               <CommentRow
-                key={reply.id}
-                comment={reply}
-                isReply
-                onLike={() => onToggleLike(reply)}
-                onReply={() => startReply(reply)}
+                comment={item}
+                isReply={false}
+                onLike={() => onToggleLike(item)}
+                onReply={() => startReply(item)}
               />
-            ))}
-          </View>
-        )}
+              {visibleReplies.map((reply) => (
+                <CommentRow
+                  key={reply.id}
+                  comment={reply}
+                  isReply
+                  onLike={() => onToggleLike(reply)}
+                  onReply={() => startReply(reply)}
+                />
+              ))}
+              {hiddenCount > 0 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${hiddenCount} more replies`}
+                  onPress={() => expandThread(item.id)}
+                  style={styles.moreReplies}
+                >
+                  <View style={styles.moreRepliesRule} />
+                  <Text style={[textStyles.caption, styles.moreRepliesLabel]}>
+                    View {hiddenCount} more {hiddenCount === 1 ? 'reply' : 'replies'}
+                  </Text>
+                </Pressable>
+              )}
+              {pending?.threadId === item.id && pendingRow(pending)}
+            </View>
+          );
+        }}
+        ListFooterComponent={
+          pending && !pending.threadId ? pendingRow(pending) : null
+        }
         ListEmptyComponent={
+          // While the first-ever comment is posting, the pending footer row
+          // is the content — don't show "No comments yet" under it.
+          pending ? null : (
           <View style={styles.empty}>
             {isLoading ? (
               <Text style={[textStyles.headerL, styles.emptyTitle]}>Loading…</Text>
@@ -335,6 +441,7 @@ export function CommentSheet({
               </>
             )}
           </View>
+          )
         }
       />
 
@@ -468,6 +575,33 @@ const styles = StyleSheet.create({
   rowReply: {
     marginLeft: spacing.xl,
     marginTop: spacing.xs,
+  },
+  rowPending: {
+    opacity: 0.55,
+    marginTop: spacing.xs,
+  },
+  postingLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+  },
+  moreReplies: {
+    minHeight: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginLeft: spacing.xl,
+    marginTop: spacing.xxs,
+  },
+  moreRepliesRule: {
+    width: 28,
+    height: 1,
+    backgroundColor: colors.textSecondary,
+    opacity: 0.5,
+  },
+  moreRepliesLabel: {
+    color: colors.textSecondary,
+    fontWeight: '700',
   },
   avatar: {
     width: 36,
