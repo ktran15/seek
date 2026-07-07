@@ -10,10 +10,10 @@
 |---|----------|--------|
 | 1 | Main tab shell: bottom bar (Profile/Home/Challenge), persistent top bar (Add Friends, Notifications), stub screens (add-friends, notifications, settings w/ sign-out) | ✅ done |
 | 2 | Home: 3-feed horizontal swipe (Friends / Friends-of-friends / Explore) | ✅ done |
-| 3 | Challenge: Mountain <-> Leaderboard horizontal swipe, 7-stop mountain placeholder | ⬜ not started |
+| 3 | Challenge: Mountain <-> Leaderboard horizontal swipe, 7-stop mountain placeholder | ✅ done |
 | 4 | Profile: header/tabs skeleton, swipe -> Shop w/ translucent edge hint, error boundaries per major screen | ⬜ not started |
 
-**Next step:** M2 sub-step 3 -- Challenge Mountain <-> Leaderboard swipe.
+**Next step:** M2 sub-step 4 -- Profile skeleton + swipe to Shop.
 
 <details><summary>M1 -- Auth & onboarding (complete, founder-verified)</summary>
 

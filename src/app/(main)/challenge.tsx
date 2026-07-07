@@ -1,17 +1,61 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { colors, spacing, textStyles } from '@/theme';
+import { LeaderboardPlaceholder } from '@/features/leaderboard/LeaderboardPlaceholder';
+import { MountainView } from '@/features/mountain/MountainView';
+import { colors, radii, spacing, textStyles } from '@/theme';
 
-/** Challenge tab — Mountain ↔ Leaderboard swipe lands in M2 sub-step 3. */
+const PAGES = ['Mountain', 'Leaderboard'] as const;
+
+/** Challenge tab (spec §5): swipe between Mountain (default) and Leaderboard. */
 export default function ChallengeScreen() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const pagerRef = useRef<PagerView>(null);
+
   return (
     <ErrorBoundary screen="Challenge">
       <View style={styles.container}>
-        <Text style={[textStyles.headerL, styles.title]}>Challenge</Text>
-        <Text style={[textStyles.body, styles.copy]}>
-          Mountain and Leaderboard land next sub-steps.
-        </Text>
+        <View style={styles.switcher}>
+          {PAGES.map((page, index) => {
+            const active = index === activeIndex;
+            return (
+              <Pressable
+                key={page}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                onPress={() => {
+                  setActiveIndex(index);
+                  pagerRef.current?.setPage(index);
+                }}
+                style={[styles.switchTab, active && styles.switchTabActive]}
+              >
+                <Text
+                  style={[
+                    textStyles.headerS,
+                    active ? styles.switchLabelActive : styles.switchLabel,
+                  ]}
+                >
+                  {page}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <PagerView
+          ref={pagerRef}
+          style={styles.pager}
+          initialPage={0}
+          onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
+        >
+          <View key="mountain" style={styles.page}>
+            <MountainView />
+          </View>
+          <View key="leaderboard" style={styles.page}>
+            <LeaderboardPlaceholder />
+          </View>
+        </PagerView>
       </View>
     </ErrorBoundary>
   );
@@ -20,11 +64,36 @@ export default function ChallengeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: spacing.xs,
+  },
+  switcher: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    padding: spacing.xxs,
+    gap: spacing.xxs,
+  },
+  switchTab: {
+    flex: 1,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.lg,
-    gap: spacing.xs,
+    borderRadius: radii.pill,
   },
-  title: { color: colors.textPrimary },
-  copy: { color: colors.textSecondary, textAlign: 'center' },
+  switchTabActive: {
+    backgroundColor: colors.primary,
+  },
+  switchLabel: {
+    color: colors.textSecondary,
+  },
+  switchLabelActive: {
+    color: colors.textOnPrimary,
+  },
+  pager: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+  },
 });
