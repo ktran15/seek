@@ -4,7 +4,20 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current: **M7 comment-section bug-fix pass** (founder-directed) — branch `m7-comment-fixes`
+## Current milestone: **M8 — Avatar & cosmetics** (spec §10, §15) — branch `m8-avatar-and-cosmetics`
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Pure layer-resolution logic + unit tests: 8-slot z-order, jacket-closed rule (jacket occludes shirt), base shirt/pants/backpack fallbacks, stale-cosmetic-id safety (7 tests) | ✅ done |
+| 2 | AvatarPreview v2: renders equipped cosmetics as placeholder layers (rarity-tinted, slot-shaped) over the base; onboarding usage unchanged | ⬜ not started |
+| 3 | Inventory equip/preview: tap cosmetic → preview on avatar → EQUIP/UNEQUIP persists to `avatar_config.equipped` (client-updatable column, M1 grants) | ⬜ not started |
+| 4 | Settings → Edit avatar base screen (skin/eyes/hair/hair color pickers + live preview, SAVE persists) | ⬜ not started |
+
+**Next step:** M8 sub-step 2 — AvatarPreview v2 (cosmetic layers).
+
+<details><summary>M7 comment-section bug-fix pass (complete — merged to main via PR #1)</summary>
+
+### was: **M7 comment-section bug-fix pass** (founder-directed) — branch `m7-comment-fixes`
 
 Two founder-reported defects in the M6.1 comment sheet. No redesign — targeted fixes.
 
@@ -37,7 +50,11 @@ Until day-close is redeployed it still runs the pre-M7 code: matches resolve but
 - **Idle composer:** bar sits flush at the sheet bottom, just above the home indicator — no dead gap, no hard-coded margin.
 - **Keyboard:** tap the input → the sheet rises with the keyboard and the bar sits directly on top of it — no gap, no overshoot (iMessage feel). Dismiss → settles back flush.
 
-## Previous milestone: **M7 — Economy & crates** (spec §9, §15) — on `main` (founder pre-approved 2026-07-07)
+</details>
+
+<details><summary>M7 — Economy & crates (complete — merged to main; 2 founder deploys still open)</summary>
+
+### was: **M7 — Economy & crates** (spec §9, §15) — on `main` (founder pre-approved 2026-07-07)
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -71,6 +88,8 @@ Until day-close is redeployed it still runs the pre-M7 code: matches resolve but
 - **Invite reward is uncapped** per spec §7.8 (reward on send). A determined user could farm +50s by re-sharing; beta-acceptable, flagged for v1.1.
 - Crate purchases run through a `buy_crate` RPC (SECURITY DEFINER, row-locked, balance floor enforced by the ledger trigger) — server-side per §2.1; the gacha **roll** stays in the crate-open Edge Function per §9.4 LOCKED.
 - Migration retro-awards completions/invites that predate the ledgers (the client had been showing "+50 coins" from config since M4).
+
+</details>
 
 <details><summary>M6 — Feed & interactions (complete — founder retesting M6.1) </summary>
 
