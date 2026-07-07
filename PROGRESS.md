@@ -4,7 +4,26 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M6 — Feed & interactions** (spec §5, §11, §15) — branch `m6-feed-and-interactions`
+## Current milestone: **M7 — Economy & crates** (spec §9, §15) — on `main` (founder pre-approved 2026-07-07)
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | DB migration: coins_ledger + points_ledger (append-only, balance trigger), crates, cosmetics catalog (seeded) + user_cosmetics, completion/invite award triggers, buy_crate + open_crate_apply RPCs, economy in app_settings, award backfill | ✅ authored — **founder must apply** |
+| 2 | Pure logic, unit-tested: gacha rarity roll (injectable RNG), vote-placement → reward mapping, drop-rate validation, dupe refund | ⬜ not started |
+| 3 | Edge Functions: crate-open (the roll); award wiring into h2h-pair/day-close (H2H win → blue crate + coins/points; CV placements → red/yellow crates + coins/points) | ⬜ not started |
+| 4 | Client: Shop grid (buy w/ live coin balance), Inventory (unopened crates → open reveal, owned cosmetics), post-submit sequence on real award rows | ⬜ not started |
+
+**Next step:** M7 sub-step 2 — pure gacha/placement logic + unit tests.
+
+### M7 decisions so far (flag for founder)
+- **Completion award pays on submission, pass or fail** (a failed day-2 Wordle or missed day-6 photo still "did the challenge"; spec §9.1 says "complete daily challenge"). Easy to flip to passed-only — say the word.
+- **Invite reward is uncapped** per spec §7.8 (reward on send). A determined user could farm +50s by re-sharing; beta-acceptable, flagged for v1.1.
+- Crate purchases run through a `buy_crate` RPC (SECURITY DEFINER, row-locked, balance floor enforced by the ledger trigger) — server-side per §2.1; the gacha **roll** stays in the crate-open Edge Function per §9.4 LOCKED.
+- Migration retro-awards completions/invites that predate the ledgers (the client had been showing "+50 coins" from config since M4).
+
+<details><summary>M6 — Feed & interactions (complete — founder retesting M6.1) </summary>
+
+### was: **M6 — Feed & interactions** (spec §5, §11, §15) — branch `m6-feed-and-interactions`
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -43,7 +62,9 @@
 - **Block:** overflow → Block user → their posts vanish from all three feeds, suggestions, and vote surfaces — both directions (check from the other account too).
 - **Suggestions:** "Suggestions to add" strip woven into Friends/FoF feeds (after the 2nd post, or in the empty state); ADD sends a request and flips to REQUESTED.
 
-<details><summary>M5 — H2H & community vote (complete — awaiting founder review) — branch merged to main</summary>
+</details>
+
+<details><summary>M5 — H2H & community vote (complete) — branch merged to main</summary>
 
 | # | Sub-step | Status |
 |---|----------|--------|
