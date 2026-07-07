@@ -18,37 +18,42 @@
 **Next step:** M5 complete — founder review (apply migration + deploy functions + schedule cron below), then M6 after approval.
 
 ### ⚠️ Founder actions before testing M5
-1. **Apply the migration** `supabase/migrations/20260707000001_m5_h2h_votes_notifications.sql` via Dashboard → SQL Editor (paste the whole file).
-2. **Deploy the Edge Functions** (needs `npx supabase login` + `npx supabase link --project-ref aducawlftwdowvsnryar` once):
-   ```
-   npx supabase functions deploy h2h-pair
-   npx supabase functions deploy vote-feed
-   npx supabase functions deploy day-close --no-verify-jwt
-   ```
-   (day-close validates the service-role key itself — it is cron/founder-invoked, never user-invoked.)
-3. **Schedule day-close** (SQL Editor; replace `<SERVICE_ROLE_KEY>` from Dashboard → Settings → API — never commit it):
+1. ✅ **Migration applied** (founder, 2026-07-07).
+2. ✅ **Edge Functions deployed** (2026-07-07): h2h-pair + vote-feed (JWT-verified), day-close (no-verify-jwt; validates the service-role key itself). Redeploy after any change: `npx supabase functions deploy <name>` (day-close adds `--no-verify-jwt`).
+3. ⬜ **Schedule day-close** — one paste in Dashboard → SQL Editor. Replace `PASTE_KEY_HERE` with the `service_role` key (Project Settings → API keys; the long `eyJ…` one). The key is stored encrypted in the DB vault, never in the repo:
    ```sql
    create extension if not exists pg_cron;
    create extension if not exists pg_net;
+
+   select vault.create_secret('PASTE_KEY_HERE', 'service_role_key');
+
    select cron.schedule(
      'seek-day-close',
      '5 4 * * *',  -- 04:05 UTC = 00:05 America/New_York during EDT (the beta)
      $$
      select net.http_post(
        url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/day-close',
-       headers := jsonb_build_object('Content-Type','application/json',
-                                     'Authorization','Bearer <SERVICE_ROLE_KEY>'),
+       headers := jsonb_build_object(
+         'Content-Type', 'application/json',
+         'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+       ),
        body := '{}'::jsonb,
        timeout_milliseconds := 30000
      );
      $$
    );
    ```
-4. **Manual close for testing** (don't wait for midnight — close any day on demand):
-   ```
-   curl -X POST 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/day-close' \
-     -H 'Authorization: Bearer <SERVICE_ROLE_KEY>' \
-     -H 'Content-Type: application/json' -d '{"beta_day": 1}'
+4. **Manual close for testing** (don't wait for midnight — run in SQL Editor after step 3; change beta_day as needed):
+   ```sql
+   select net.http_post(
+     url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/day-close',
+     headers := jsonb_build_object(
+       'Content-Type', 'application/json',
+       'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+     ),
+     body := '{"beta_day": 1}'::jsonb,
+     timeout_milliseconds := 30000
+   );
    ```
 
 ### M5 test guide (3 accounts: A + B friends, C friendless)
@@ -122,7 +127,7 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - Invite coin reward (+50) not paid yet (M7); invite row recorded now. Share URL is a founder-set placeholder until TestFlight (M14).
 - joined_beta_day + vote window compute from app_settings.beta — keep in sync with src/config beta.startDate. Mascot targets likewise (app_settings.mascot ↔ src/config mascot.targets).
 
-## Notes / decisions this milestone (founder can veto any of these)
+## Notes / decisions this milestone (✅ founder-approved 2026-07-07)
 - **Friend-match ties → earlier submission wins** (extends the day-5 LOCKED tie rule to all H2H days; a resolved match must always have a winner — the schema has no draw state).
 - **Ties vs. the mascot's target → user wins** (spec §7.9 framing: friendly rival, never punishment).
 - **Zero votes never places** in the CV tally (otherwise a friend group where nobody voted would all "win 1st").
