@@ -9,11 +9,11 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | DB migration: friendships + blocks tables (RLS, column grants), security-definer graph functions (friends / FoF / search, block-aware) | ✅ authored -- **founder must apply** (SQL Editor, same as M1) |
-| 2 | Pure TS graph helpers + jest setup + unit tests (friend/FoF/block set logic, request-state derivation) | ⬜ not started |
+| 2 | Pure TS graph helpers + jest setup + unit tests (friend/FoF/block set logic, request-state derivation) | ✅ done (16 tests) |
 | 3 | Add Friends screen: username search, request states (Add/Requested/Accept/Friends), invite entry point | ⬜ not started |
 | 4 | Notifications screen: pending requests w/ accept-decline; Profile friends count + invite button | ⬜ not started |
 
-**Next step:** M3 sub-step 2 -- graph helpers + unit tests.
+**Next step:** M3 sub-step 3 -- Add Friends screen.
 
 ### ⚠️ Founder action before testing M3
 Apply `supabase/migrations/20260706000002_m3_friendships_blocks_graph.sql` via Dashboard -> SQL Editor (copy from the file on disk, not from chat).
