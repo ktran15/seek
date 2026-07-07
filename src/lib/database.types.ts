@@ -223,6 +223,78 @@ export interface Database {
         };
         Relationships: [];
       };
+      feed_posts: {
+        Row: {
+          id: string;
+          submission_id: string;
+          author_id: string;
+          beta_day: number;
+          like_count: number;
+          comment_count: number;
+          removed: boolean;
+          created_at: string;
+        };
+        /** Created by the submissions trigger — never by the client. */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      reactions: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          type: 'like';
+          created_at: string;
+        };
+        Insert: {
+          post_id: string;
+          user_id: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          body: string;
+          removed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          post_id: string;
+          user_id: string;
+          body: string;
+        };
+        /** No client edits in v1; removal is the admin path (spec §12). */
+        Update: never;
+        Relationships: [];
+      };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          post_id: string | null;
+          comment_id: string | null;
+          reported_user_id: string | null;
+          reason: 'inappropriate' | 'spam' | 'fake_proof' | 'harassment' | 'other';
+          details: string | null;
+          status: 'open' | 'actioned' | 'dismissed';
+          created_at: string;
+        };
+        Insert: {
+          reporter_id: string;
+          post_id?: string;
+          comment_id?: string;
+          reported_user_id?: string;
+          reason: 'inappropriate' | 'spam' | 'fake_proof' | 'harassment' | 'other';
+          details?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       invites: {
         Row: {
           id: string;
@@ -273,6 +345,10 @@ export interface Database {
       cast_vote: {
         Args: { target_submission_id: string };
         Returns: undefined;
+      };
+      can_view_post: {
+        Args: { pid: string };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

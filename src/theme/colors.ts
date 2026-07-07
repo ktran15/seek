@@ -56,6 +56,8 @@ export const colors = {
   accent: palette.chestnut,
   /** Deep shadow / accent. */
   shadow: palette.darkSienna,
+  /** Translucent dark scrim for overlays on media (gallery chrome). */
+  scrim: 'rgba(35, 56, 55, 0.55)',
 
   /** Errors/destructive — warm, in-palette (no new reds). */
   danger: palette.vermillon,

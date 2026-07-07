@@ -3,10 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { FeedPlaceholder } from '@/features/feed/FeedPlaceholder';
+import { Feed } from '@/features/feed/Feed';
 import { FEEDS, FeedTabs } from '@/features/feed/FeedTabs';
-import { FriendsFeed } from '@/features/feed/FriendsFeed';
+import type { FeedScope } from '@/features/feed/useFeed';
 import { spacing } from '@/theme';
+
+const FEED_SCOPES: readonly FeedScope[] = ['friends', 'fof', 'explore'];
 
 /** Home (spec §5): horizontal swipe between Friends / FoF / Explore feeds. */
 export default function HomeScreen() {
@@ -31,7 +33,7 @@ export default function HomeScreen() {
         >
           {FEEDS.map((feed, index) => (
             <View key={feed} style={styles.page}>
-              {index === 0 ? <FriendsFeed /> : <FeedPlaceholder feedName={feed} />}
+              <Feed scope={FEED_SCOPES[index] as FeedScope} />
             </View>
           ))}
         </PagerView>

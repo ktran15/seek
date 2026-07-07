@@ -1,92 +1,192 @@
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { config } from '@/config';
+import { useSession } from '@/features/auth/useSession';
+import { betaDayInTimezone } from '@/lib/globalClock';
 import { colors, elevation, radii, spacing, textStyles } from '@/theme';
 
-import type { MyPost, ProofMedia } from './useMyPosts';
+import { MediaCarousel } from './MediaCarousel';
+import {
+  useBlockUser,
+  useReport,
+  useToggleLike,
+  type FeedPost,
+  type ReportReason,
+} from './useFeed';
 
-const MEDIA_HEIGHT = 320;
+const REPORT_REASONS: { label: string; reason: ReportReason }[] = [
+  { label: 'Inappropriate content', reason: 'inappropriate' },
+  { label: 'Spam', reason: 'spam' },
+  { label: 'Not real proof', reason: 'fake_proof' },
+  { label: 'Harassment', reason: 'harassment' },
+  { label: 'Something else', reason: 'other' },
+];
 
-function VideoProof({ url }: { url: string }) {
-  const player = useVideoPlayer(url);
-  return (
-    <VideoView
-      player={player}
-      style={styles.media}
-      contentFit="cover"
-      nativeControls
-    />
-  );
+function scoreCaption(post: FeedPost): string | null {
+  switch (post.challenge.capture_type) {
+    case 'timer_video':
+      return post.score !== null ? `${post.score}s` : null;
+    case 'screenshot_plus_count':
+      return post.score !== null ? `${post.score} guesses` : null;
+    case 'multi_photo_count':
+      return `${post.media.length} photo${post.media.length === 1 ? '' : 's'}`;
+    case 'camera_video':
+      return post.difficulty === 'hard' && post.score !== null
+        ? `${post.score} made`
+        : null;
+    default:
+      return null;
+  }
 }
 
-function MediaBlock({ media }: { media: ProofMedia[] }) {
-  if (media.length === 0) {
-    return (
-      <View style={[styles.media, styles.mediaEmpty]}>
-        <Text style={[textStyles.caption, styles.muted]}>Loading proof…</Text>
-      </View>
-    );
-  }
-  const first = media[0] as ProofMedia;
-  if (media.length === 1) {
-    return first.kind === 'video' ? (
-      <VideoProof url={first.url} />
-    ) : (
-      <Image source={{ uri: first.url }} style={styles.media} resizeMode="cover" />
-    );
-  }
-  // Multi-photo (day 5): simple swipeable strip — full carousel/gallery is M6.
-  return (
-    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-      {media.map((m) => (
-        <Image
-          key={m.path}
-          source={{ uri: m.url }}
-          style={[styles.media, styles.mediaPage]}
-          resizeMode="cover"
-        />
-      ))}
-    </ScrollView>
-  );
-}
+/** A submitted proof as a full feed post (spec §5, §11): like, comment,
+ *  overflow report/block, day-5 carousel/gallery, day-3 vote chip. */
+export function PostCard({ post }: { post: FeedPost }) {
+  const router = useRouter();
+  const { session } = useSession();
+  const userId = session?.user.id;
+  const toggleLike = useToggleLike(userId);
+  const report = useReport(userId);
+  const blockUser = useBlockUser(userId);
 
-/** A submitted proof rendered as a feed post (own posts today; friends' in M6). */
-export function PostCard({
-  post,
-  displayName,
-  username,
-}: {
-  post: MyPost;
-  displayName: string;
-  username: string;
-}) {
-  const { submission, challenge, media } = post;
+  const name = post.author.display_name || post.author.username;
+  // Vote chip (spec §5): day-3 CV posts carry a Vote entry while the global
+  // EST window is open. Own post can't be voted for (spec §7.7).
+  const voteOpen =
+    post.challenge.mode === 'CV' &&
+    !post.is_own &&
+    betaDayInTimezone(config.beta.startDate, config.beta.timezone) === 3;
+
+  const onReport = () => {
+    Alert.alert('Report post', 'Why are you reporting this post?', [
+      ...REPORT_REASONS.map(({ label, reason }) => ({
+        text: label,
+        onPress: () =>
+          report.mutate(
+            { reason, postId: post.post_id },
+            {
+              onSuccess: () =>
+                Alert.alert('Thanks', 'Your report is in — we review every one.'),
+              onError: () => Alert.alert('Report failed', 'Please try again.'),
+            },
+          ),
+      })),
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  };
+
+  const onBlock = () => {
+    Alert.alert(
+      `Block ${name}?`,
+      'They disappear from your feeds, suggestions, matchups, and votes — and you from theirs.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: () =>
+            blockUser.mutate(post.author.id, {
+              onError: () => Alert.alert('Block failed', 'Please try again.'),
+            }),
+        },
+      ],
+    );
+  };
+
+  const onOverflow = () => {
+    Alert.alert(name, undefined, [
+      { text: 'Report post', onPress: onReport },
+      { text: 'Block user', style: 'destructive', onPress: onBlock },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const caption = scoreCaption(post);
 
   return (
     <View style={[styles.card, elevation.card]}>
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={[textStyles.headerS, styles.avatarInitial]}>
-            {(displayName || username || '?').slice(0, 1).toUpperCase()}
+            {(name || '?').slice(0, 1).toUpperCase()}
           </Text>
         </View>
         <View style={styles.nameBlock}>
           <Text style={[textStyles.bodyEmphasis, styles.name]} numberOfLines={1}>
-            {displayName || username}
+            {name}
           </Text>
           <Text style={[textStyles.caption, styles.muted]} numberOfLines={1}>
-            Day {submission.beta_day}
-            {challenge ? ` · ${challenge.title}` : ''}
+            Day {post.beta_day} · {post.challenge.title}
+            {caption ? ` · ${caption}` : ''}
           </Text>
         </View>
+        {!post.is_own && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Post options"
+            onPress={onOverflow}
+            hitSlop={8}
+            style={styles.overflow}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+          </Pressable>
+        )}
       </View>
 
-      <MediaBlock media={media} />
+      <MediaCarousel media={post.media} />
 
-      <Text style={[textStyles.caption, styles.muted]}>
-        {media.length > 1 ? `${media.length} photos · ` : ''}
-        Likes & comments arrive with the full feed (M6).
-      </Text>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={post.viewer_liked ? 'Unlike' : 'Like'}
+          accessibilityState={{ selected: post.viewer_liked }}
+          onPress={() =>
+            toggleLike.mutate({ postId: post.post_id, liked: post.viewer_liked })
+          }
+          style={styles.action}
+          hitSlop={8}
+        >
+          <Ionicons
+            name={post.viewer_liked ? 'heart' : 'heart-outline'}
+            size={24}
+            color={post.viewer_liked ? colors.primary : colors.textPrimary}
+          />
+          <Text style={[textStyles.bodyEmphasis, styles.actionCount]}>
+            {post.like_count}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Comments, ${post.comment_count}`}
+          onPress={() =>
+            router.push({
+              pathname: '/comments/[postId]',
+              params: { postId: post.post_id, name },
+            })
+          }
+          style={styles.action}
+          hitSlop={8}
+        >
+          <Ionicons name="chatbubble-outline" size={22} color={colors.textPrimary} />
+          <Text style={[textStyles.bodyEmphasis, styles.actionCount]}>
+            {post.comment_count}
+          </Text>
+        </Pressable>
+
+        {voteOpen && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Vote for ${name}`}
+            onPress={() => router.push('/vote')}
+            style={styles.voteChip}
+          >
+            <Text style={[textStyles.headerS, styles.voteChipLabel]}>VOTE</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -124,18 +224,37 @@ const styles = StyleSheet.create({
   muted: {
     color: colors.textSecondary,
   },
-  media: {
-    height: MEDIA_HEIGHT,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceNature,
-    width: '100%',
-  },
-  mediaPage: {
-    width: 280,
-    marginRight: spacing.xs,
-  },
-  mediaEmpty: {
+  overflow: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  action: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    minHeight: 44,
+  },
+  actionCount: {
+    color: colors.textPrimary,
+  },
+  voteChip: {
+    marginLeft: 'auto',
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.info,
+  },
+  voteChipLabel: {
+    color: colors.textOnDark,
+    fontSize: 14,
   },
 });

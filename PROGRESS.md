@@ -10,10 +10,29 @@
 |---|----------|--------|
 | 1 | DB migration: feed_posts (auto-created from submissions + backfill), reactions w/ counter triggers, comments, reports — RLS + grants | ✅ authored — **founder must apply** |
 | 2 | `feed` Edge Function: friends / FoF / explore visibility, explore like-count sort (current-day) w/ recency tiebreak, block-aware, signs ALL media paths | ✅ authored — **founder must deploy** |
-| 3 | Client: useFeed hook, PostCard v2 (like toggle, comment count, day-5 carousel + tap-to-gallery, overflow report/block, day-3 vote chip) | ⬜ not started |
-| 4 | Comments screen, friend suggestions woven into feeds, Home wired to real 3 feeds | ⬜ not started |
+| 3 | Client: useFeed hook, PostCard v2 (like toggle, comment count, day-5 carousel + tap-to-gallery, overflow report/block, day-3 vote chip) | ✅ done |
+| 4 | Comments screen, friend suggestions woven into feeds, Home wired to real 3 feeds | ✅ done |
 
-**Next step:** M6 sub-step 3 — client useFeed hook + PostCard v2.
+**Next step:** M6 complete — founder review (apply migration + deploy `feed` function below), then M7 after approval.
+
+### ⚠️ Founder actions before testing M6
+1. ⬜ **Apply the migration** — Dashboard → SQL Editor → paste all of
+   `supabase/migrations/20260707000002_m6_feed_reactions_comments_reports.sql` → Run.
+   (It backfills feed_posts from every already-submitted proof.)
+2. ⬜ **Deploy the feed function** — same flow as M5: `npx supabase functions deploy feed`
+   (JWT-verified, the default; no flag needed).
+
+### M6 test guide (3 accounts: A + B friends, C friends B only)
+- **Friends feed:** A sees A's own + B's posts with real media (photos render, videos play). C's posts do NOT appear for A.
+- **FoF feed:** C's posts appear in A's Friends-of-friends feed (C is B's friend). Nothing of A's own shows there.
+- **Explore:** shows everyone's posts from the CURRENT beta day only, most-liked first, newest first on ties. (Beta start is 2026-07-06, so "today" moves — day 2 on 07-07.)
+- **Like:** heart toggles instantly and survives refresh; `feed_posts.like_count` updates in the table; unlike decrements.
+- **Comments:** tap the bubble → comments screen; add one; the card's count bumps; the other account sees it.
+- **Day-5 carousel/gallery:** a multi-photo post auto-advances (stops once you touch it or with reduced motion on), swipes, dots track the page; tap a photo → fullscreen gallery with swipe + "n / N" counter + ✕.
+- **Day-3 vote chip:** on beta day 3, friends' day-3 posts show a blue VOTE chip → opens the Community Vote screen. Own post shows no chip.
+- **Report:** overflow (⋯) → Report post → pick a reason → row lands in `reports` (status `open`).
+- **Block:** overflow → Block user → their posts vanish from all three feeds, suggestions, and vote surfaces — both directions (check from the other account too).
+- **Suggestions:** "Suggestions to add" strip woven into Friends/FoF feeds (after the 2nd post, or in the empty state); ADD sends a request and flips to REQUESTED.
 
 <details><summary>M5 — H2H & community vote (complete — awaiting founder review) — branch merged to main</summary>
 
@@ -123,14 +142,16 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M2: **complete — founder-verified**
 - M3: **complete**
 - M4: **complete — founder-verified** (review feedback fixed in M5 branch)
-- M5: **complete — awaiting founder review** (apply migration, deploy functions, schedule cron)
-- M6–M14: not started (do not work ahead — founder reviews after each milestone)
+- M5: **complete — awaiting founder review** (cron scheduling still open)
+- M6: **complete — awaiting founder review** (apply migration, deploy `feed` function)
+- M7–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - **H2H/vote rewards not paid yet:** resolution records win/placement + notification; bonus coins, blue crate, and points ledger writes are M7 (server-authoritative). UI says so.
 - Post-submit sequence shows +50 coins and "wooden crate added" from config — ledger + crate rows are M7 (display only).
-- Friends feed shows **own** posts only (M4 review ask); friends'/FoF/Explore posts, likes, comments, carousel gallery, report/block UI land in M6 (feed_posts rows too — vote-feed reads submissions directly until then).
-- Day-3 countdown is pinned on the Challenge screen; the "countdown on day-3 feed posts" half arrives with the feed in M6.
+- Comments/users are reportable at the DB level (reports table takes post/comment/user targets); the client UI reports **posts** — comment-report UI + the admin removal path are M10.
+- Blocked-users list w/ unblock in Settings is M10 (blocks themselves fully enforced since M3; block UI on posts shipped in M6).
+- vote-feed still reads day-3 submissions directly (it predates feed_posts and its vote semantics are per-submission) — harmless duplication, unify if it ever drifts.
 - Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is M13.
 - Push notifications (incl. "voting closes in 2h") are M11 — in-app Notifications screen carries results today.
 - Profile header shows a single mutual **Friends** count (mutual friendship model; flagged for founder).
@@ -138,7 +159,17 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - Invite coin reward (+50) not paid yet (M7); invite row recorded now. Share URL is a founder-set placeholder until TestFlight (M14).
 - joined_beta_day + vote window compute from app_settings.beta — keep in sync with src/config beta.startDate. Mascot targets likewise (app_settings.mascot ↔ src/config mascot.targets).
 
-## Notes / decisions this milestone (✅ founder-approved 2026-07-07)
+## Notes / decisions this milestone (M6)
+- **Post visibility is global-except-blocks at the row level** (RLS): Explore is global per spec §5, so friends/FoF scoping is feed *shape* (which posts the Edge Fn returns per tab), not row secrecy. Removed posts and blocked pairs are invisible everywhere.
+- **Explore = current-beta-day posts only**, like_count desc → created_at desc (reading of spec §5 "sorted: like-count within current beta day, recency tiebreak").
+- like_count / comment_count are **denormalized via SECURITY DEFINER counter triggers** (comment_count counts non-removed only) so the Explore sort is one index scan; clients never write feed_posts.
+- feed_posts.created_at = submitted_at (trigger), so recency ties follow submit time.
+- Likes: unique(post_id,user_id); the client toggle is optimistic across all three feed caches with rollback; a double-tap 23505 counts as success.
+- Day-3 posts carry a **VOTE chip** (→ /vote) while the EST window is open — the persistent countdown itself stays pinned on Challenge per spec §5.
+- Day-5 carousel auto-advance (3s) stops on first touch and under reduced motion; tap opens the fullscreen gallery.
+- New `colors.scrim` token for gallery chrome (no inline rgba on screens).
+
+## Earlier notes / decisions (M5) (✅ founder-approved 2026-07-07)
 - **Friend-match ties → earlier submission wins** (extends the day-5 LOCKED tie rule to all H2H days; a resolved match must always have a winner — the schema has no draw state).
 - **Ties vs. the mascot's target → user wins** (spec §7.9 framing: friendly rival, never punishment).
 - **Zero votes never places** in the CV tally (otherwise a friend group where nobody voted would all "win 1st").

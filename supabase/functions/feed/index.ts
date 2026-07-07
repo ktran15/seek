@@ -58,13 +58,18 @@ Deno.serve(async (req) => {
     if (authError || !userData.user) return json({ error: 'Not signed in' }, 401);
     const userId = userData.user.id;
 
+    // Params arrive as a JSON body (functions.invoke POSTs) or query string.
+    let body: { scope?: string; before?: string } = {};
+    if (req.method === 'POST') {
+      body = (await req.json().catch(() => ({}))) as typeof body;
+    }
     const url = new URL(req.url);
-    const scope = (url.searchParams.get('scope') ?? 'friends') as Scope;
+    const scope = (body.scope ?? url.searchParams.get('scope') ?? 'friends') as Scope;
     if (!['friends', 'fof', 'explore'].includes(scope)) {
       return json({ error: 'Unknown scope' }, 400);
     }
     // Recency cursor for friends/fof paging (explore is a top-N, no cursor).
-    const before = url.searchParams.get('before');
+    const before = body.before ?? url.searchParams.get('before');
 
     let query = admin
       .from('feed_posts')
