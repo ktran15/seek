@@ -39,6 +39,18 @@ function describeNotification(n: AppNotification): string {
       ? `Community vote: you placed ${placement} with ${votes} vote${votes === 1 ? '' : 's'}! 🏆`
       : `Community vote: ${votes} vote${votes === 1 ? '' : 's'} — outside the top 3.`;
   }
+  if (n.type === 'weekly_result') {
+    const coins = typeof n.payload.coins === 'number' ? n.payload.coins : 0;
+    if (n.payload.solo === true) {
+      return `Week complete: +${coins} coins solo payout. Add friends to compete for the big purses!`;
+    }
+    const rank = typeof n.payload.rank === 'number' ? n.payload.rank : null;
+    const rankLabel =
+      rank !== null ? (PLACEMENT_LABELS[rank] ?? `#${rank}`) : 'ranked';
+    return n.payload.gold_crate === true
+      ? `Weekly leaderboard: ${rankLabel} place! +${coins} coins and a GOLD crate 👑`
+      : `Weekly leaderboard: you finished ${rankLabel} — +${coins} coins.`;
+  }
   return 'Something happened on the mountain.';
 }
 

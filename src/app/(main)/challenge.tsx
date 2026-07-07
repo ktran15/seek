@@ -4,7 +4,7 @@ import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { H2HStatusCard } from '@/features/h2h/H2HStatusCard';
-import { LeaderboardPlaceholder } from '@/features/leaderboard/LeaderboardPlaceholder';
+import { LeaderboardView } from '@/features/leaderboard/LeaderboardView';
 import { MountainView } from '@/features/mountain/MountainView';
 import { VoteCountdown } from '@/features/vote/VoteCountdown';
 import { colors, radii, spacing, textStyles } from '@/theme';
@@ -57,7 +57,7 @@ export default function ChallengeScreen() {
             <MountainView />
           </View>
           <View key="leaderboard" style={styles.page}>
-            <LeaderboardPlaceholder />
+            <LeaderboardView />
           </View>
         </PagerView>
       </View>
