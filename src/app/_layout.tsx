@@ -19,6 +19,18 @@ import { colors, fontFamilies, radii } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
+/** Comment sheet presentation (M6.1): partial-height over the feed — the
+ *  post stays visible above and shows more as the sheet is dragged down.
+ *  Shared with the dev preview route so its geometry can never drift. */
+const commentSheetOptions = {
+  presentation: 'formSheet' as const,
+  sheetAllowedDetents: [0.6, 0.95],
+  sheetInitialDetentIndex: 0,
+  sheetGrabberVisible: true,
+  sheetCornerRadius: radii.card,
+  sheetLargestUndimmedDetentIndex: 0,
+};
+
 function RootNavigator() {
   const { session, isLoading: sessionLoading } = useSession();
   const { data: profile, isLoading: profileLoading } = useProfile(
@@ -64,20 +76,14 @@ function RootNavigator() {
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: false }} />
         <Stack.Screen name="vote" options={{ headerShown: true, title: 'Community Vote' }} />
-        {/* Comment sheet (M6.1): partial-height over the feed — the post stays
-            visible above and shows more as the sheet is dragged down. */}
-        <Stack.Screen
-          name="comments/[postId]"
-          options={{
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.6, 0.95],
-            sheetInitialDetentIndex: 0,
-            sheetGrabberVisible: true,
-            sheetCornerRadius: radii.card,
-            sheetLargestUndimmedDetentIndex: 0,
-          }}
-        />
+        <Stack.Screen name="comments/[postId]" options={commentSheetOptions} />
       </Stack.Protected>
+
+      {/* Dev-only sheet preview (mock data, no auth) — the route itself
+          redirects away in release builds. */}
+      {__DEV__ && (
+        <Stack.Screen name="dev/comment-sheet-preview" options={commentSheetOptions} />
+      )}
     </Stack>
   );
 }
