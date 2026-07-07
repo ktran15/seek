@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PressButton } from '@/components/ui/PressButton';
@@ -32,6 +33,30 @@ import { useProfile } from '@/features/profile/useProfile';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 const MAX_COMMENT_LENGTH = 500;
+
+/**
+ * Whether the keyboard is up. The comment screen is a native formSheet, and
+ * iOS sheets (UISheetPresentationController) do their own keyboard avoidance
+ * — the whole sheet rides up to sit on the keyboard. So the composer needs
+ * no KeyboardAvoidingView (stacking one on top double-compensates and floats
+ * the bar far above the keyboard); it only needs to swap its bottom inset:
+ * home-indicator safe area when idle, nothing when the sheet is on the
+ * keyboard. `will` events on iOS so the swap lands with the slide animation.
+ */
+function useKeyboardVisible(): boolean {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setVisible(true));
+    const hide = Keyboard.addListener(hideEvent, () => setVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return visible;
+}
 
 interface ReplyTarget {
   /** Top-level thread the reply lands in (replies to replies stay flat). */
@@ -122,6 +147,15 @@ export default function CommentsScreen() {
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [sending, setSending] = useState(false);
 
+  const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
+  // Idle: flush to the sheet bottom, padded just above the home indicator.
+  // Keyboard up: the sheet itself sits on the keyboard, so only a hair of
+  // padding remains (iMessage composer behavior).
+  const composerBottomInset = keyboardVisible
+    ? spacing.xs
+    : Math.max(insets.bottom, spacing.xs);
+
   const { data: comments, isLoading, error, refetch, isRefetching } = useComments(postId);
   const addComment = useAddComment(userId);
   const toggleLike = useToggleCommentLike(userId);
@@ -177,15 +211,13 @@ export default function CommentsScreen() {
 
   return (
     <ErrorBoundary screen="Comments">
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.container}>
         <Text style={[textStyles.headerS, styles.title]}>Comments</Text>
 
         <FlatList
           data={topLevel}
           keyExtractor={(c) => c.id}
+          style={styles.listArea}
           contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
@@ -273,7 +305,7 @@ export default function CommentsScreen() {
           </View>
         )}
 
-        <View style={styles.composer}>
+        <View style={[styles.composer, { paddingBottom: composerBottomInset }]}>
           <View style={styles.avatar}>
             <Text style={[textStyles.headerS, styles.avatarLetter]}>
               {(myProfile?.display_name || myProfile?.username || '?')
@@ -327,7 +359,7 @@ export default function CommentsScreen() {
             )}
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </ErrorBoundary>
   );
 }
@@ -342,6 +374,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
+  },
+  // flex: 1 pins the composer to the sheet bottom even when the thread is
+  // short — without it the list wraps its content and the bar floats up.
+  listArea: {
+    flex: 1,
   },
   list: {
     padding: spacing.md,
@@ -466,7 +503,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: spacing.md,
+    // paddingBottom is set inline from the safe-area inset + keyboard state.
     backgroundColor: colors.surface,
   },
   inputPill: {
