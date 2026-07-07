@@ -8,6 +8,7 @@ import { PressButton } from '@/components/ui/PressButton';
 import { useSession } from '@/features/auth/useSession';
 import { deriveAttemptState } from '@/features/challenge/attemptMachine';
 import { DifficultySelect } from '@/features/challenge/DifficultySelect';
+import { PostSubmitSequence } from '@/features/challenge/PostSubmitSequence';
 import {
   useBeginAttempt,
   useChallengeByDay,
@@ -340,14 +341,7 @@ export default function ChallengeFlowScreen() {
           )}
 
           {step === 'done' && (
-            <View style={styles.center}>
-              <Text style={[textStyles.hero, styles.title]}>Submitted! 🎉</Text>
-              <Text style={[textStyles.body, styles.copy]}>
-                Post-submit celebration (coins → crate → climb) lands in the
-                next sub-step.
-              </Text>
-              <PressButton label="BACK TO THE MOUNTAIN" onPress={() => router.back()} />
-            </View>
+            <PostSubmitSequence day={day} onDone={() => router.back()} />
           )}
         </ScrollView>
       )}

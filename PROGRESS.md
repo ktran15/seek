@@ -12,9 +12,9 @@
 | 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ✅ done (34 tests total) |
 | 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ✅ done (+ mountain wired to real calendar/submissions) |
 | 4 | Capture types: timer-bound recording w/ big clock + auto-stop, photo, video, screenshot+count, multi-photo<=25; local persistence + upload retry | ✅ done |
-| 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ⬜ not started |
+| 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ✅ done |
 
-**Next step:** M4 sub-step 5 -- post-submit sequence.
+**Next step:** M4 complete -- founder review (apply migration + set start date first), then M5 after approval.
 
 ### ⚠️ Founder actions before testing M4
 1. Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
@@ -71,10 +71,14 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 - M1: **complete — founder-verified**
 - M2: **complete — founder-verified**
 - M3: **complete** (migration applied; founder testing in parallel)
-- M4: **in progress**
+- M4: **complete — awaiting founder review** (apply migration 20260706000003 + set beta start date to test)
 - M5–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
+- Post-submit sequence shows +50 coins and "wooden crate added" from config, but the actual ledger write + crate row are M7 (server-authoritative) — display only today.
+- "Posted to your friends' feed" confirm screen: the feed_posts row + real feed land in M6.
+- H2H days (1, 2, 4-Hard, 5) capture + submit fully; pairing/resolution is M5 — no winner yet. Day 3 photo submits; voting window is M5.
+- Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is the M13 pass.
 - Profile header shows a single mutual **Friends** count + Invite action (spec §11 says Following/Followers, but the friendship model is mutual — they would always be equal; flagged for founder).
 - Block/report UI (post overflow menu) lands in M6 with the feed; blocks table + enforcement plumbing are live now.
 - Declined requests show as "REQUESTED" to the requester (silent decline — no re-request in v1).

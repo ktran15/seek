@@ -12,6 +12,7 @@ import {
 
 import { useSession } from '@/features/auth/useSession';
 import { AvatarPreview } from '@/features/avatar/AvatarPreview';
+import { useMySubmissions } from '@/features/challenge/useChallenge';
 import { useFriendCount } from '@/features/friends/useFriends';
 import { sendInvite } from '@/features/invites/sendInvite';
 import { useProfile } from '@/features/profile/useProfile';
@@ -20,19 +21,17 @@ import { colors, radii, spacing, textStyles } from '@/theme';
 const SECTIONS = ['Stats', 'Badges', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
-/** LOCKED stat set (spec §11); real values wire up in M4–M9. */
-const STAT_ROWS = [
-  'Stops climbed',
-  'H2H record (W-L)',
-  'Votes won',
-  'Challenges completed',
-  'Coins earned',
-];
+/** LOCKED stat set (spec §11); H2H/votes/coins values wire up in M5–M9. */
+const PENDING_STATS = ['H2H record (W-L)', 'Votes won', 'Coins earned'];
 
 export function ProfileView() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
   const friendCount = useFriendCount(session?.user.id);
+  const { data: submissions } = useMySubmissions(session?.user.id);
+  const completedCount = (submissions ?? []).filter(
+    (s) => s.state === 'submitted',
+  ).length;
   const [section, setSection] = useState<Section>('Stats');
 
   const invite = async () => {
@@ -118,14 +117,28 @@ export function ProfileView() {
 
       {section === 'Stats' && (
         <View style={styles.sectionBody}>
-          {STAT_ROWS.map((stat) => (
+          <View style={styles.statRow}>
+            <Text style={[textStyles.body, styles.statLabel]}>Stops climbed</Text>
+            <Text style={[textStyles.headerS, styles.statValueLive]}>
+              {completedCount}
+            </Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={[textStyles.body, styles.statLabel]}>
+              Challenges completed
+            </Text>
+            <Text style={[textStyles.headerS, styles.statValueLive]}>
+              {completedCount}
+            </Text>
+          </View>
+          {PENDING_STATS.map((stat) => (
             <View key={stat} style={styles.statRow}>
               <Text style={[textStyles.body, styles.statLabel]}>{stat}</Text>
               <Text style={[textStyles.headerS, styles.statValue]}>—</Text>
             </View>
           ))}
           <Text style={[textStyles.caption, styles.sectionNote]}>
-            Stats wire up as their systems land (M4–M9).
+            H2H, votes and coins wire up as their systems land (M5–M9).
           </Text>
         </View>
       )}
@@ -257,6 +270,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: colors.textSecondary,
+  },
+  statValueLive: {
+    color: colors.textPrimary,
   },
   badgeGrid: {
     flexDirection: 'row',
