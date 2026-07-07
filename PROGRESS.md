@@ -4,7 +4,34 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M7 — Economy & crates** (spec §9, §15) — on `main` (founder pre-approved 2026-07-07)
+## Current: **M7 comment-section bug-fix pass** (founder-directed) — branch `m7-comment-fixes`
+
+Two founder-reported defects in the M6.1 comment sheet. No redesign — targeted fixes.
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Root-cause Bug 1 ("comments don't load"): confirmed **ops state, not code** — `comments` Edge Fn was never deployed (404) and the M6.1 migration never applied (no `like_count`/`parent_comment_id`/`media_path`, no `comment_reactions`, no bucket). Text comments still inserted (M6 RLS), so counts rose while the sheet showed the error state | ✅ done |
+| 2 | Remediate live project: migration history repaired (dashboard-applied 1–5 marked applied), `db push` applied M6.1 + M7 migrations, deployed `comments`, redeployed `h2h-pair` | ✅ done 2026-07-07 |
+| 3 | Load hardening (client): distinct error state + PressButton Retry in the sheet, `refetchOnMount:'always'` + 15s poll on the open thread, React Query `focusManager` wired to AppState | ✅ done |
+| 4 | Composer/keyboard fix: removed the inner KeyboardAvoidingView (the iOS formSheet already lifts onto the keyboard natively — KAV double-compensated → bar floated far above the keyboard); idle bar pinned flush via `useSafeAreaInsets().bottom` (was hard-coded padding); FlatList `flex:1` so short threads can't float the bar mid-sheet | ✅ done |
+| 5 | Repair corrupted `node_modules` (reanimated missing `publicGlobals` — broke Metro); lockfile resolved + committed | ✅ done |
+
+**Next step:** founder retests comments on a physical iPhone (guide below), then merge to `main`.
+
+### ⚠️ Founder actions still open (2 commands — blocked for the agent by permissions)
+```
+npx supabase functions deploy crate-open --project-ref aducawlftwdowvsnryar
+npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
+```
+Until day-close is redeployed it still runs the pre-M7 code: matches resolve but day-close-time H2H sweeps and the CV tally won't pay coins/points/crates (h2h-pair-time resolutions DO pay — it was redeployed). Award wiring is ref-deduped, so paying later never double-pays. crate-open is needed to open crates from Inventory.
+
+### Comment-fix test guide (physical iPhone)
+- **Load:** open any post's comments → thread loads with author, text, images, likes; removed/blocked-user comments hidden; count on the card matches. Airplane-mode open → "Comments didn't load" + RETRY, which recovers after reconnect.
+- **Fresh comments:** comment from account B while A's sheet is open → appears on A within ~15s; also on reopen and on app-foreground.
+- **Idle composer:** bar sits flush at the sheet bottom, just above the home indicator — no dead gap, no hard-coded margin.
+- **Keyboard:** tap the input → the sheet rises with the keyboard and the bar sits directly on top of it — no gap, no overshoot (iMessage feel). Dismiss → settles back flush.
+
+## Previous milestone: **M7 — Economy & crates** (spec §9, §15) — on `main` (founder pre-approved 2026-07-07)
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -15,20 +42,12 @@
 
 **Next step:** M7 complete — founder review (actions below), then M8 after approval.
 
-### ⚠️ Founder actions before testing M6/M6.1/M7 (consolidated)
-1. ⬜ **Apply THREE migrations in order** — Dashboard → SQL Editor, paste + Run each:
-   1. `20260707000002_m6_feed_reactions_comments_reports.sql`
-   2. `20260707000003_m6_1_comment_threads_likes_media.sql`
-   3. `20260707000004_m7_economy_crates_cosmetics.sql`
-2. ⬜ **Deploy the three NEW functions** (after `npx supabase login` if needed):
+### ⚠️ Founder actions before testing M6/M6.1/M7 (consolidated — updated 2026-07-07 by the comment-fix pass)
+1. ✅ **All migrations applied** (comment-fix pass, 2026-07-07): M6 was already live (dashboard-applied); M6.1 + M7 applied via `supabase db push` after `migration repair` synced the history. Future migrations can now use plain `db push`.
+2. ✅ `feed`, `comments` deployed; `h2h-pair` redeployed (comment-fix pass, 2026-07-07).
+3. ⬜ **Two deploys still yours** (agent permission-blocked):
    ```
-   npx supabase functions deploy feed --project-ref aducawlftwdowvsnryar
-   npx supabase functions deploy comments --project-ref aducawlftwdowvsnryar
    npx supabase functions deploy crate-open --project-ref aducawlftwdowvsnryar
-   ```
-3. ⬜ **REDEPLOY the two M5 functions** — their shared code now pays awards:
-   ```
-   npx supabase functions deploy h2h-pair --project-ref aducawlftwdowvsnryar
    npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
    ```
 
