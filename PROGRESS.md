@@ -9,11 +9,11 @@
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | DB migration: feed_posts (auto-created from submissions + backfill), reactions w/ counter triggers, comments, reports — RLS + grants | ✅ authored — **founder must apply** |
-| 2 | `feed` Edge Function: friends / FoF / explore visibility, explore like-count sort (current-day) w/ recency tiebreak, block-aware, signs ALL media paths | ⬜ not started |
+| 2 | `feed` Edge Function: friends / FoF / explore visibility, explore like-count sort (current-day) w/ recency tiebreak, block-aware, signs ALL media paths | ✅ authored — **founder must deploy** |
 | 3 | Client: useFeed hook, PostCard v2 (like toggle, comment count, day-5 carousel + tap-to-gallery, overflow report/block, day-3 vote chip) | ⬜ not started |
 | 4 | Comments screen, friend suggestions woven into feeds, Home wired to real 3 feeds | ⬜ not started |
 
-**Next step:** M6 sub-step 2 — `feed` Edge Function.
+**Next step:** M6 sub-step 3 — client useFeed hook + PostCard v2.
 
 <details><summary>M5 — H2H & community vote (complete — awaiting founder review) — branch merged to main</summary>
 
