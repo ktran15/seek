@@ -366,7 +366,13 @@ export default function CommentsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // Explicit height, not flex: react-native-screens' numeric-detent
+    // formSheet doesn't honor flex from its content wrapper until SDK 55
+    // (and force-frames a bare ScrollView child under its siblings). A
+    // single explicitly-sized root View keeps the FlatList out of that
+    // native path and makes the inner flex column reliable. Simplify back
+    // to flex: 1 after the SDK 55 upgrade.
+    height: '100%',
     backgroundColor: colors.background,
   },
   title: {
