@@ -470,6 +470,16 @@ export interface Database {
         Args: { tier_in: string };
         Returns: string;
       };
+      get_weekly_leaderboard: {
+        Args: { week_in?: number };
+        Returns: {
+          user_id: string;
+          username: string | null;
+          display_name: string | null;
+          avatar_config: AvatarConfig;
+          points: number;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
