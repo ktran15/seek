@@ -12,6 +12,8 @@ import {
 
 import { useSession } from '@/features/auth/useSession';
 import { AvatarPreview } from '@/features/avatar/AvatarPreview';
+import { useFriendCount } from '@/features/friends/useFriends';
+import { sendInvite } from '@/features/invites/sendInvite';
 import { useProfile } from '@/features/profile/useProfile';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
@@ -30,18 +32,37 @@ const STAT_ROWS = [
 export function ProfileView() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
+  const friendCount = useFriendCount(session?.user.id);
   const [section, setSection] = useState<Section>('Stats');
+
+  const invite = async () => {
+    if (!session) return;
+    try {
+      await sendInvite(session.user.id);
+    } catch (e) {
+      Alert.alert('Could not share', e instanceof Error ? e.message : 'Try again.');
+    }
+  };
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
       <View style={styles.headerRow}>
         <View style={styles.counters}>
-          <Text style={[textStyles.headerS, styles.counter]}>0{'\n'}Followers</Text>
+          <Text style={[textStyles.headerS, styles.counter]}>
+            {friendCount}
+            {'\n'}Friends
+          </Text>
         </View>
         <AvatarPreview config={profile?.avatar_config ?? {}} />
-        <View style={styles.counters}>
-          <Text style={[textStyles.headerS, styles.counter]}>0{'\n'}Following</Text>
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={invite}
+          style={styles.counters}
+        >
+          <Text style={[textStyles.headerS, styles.inviteCounter]}>
+            ＋{'\n'}Invite
+          </Text>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Settings"
@@ -160,6 +181,10 @@ const styles = StyleSheet.create({
   },
   counter: {
     color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  inviteCounter: {
+    color: colors.info,
     textAlign: 'center',
   },
   gear: {

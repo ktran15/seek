@@ -11,9 +11,9 @@
 | 1 | DB migration: friendships + blocks tables (RLS, column grants), security-definer graph functions (friends / FoF / search, block-aware) | ✅ authored -- **founder must apply** (SQL Editor, same as M1) |
 | 2 | Pure TS graph helpers + jest setup + unit tests (friend/FoF/block set logic, request-state derivation) | ✅ done (16 tests) |
 | 3 | Add Friends screen: username search, request states (Add/Requested/Accept/Friends), invite entry point | ✅ done |
-| 4 | Notifications screen: pending requests w/ accept-decline; Profile friends count + invite button | ⬜ not started |
+| 4 | Notifications screen: pending requests w/ accept-decline; Profile friends count + invite button | ✅ done |
 
-**Next step:** M3 sub-step 4 -- Notifications accept/decline + profile friends count.
+**Next step:** M3 complete -- founder review (apply the M3 migration first), then M4 (challenge engine) after approval.
 
 ### ⚠️ Founder action before testing M3
 Apply `supabase/migrations/20260706000002_m3_friendships_blocks_graph.sql` via Dashboard -> SQL Editor (copy from the file on disk, not from chat).
@@ -58,10 +58,13 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
 - M1: **complete — founder-verified**
 - M2: **complete — founder-verified**
-- M3: **in progress**
+- M3: **complete — awaiting founder review** (migration 20260706000002 must be applied first)
 - M4–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
+- Profile header shows a single mutual **Friends** count + Invite action (spec §11 says Following/Followers, but the friendship model is mutual — they would always be equal; flagged for founder).
+- Block/report UI (post overflow menu) lands in M6 with the feed; blocks table + enforcement plumbing are live now.
+- Declined requests show as "REQUESTED" to the requester (silent decline — no re-request in v1).
 - Invite coin reward (+50) NOT paid yet — coins ledger is M7; the invite row is recorded now.
 - An invites row is created even if the user cancels the share sheet (client cannot delete; harmless, redeemed_by stays null).
 - Invite share URL is a FOUNDER-SET placeholder until the TestFlight link exists (M14).
