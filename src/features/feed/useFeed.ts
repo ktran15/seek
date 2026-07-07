@@ -130,6 +130,11 @@ export function useComments(postId: string) {
   return useQuery({
     queryKey: feedKeys.comments(postId),
     staleTime: 30 * 1000,
+    // The sheet must always show the latest thread on open, and pick up
+    // friends' new comments while it stays open (beta-scale poll; no
+    // Realtime publication needed).
+    refetchOnMount: 'always',
+    refetchInterval: 15 * 1000,
     queryFn: async (): Promise<CommentView[]> => {
       const { data, error } = await supabase.functions.invoke('comments', {
         body: { post_id: postId },
