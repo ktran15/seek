@@ -1,17 +1,41 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { colors, spacing, textStyles } from '@/theme';
+import { ProfileView } from '@/features/profile/ProfileView';
+import { ShopView } from '@/features/shop/ShopView';
+import { colors, radii, spacing, textStyles } from '@/theme';
 
-/** Profile tab — header/tabs skeleton + swipe→Shop land in M2 sub-step 4. */
+/**
+ * Profile tab (spec §5, §9.5): swipe left → Shop, with a translucent "Shop"
+ * hint pinned at the right edge of the profile page.
+ */
 export default function ProfileScreen() {
+  const [page, setPage] = useState(0);
+
   return (
     <ErrorBoundary screen="Profile">
       <View style={styles.container}>
-        <Text style={[textStyles.headerL, styles.title]}>Profile</Text>
-        <Text style={[textStyles.body, styles.copy]}>
-          Profile skeleton lands in sub-step 4.
-        </Text>
+        <PagerView
+          style={styles.pager}
+          initialPage={0}
+          onPageSelected={(e) => setPage(e.nativeEvent.position)}
+        >
+          <View key="profile" style={styles.page}>
+            <ProfileView />
+          </View>
+          <View key="shop" style={styles.page}>
+            <ShopView />
+          </View>
+        </PagerView>
+        {page === 0 && (
+          <View style={styles.shopHint} pointerEvents="none">
+            <Text style={[textStyles.headerS, styles.shopHintText]}>
+              Shop ›
+            </Text>
+          </View>
+        )}
       </View>
     </ErrorBoundary>
   );
@@ -20,11 +44,26 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-    gap: spacing.xs,
   },
-  title: { color: colors.textPrimary },
-  copy: { color: colors.textSecondary, textAlign: 'center' },
+  pager: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+  },
+  shopHint: {
+    position: 'absolute',
+    right: 0,
+    top: '46%',
+    backgroundColor: colors.info,
+    opacity: 0.55,
+    borderTopLeftRadius: radii.card,
+    borderBottomLeftRadius: radii.card,
+    paddingVertical: spacing.sm,
+    paddingLeft: spacing.sm,
+    paddingRight: spacing.xxs,
+  },
+  shopHintText: {
+    color: colors.textOnDark,
+  },
 });

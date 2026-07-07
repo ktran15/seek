@@ -11,9 +11,9 @@
 | 1 | Main tab shell: bottom bar (Profile/Home/Challenge), persistent top bar (Add Friends, Notifications), stub screens (add-friends, notifications, settings w/ sign-out) | ✅ done |
 | 2 | Home: 3-feed horizontal swipe (Friends / Friends-of-friends / Explore) | ✅ done |
 | 3 | Challenge: Mountain <-> Leaderboard horizontal swipe, 7-stop mountain placeholder | ✅ done |
-| 4 | Profile: header/tabs skeleton, swipe -> Shop w/ translucent edge hint, error boundaries per major screen | ⬜ not started |
+| 4 | Profile: header/tabs skeleton, swipe -> Shop w/ translucent edge hint, error boundaries per major screen | ✅ done |
 
-**Next step:** M2 sub-step 4 -- Profile skeleton + swipe to Shop.
+**Next step:** M2 complete -- founder review, then M3 (friend graph & social core) after approval.
 
 <details><summary>M1 -- Auth & onboarding (complete, founder-verified)</summary>
 
@@ -46,7 +46,7 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 ## Milestone status
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
 - M1: **complete — founder-verified**
-- M2: **in progress**
+- M2: **complete — awaiting founder review**
 - M3–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
@@ -62,6 +62,6 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 - Bundle ID: `com.smokeysummit.seek` (founder can change in `app.config.ts` before first EAS build).
 - Expo SDK **54** (downgraded from 57 so the founder's Expo Go can run it: RN 0.81.5, React 19.1, expo-router 6, Reanimated 4.1, TS 5.9). Template demo app removed. Unused template packages pruned (@expo/ui, expo-glass-effect, expo-symbols, expo-device, expo-image).
 - App name lives ONCE in `app-name.json` (read by both `app.config.ts` and `src/config` — app.config.ts can't import TS modules).
-- Supabase project `aducawlftwdowvsnryar` wired with the modern `sb_publishable_` key (client-safe by design; RLS is the boundary). No schema yet — tables start in M3/M4.
+- Supabase project `aducawlftwdowvsnryar` wired with the modern `sb_publishable_` key (client-safe by design; RLS is the boundary). Schema: profiles/app_settings/invites live (M1 migration applied by founder).
 - eas.json env block carries only the EXPO_PUBLIC (client-safe) vars; real secrets go in Edge Function env later, never in the repo.
-- React Query + Zustand intentionally NOT installed yet — first consumer is M1 (no dead code rule).
+- Zustand installed but unused so far (first real consumer expected M4 capture flows); React Query in use since M1.
