@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { PressButton } from '@/components/ui/PressButton';
 import { useSession } from '@/features/auth/useSession';
 import {
   pickCommentImage,
@@ -121,7 +122,7 @@ export default function CommentsScreen() {
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [sending, setSending] = useState(false);
 
-  const { data: comments, isLoading, error } = useComments(postId);
+  const { data: comments, isLoading, error, refetch, isRefetching } = useComments(postId);
   const addComment = useAddComment(userId);
   const toggleLike = useToggleCommentLike(userId);
 
@@ -208,15 +209,34 @@ export default function CommentsScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={[textStyles.headerL, styles.emptyTitle]}>
-                {isLoading ? 'Loading…' : error ? 'Could not load comments' : 'No comments yet'}
-              </Text>
-              {!isLoading && !error && (
-                <Text style={[textStyles.body, styles.emptyCopy]}>
-                  {posterName
-                    ? `Be the first to cheer ${posterName} on.`
-                    : 'Be the first to comment.'}
-                </Text>
+              {isLoading ? (
+                <Text style={[textStyles.headerL, styles.emptyTitle]}>Loading…</Text>
+              ) : error ? (
+                <>
+                  <Text style={[textStyles.headerL, styles.emptyTitle]}>
+                    Comments didn’t load
+                  </Text>
+                  <Text style={[textStyles.body, styles.emptyCopy]}>
+                    Check your connection and try again.
+                  </Text>
+                  <PressButton
+                    label={isRefetching ? 'Retrying…' : 'Retry'}
+                    onPress={() => void refetch()}
+                    disabled={isRefetching}
+                    style={styles.retryButton}
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={[textStyles.headerL, styles.emptyTitle]}>
+                    No comments yet
+                  </Text>
+                  <Text style={[textStyles.body, styles.emptyCopy]}>
+                    {posterName
+                      ? `Be the first to cheer ${posterName} on.`
+                      : 'Be the first to comment.'}
+                  </Text>
+                </>
               )}
             </View>
           }
@@ -400,6 +420,11 @@ const styles = StyleSheet.create({
   emptyCopy: {
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'center',
+    minWidth: 160,
   },
   replyBar: {
     flexDirection: 'row',

@@ -1,9 +1,19 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AppState, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export function AppProviders({ children }: { children: ReactNode }) {
+  // React Query has no "window focus" in React Native — drive it from
+  // AppState so stale queries (feeds, comment threads) refetch when the
+  // app returns to the foreground.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (status) => {
+      focusManager.setFocused(status === 'active');
+    });
+    return () => subscription.remove();
+  }, []);
+
   // QueryClient in state so a re-render never recreates the cache.
   const [queryClient] = useState(
     () =>
