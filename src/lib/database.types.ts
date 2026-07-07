@@ -52,6 +52,71 @@ export interface Database {
         };
         Relationships: [];
       };
+      challenges: {
+        Row: {
+          id: string;
+          beta_day: number;
+          title: string;
+          description: string;
+          explainer: string;
+          /** Day 4 is stored as SP + difficulty_modes; the chosen difficulty
+           *  decides the effective mode (spec §7.2). */
+          mode: 'SP' | 'H2H' | 'CV';
+          capture_type:
+            | 'timer_video'
+            | 'camera_photo'
+            | 'camera_video'
+            | 'screenshot_plus_count'
+            | 'multi_photo_count';
+          has_difficulty: boolean;
+          difficulty_modes: Record<string, 'SP' | 'H2H'> | null;
+          victor_rule:
+            | 'lower_time'
+            | 'fewer_guesses'
+            | 'community_vote'
+            | 'higher_count'
+            | 'higher_made_count'
+            | 'pass_fail'
+            | null;
+          recording_cap_seconds: number | null;
+          vote_window: unknown;
+          proof_required: boolean;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          challenge_id: string;
+          beta_day: number;
+          state: 'in_progress' | 'submitted';
+          submitted_at: string | null;
+          passed: boolean | null;
+          score: number | null;
+          difficulty: 'easy' | 'medium' | 'hard' | null;
+          media_paths: string[];
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          challenge_id: string;
+          beta_day: number;
+          difficulty?: 'easy' | 'medium' | 'hard';
+        };
+        /** Submitting / crash-safe reset while in_progress (RLS enforces). */
+        Update: {
+          state?: 'in_progress' | 'submitted';
+          submitted_at?: string;
+          passed?: boolean;
+          score?: number;
+          difficulty?: 'easy' | 'medium' | 'hard';
+          media_paths?: string[];
+        };
+        Relationships: [];
+      };
       friendships: {
         Row: {
           id: string;

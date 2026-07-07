@@ -4,19 +4,28 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M3 -- Friend graph & social core** (spec sec 15, sec 7.10, sec 11)
+## Current milestone: **M4 -- Challenge engine** (spec sec 15, sec 7, sec 8)
 
 | # | Sub-step | Status |
 |---|----------|--------|
-| 1 | DB migration: friendships + blocks tables (RLS, column grants), security-definer graph functions (friends / FoF / search, block-aware) | ✅ authored -- **founder must apply** (SQL Editor, same as M1) |
-| 2 | Pure TS graph helpers + jest setup + unit tests (friend/FoF/block set logic, request-state derivation) | ✅ done (16 tests) |
-| 3 | Add Friends screen: username search, request states (Add/Requested/Accept/Friends), invite entry point | ✅ done |
-| 4 | Notifications screen: pending requests w/ accept-decline; Profile friends count + invite button | ✅ done |
+| 1 | DB migration: challenges table + 7 seeded rows, submissions (one-attempt unique, state machine columns), proofs storage bucket + owner policies | ✅ authored -- **founder must apply** |
+| 2 | Beta calendar lib (local-midnight day logic, day states) + attempt state-machine reducer -- both unit-tested | ⬜ not started |
+| 3 | Challenge flow: reveal->explainer->begin, day-4 difficulty select (Hard unlocks H2H), attempt hooks w/ crash-safe reset, one-attempt lock | ⬜ not started |
+| 4 | Capture types: timer-bound recording w/ big clock + auto-stop, photo, video, screenshot+count, multi-photo<=25; local persistence + upload retry | ⬜ not started |
+| 5 | Post-submit sequence (success->coins->crate->climb->feed confirm) + mountain real day states + submit pipeline | ⬜ not started |
 
-**Next step:** M3 complete -- founder review (apply the M3 migration first), then M4 (challenge engine) after approval.
+**Next step:** M4 sub-step 2 -- calendar + state machine + tests.
 
-### ⚠️ Founder action before testing M3
-Apply `supabase/migrations/20260706000002_m3_friendships_blocks_graph.sql` via Dashboard -> SQL Editor (copy from the file on disk, not from chat).
+### ⚠️ Founder action before testing M4
+Apply `supabase/migrations/20260706000003_m4_challenges_submissions_storage.sql` via Dashboard -> SQL Editor (copy from the file on disk).
+
+<details><summary>M3 -- Friend graph & social core (complete)</summary>
+
+friendships+blocks migration (applied), block-aware graph SQL functions,
+16 unit tests, Add Friends search+requests, Notifications accept/decline,
+Profile friends count + invite entry.
+
+</details>
 
 <details><summary>M2 -- Navigation & skeletons (complete, founder-verified; tabs reordered Challenge/Home/Profile)</summary>
 
@@ -58,8 +67,9 @@ onboarding steps 1-3 + username / avatar creation / invite (soft) + begin.
 - M0: **complete** (founder still owes the 3 interactive EAS login steps above)
 - M1: **complete — founder-verified**
 - M2: **complete — founder-verified**
-- M3: **complete — awaiting founder review** (migration 20260706000002 must be applied first)
-- M4–M14: not started (do not work ahead — founder reviews after each milestone)
+- M3: **complete** (migration applied; founder testing in parallel)
+- M4: **in progress**
+- M5–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Profile header shows a single mutual **Friends** count + Invite action (spec §11 says Following/Followers, but the friendship model is mutual — they would always be equal; flagged for founder).
