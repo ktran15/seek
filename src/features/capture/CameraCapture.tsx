@@ -1,6 +1,13 @@
-import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+  type CameraType,
+} from 'expo-camera';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressButton } from '@/components/ui/PressButton';
 import { colors, radii, spacing, textStyles } from '@/theme';
@@ -40,8 +47,10 @@ export function CameraCapture({
   onCancel,
 }: CameraCaptureProps) {
   const cameraRef = useRef<CameraView>(null);
+  const insets = useSafeAreaInsets();
   const [cameraPermission, requestCamera] = useCameraPermissions();
   const [micPermission, requestMic] = useMicrophonePermissions();
+  const [facing, setFacing] = useState<CameraType>('back');
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -124,19 +133,32 @@ export function CameraCapture({
       <CameraView
         ref={cameraRef}
         style={styles.camera}
-        facing="back"
+        facing={facing}
         mode={kind === 'video' ? 'video' : 'picture'}
       >
         {kind === 'video' && recording && (
-          <View style={styles.clockWrap} pointerEvents="none">
+          <View
+            style={[styles.clockWrap, { top: insets.top + spacing.md }]}
+            pointerEvents="none"
+          >
             <Text style={[textStyles.timer, styles.clock]}>
               {formatClock(clockValue)}
             </Text>
           </View>
         )}
+        {!recording && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Flip camera"
+            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+            style={[styles.flip, { top: insets.top + spacing.sm }]}
+          >
+            <Ionicons name="camera-reverse" size={26} color="#FFFFFF" />
+          </Pressable>
+        )}
       </CameraView>
 
-      <View style={styles.controls}>
+      <View style={[styles.controls, { paddingBottom: insets.bottom + spacing.md }]}>
         {kind === 'photo' ? (
           <Pressable
             accessibilityRole="button"
@@ -184,10 +206,19 @@ const styles = StyleSheet.create({
   },
   clockWrap: {
     position: 'absolute',
-    top: spacing.xl,
     left: 0,
     right: 0,
     alignItems: 'center',
+  },
+  flip: {
+    position: 'absolute',
+    right: spacing.md,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   clock: {
     color: '#FFFFFF',

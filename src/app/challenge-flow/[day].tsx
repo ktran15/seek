@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { FormTextInput } from '@/components/ui/FormTextInput';
@@ -63,6 +64,7 @@ export default function ChallengeFlowScreen() {
   const { day: dayParam } = useLocalSearchParams<{ day: string }>();
   const day = Number(dayParam);
 
+  const insets = useSafeAreaInsets();
   const { session } = useSession();
   const userId = session?.user.id;
   const challenge = useChallengeByDay(day);
@@ -215,7 +217,16 @@ export default function ChallengeFlowScreen() {
           onCancel={() => setStep('reveal')}
         />
       ) : (
-        <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={[
+            styles.container,
+            {
+              paddingTop: insets.top + spacing.sm,
+              paddingBottom: insets.bottom + spacing.lg,
+            },
+          ]}
+        >
           {step === 'reveal' && (
             <>
               <Text style={[textStyles.caption, styles.dayLabel]}>
