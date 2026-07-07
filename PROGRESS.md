@@ -4,7 +4,18 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M5 — H2H & community vote** (spec §7.6, §7.7, §7.9, §15) — branch `m5-h2h-community-vote`
+## Current milestone: **M6 — Feed & interactions** (spec §5, §11, §15) — branch `m6-feed-and-interactions`
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | DB migration: feed_posts (auto-created from submissions + backfill), reactions w/ counter triggers, comments, reports — RLS + grants | ✅ authored — **founder must apply** |
+| 2 | `feed` Edge Function: friends / FoF / explore visibility, explore like-count sort (current-day) w/ recency tiebreak, block-aware, signs ALL media paths | ⬜ not started |
+| 3 | Client: useFeed hook, PostCard v2 (like toggle, comment count, day-5 carousel + tap-to-gallery, overflow report/block, day-3 vote chip) | ⬜ not started |
+| 4 | Comments screen, friend suggestions woven into feeds, Home wired to real 3 feeds | ⬜ not started |
+
+**Next step:** M6 sub-step 2 — `feed` Edge Function.
+
+<details><summary>M5 — H2H & community vote (complete — awaiting founder review) — branch merged to main</summary>
 
 | # | Sub-step | Status |
 |---|----------|--------|
