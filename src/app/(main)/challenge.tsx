@@ -5,6 +5,7 @@ import PagerView from 'react-native-pager-view';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LeaderboardPlaceholder } from '@/features/leaderboard/LeaderboardPlaceholder';
 import { MountainView } from '@/features/mountain/MountainView';
+import { VoteCountdown } from '@/features/vote/VoteCountdown';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 const PAGES = ['Mountain', 'Leaderboard'] as const;
@@ -17,6 +18,7 @@ export default function ChallengeScreen() {
   return (
     <ErrorBoundary screen="Challenge">
       <View style={styles.container}>
+        <VoteCountdown />
         <View style={styles.switcher}>
           {PAGES.map((page, index) => {
             const active = index === activeIndex;

@@ -1,4 +1,10 @@
-import { betaDayInTimezone, dateInTimezone } from '../betaDay';
+import {
+  addDays,
+  betaDayInTimezone,
+  dateInTimezone,
+  dayCloseInstant,
+  utcInstantOfLocalMidnight,
+} from '../betaDay';
 
 const NY = 'America/New_York';
 
@@ -30,5 +36,25 @@ describe('betaDayInTimezone (global beta clock, spec §7.7)', () => {
 
   it('after 7 days the beta is over', () => {
     expect(betaDayInTimezone(start, NY, new Date('2026-07-14T12:00:00Z'))).toBe(9);
+  });
+});
+
+describe('dayCloseInstant (vote close, spec §7.7)', () => {
+  const start = '2026-07-06';
+
+  it('day 3 closes at NY midnight = 04:00 UTC in July (EDT)', () => {
+    expect(dayCloseInstant(start, NY, 3).toISOString()).toBe(
+      '2026-07-09T04:00:00.000Z',
+    );
+  });
+
+  it('handles EST (winter, UTC-5)', () => {
+    expect(utcInstantOfLocalMidnight('2026-01-15', NY).toISOString()).toBe(
+      '2026-01-15T05:00:00.000Z',
+    );
+  });
+
+  it('addDays crosses month boundaries', () => {
+    expect(addDays('2026-07-30', 3)).toBe('2026-08-02');
   });
 });
