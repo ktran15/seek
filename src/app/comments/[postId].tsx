@@ -212,7 +212,11 @@ export default function CommentsScreen() {
   return (
     <ErrorBoundary screen="Comments">
       <View style={styles.container}>
-        <Text style={[textStyles.headerS, styles.title]}>Comments</Text>
+        {/* Header region in normal flow: reserves the native grabber zone
+            above the title so the list always starts strictly below both. */}
+        <View style={styles.header}>
+          <Text style={[textStyles.headerS, styles.title]}>Comments</Text>
+        </View>
 
         <FlatList
           data={topLevel}
@@ -375,11 +379,15 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.background,
   },
+  header: {
+    // lg top padding clears the grabber UIKit draws over the sheet's top edge.
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
+    alignItems: 'center',
+  },
   title: {
     color: colors.textPrimary,
     textAlign: 'center',
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
   },
   // flex: 1 pins the composer to the sheet bottom even when the thread is
   // short — without it the list wraps its content and the bar floats up.
