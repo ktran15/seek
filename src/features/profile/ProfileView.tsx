@@ -16,6 +16,7 @@ import { useMySubmissions } from '@/features/challenge/useChallenge';
 import { InventorySection } from '@/features/economy/InventorySection';
 import {
   useCoinsEarned,
+  useCosmeticsCatalog,
   useH2HRecord,
   useMyCrates,
 } from '@/features/economy/useEconomy';
@@ -43,6 +44,7 @@ export function ProfileView() {
   const { data: h2hRecord } = useH2HRecord(userId);
   const { data: crates } = useMyCrates(userId);
   const votesWon = (crates ?? []).filter((c) => c.source === 'vote_win').length;
+  const { data: catalog } = useCosmeticsCatalog();
 
   const invite = async () => {
     if (!session) return;
@@ -62,7 +64,7 @@ export function ProfileView() {
             {'\n'}Friends
           </Text>
         </View>
-        <AvatarPreview config={profile?.avatar_config ?? {}} />
+        <AvatarPreview config={profile?.avatar_config ?? {}} cosmetics={catalog ?? []} />
         <Pressable
           accessibilityRole="button"
           onPress={invite}

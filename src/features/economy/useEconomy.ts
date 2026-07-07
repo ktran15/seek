@@ -11,9 +11,23 @@ export type CrateTier = Crate['tier'];
 export const economyKeys = {
   crates: (userId: string) => ['crates', userId] as const,
   cosmetics: (userId: string) => ['user-cosmetics', userId] as const,
+  catalog: ['cosmetics-catalog'] as const,
   ledger: (userId: string) => ['coins-ledger', userId] as const,
   h2hRecord: (userId: string) => ['h2h-record', userId] as const,
 };
+
+/** The full seeded cosmetics catalog (32 rows, effectively static). */
+export function useCosmeticsCatalog() {
+  return useQuery({
+    queryKey: economyKeys.catalog,
+    staleTime: 60 * 60 * 1000,
+    queryFn: async (): Promise<Cosmetic[]> => {
+      const { data, error } = await supabase.from('cosmetics').select('*');
+      if (error) throw error;
+      return data;
+    },
+  });
+}
 
 /** My crates, unopened first, newest first (Inventory, spec §9.3). */
 export function useMyCrates(userId: string | undefined) {
