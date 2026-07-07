@@ -26,7 +26,7 @@ export const config = {
 
   beta: {
     /** TUNE (FOUNDER-SET): first day of the fixed 7-day global beta (day 1). */
-    startDate: '2026-07-13',
+    startDate: '2026-07-06',
     /** Locked: global vote-window / payout clock timezone (spec §7.7). */
     timezone: 'America/New_York',
     lengthDays: 7,
