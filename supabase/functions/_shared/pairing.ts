@@ -6,6 +6,7 @@
  * Pure decision logic lives in h2hLogic.ts (unit-tested); this module is the
  * DB choreography around it.
  */
+import { awardH2HWin } from './awards.ts';
 import {
   pickOpponent,
   resolveFriendMatch,
@@ -194,6 +195,9 @@ export async function attemptPair(
     beta_week: 1,
   });
   if (historyError) throw new Error(historyError.message);
+
+  // Winner's purse: coins + points + blue crate (M7; ref-deduped inside).
+  await awardH2HWin(db, winnerUserId, match.id);
 
   const { error: notifyError } = await db.from('notifications').insert([
     {

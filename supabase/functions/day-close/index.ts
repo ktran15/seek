@@ -8,14 +8,15 @@
  * 2. Day 3: tally the community vote per poster's friend context with
  *    tie-sharing (spec §7.7) and notify every poster.
  *
- * Coins/crates/points for wins and placements are wired to the ledgers in
- * M7 — this function records outcomes + notifications today (visible stub).
+ * Wins and placements pay coins/points/crates via _shared/awards.ts (M7),
+ * ref-deduped so re-runs never double-pay.
  *
  * Invoked service-to-service: deploy with --no-verify-jwt; the caller must
  * present the service-role key, checked explicitly below.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+import { awardH2HWin, awardVotePlacement } from '../_shared/awards.ts';
 import { betaDayInTimezone } from '../_shared/betaDay.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
@@ -151,6 +152,11 @@ async function closeH2H(
       .eq('status', 'pending');
     if (error) throw new Error(error.message);
 
+    // Beating the mascot pays like any H2H win (M7; ref-deduped inside).
+    if (userWon) {
+      await awardH2HWin(admin, match.protagonist_id as string, match.id as string);
+    }
+
     // Mascot matches notify only the user (spec §7.6).
     await admin.from('notifications').insert({
       user_id: match.protagonist_id,
@@ -208,6 +214,11 @@ async function closeVote(
     const friends = await friendIdsOf(admin, posterId);
     const friendVotes = friends.map((f) => counts.get(f) ?? 0);
     const placement = votePlacement(myVotes, friendVotes);
+
+    // Placement purse: coins/points + red (top-3) or yellow (win) crate (M7).
+    if (placement !== null) {
+      await awardVotePlacement(admin, posterId, placement, post.id as string);
+    }
 
     await admin.from('notifications').insert({
       user_id: posterId,

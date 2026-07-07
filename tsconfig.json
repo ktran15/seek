@@ -23,6 +23,7 @@
   "exclude": [
     "node_modules",
     "supabase/functions/**/index.ts",
-    "supabase/functions/_shared/pairing.ts"
+    "supabase/functions/_shared/pairing.ts",
+    "supabase/functions/_shared/awards.ts"
   ]
 }
