@@ -15,8 +15,10 @@ Two founder-reported defects in the M6.1 comment sheet. No redesign — targeted
 | 3 | Load hardening (client): distinct error state + PressButton Retry in the sheet, `refetchOnMount:'always'` + 15s poll on the open thread, React Query `focusManager` wired to AppState | ✅ done |
 | 4 | Composer/keyboard fix: removed the inner KeyboardAvoidingView (the iOS formSheet already lifts onto the keyboard natively — KAV double-compensated → bar floated far above the keyboard); idle bar pinned flush via `useSafeAreaInsets().bottom` (was hard-coded padding); FlatList `flex:1` so short threads can't float the bar mid-sheet | ✅ done |
 | 5 | Repair corrupted `node_modules` (reanimated missing `publicGlobals` — broke Metro); lockfile resolved + committed | ✅ done |
+| 6 | Sheet layout fix (founder round 2): root cause = SDK 54 react-native-screens numeric-detent formSheet ignores flex from its wrapper (flex support lands SDK 55) AND force-frames a bare ScrollView child to the sheet bounds (RNS #3569) → list stretched under the title + composer stranded mid-sheet. Fix: single explicitly-sized root View (`height: '100%'`, commented for SDK 55 cleanup) restoring a reliable inner flex column | ✅ done |
+| 7 | Dedicated header region: grabber-clearing top padding (`spacing.lg`) + centered title, normal flow — first comment can never sit under handle/title | ✅ done |
 
-**Next step:** founder retests comments on a physical iPhone (guide below), then merge to `main`.
+**Next step:** founder verifies the two-item layout checklist on a physical iPhone (guide below), then merge to `main`.
 
 ### ⚠️ Founder actions still open (2 commands — blocked for the agent by permissions)
 ```
@@ -24,6 +26,10 @@ npx supabase functions deploy crate-open --project-ref aducawlftwdowvsnryar
 npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
 ```
 Until day-close is redeployed it still runs the pre-M7 code: matches resolve but day-close-time H2H sweeps and the CV tally won't pay coins/points/crates (h2h-pair-time resolutions DO pay — it was redeployed). Award wiring is ref-deduped, so paying later never double-pays. crate-open is needed to open crates from Inventory.
+
+### Layout-fix checklist (physical iPhone — round 2, do these two first)
+1. **Header:** open comments on a post with several comments → grabber, then "Comments", then the first comment, each in its own space — the title never prints over a commenter's name. Drag between the ⅗ and full detents: still true at both.
+2. **Composer:** open comments on a post with 0–2 comments → the "Add a comment…" bar sits flush at the very bottom of the sheet just above the home indicator, with the empty list area ABOVE it (no dead space below). Keyboard behavior unchanged: focus → bar rides directly on the keyboard; dismiss → settles back flush.
 
 ### Comment-fix test guide (physical iPhone)
 - **Load:** open any post's comments → thread loads with author, text, images, likes; removed/blocked-user comments hidden; count on the card matches. Airplane-mode open → "Comments didn't load" + RETRY, which recovers after reconnect.
