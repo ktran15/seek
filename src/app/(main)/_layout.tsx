@@ -7,7 +7,7 @@ import { colors, fontFamilies } from '@/theme';
 
 /**
  * Main app shell (spec §5): persistent top bar + bottom bar
- * [ Challenge ] [ Home ] [ Profile ], Home as the default center tab
+ * [ Home ] [ Challenge ] [ Profile ]; Home is still the default tab
  * (founder-reordered from the spec sec 5 sketch).
  */
 export default function MainLayout() {
@@ -31,20 +31,20 @@ export default function MainLayout() {
         }}
       >
         <Tabs.Screen
-          name="challenge"
-          options={{
-            title: 'Challenge',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="flag" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="index"
           options={{
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="challenge"
+          options={{
+            title: 'Challenge',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="flag" size={size} color={color} />
             ),
           }}
         />
