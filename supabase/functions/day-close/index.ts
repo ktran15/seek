@@ -1,0 +1,224 @@
+/**
+ * day-close — runs when a beta day ends on the global beta clock
+ * (America/New_York; spec §7.6, §7.7). Scheduled via pg_cron (see
+ * PROGRESS.md founder actions) and safely re-runnable:
+ *
+ * 1. H2H days: sweep — pair anyone still pairable, then resolve every
+ *    remaining pending match against the mascot's fixed target (spec §7.9).
+ * 2. Day 3: tally the community vote per poster's friend context with
+ *    tie-sharing (spec §7.7) and notify every poster.
+ *
+ * Coins/crates/points for wins and placements are wired to the ledgers in
+ * M7 — this function records outcomes + notifications today (visible stub).
+ *
+ * Invoked service-to-service: deploy with --no-verify-jwt; the caller must
+ * present the service-role key, checked explicitly below.
+ */
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+import { betaDayInTimezone } from '../_shared/betaDay.ts';
+import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
+import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
+import { attemptPair, friendIdsOf, type ChallengeRow } from '../_shared/pairing.ts';
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+Deno.serve(async (req) => {
+  try {
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!serviceKey || token !== serviceKey) {
+      return json({ error: 'Service calls only' }, 401);
+    }
+    const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);
+
+    const { data: betaSetting } = await admin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'beta')
+      .single();
+    const beta = (betaSetting?.value ?? {}) as {
+      start_date?: string;
+      timezone?: string;
+    };
+
+    // Default: the day that just ended on the beta clock.
+    const body = (await req.json().catch(() => ({}))) as { beta_day?: number };
+    const betaDay =
+      body.beta_day ??
+      betaDayInTimezone(
+        beta.start_date ?? '',
+        beta.timezone ?? 'America/New_York',
+      ) - 1;
+    if (!Number.isInteger(betaDay) || betaDay < 1 || betaDay > 7) {
+      return json({ skipped: true, reason: `No beta day to close (${betaDay})` });
+    }
+
+    const { data: challenge } = await admin
+      .from('challenges')
+      .select('id, beta_day, mode, has_difficulty, victor_rule')
+      .eq('beta_day', betaDay)
+      .single<ChallengeRow>();
+    if (!challenge) return json({ error: 'Unknown challenge' }, 400);
+
+    const report: Record<string, number> = {};
+
+    if (challenge.mode === 'H2H' || challenge.has_difficulty) {
+      report.mascot_resolved = await closeH2H(admin, challenge);
+    }
+    if (challenge.mode === 'CV') {
+      report.vote_results = await closeVote(admin, challenge);
+    }
+
+    return json({ beta_day: betaDay, ...report });
+  } catch (e) {
+    console.error('[day-close]', e);
+    return json({ error: 'Day close failed' }, 500);
+  }
+});
+
+/** Pair the still-pairable, then mascot-resolve the rest (spec §7.6, §7.9). */
+async function closeH2H(
+  admin: ReturnType<typeof createClient>,
+  challenge: ChallengeRow,
+): Promise<number> {
+  // Sweep every submitted player first: creates missing match rows (e.g. the
+  // client crashed before calling h2h-pair) and pairs any late matchups.
+  let subsQuery = admin
+    .from('submissions')
+    .select('user_id, difficulty')
+    .eq('challenge_id', challenge.id)
+    .eq('state', 'submitted');
+  if (challenge.has_difficulty) subsQuery = subsQuery.eq('difficulty', 'hard');
+  const { data: subs } = await subsQuery;
+  for (const sub of subs ?? []) {
+    await attemptPair(admin, challenge, sub.user_id as string);
+  }
+
+  const { data: mascotSetting } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'mascot')
+    .single();
+  const mascot = (mascotSetting?.value ?? {}) as {
+    enabled?: boolean;
+    targets?: Record<string, number>;
+  };
+  const target = mascot.targets?.[String(challenge.beta_day)];
+  if (mascot.enabled === false || target === undefined) return 0;
+
+  const { data: pending } = await admin
+    .from('h2h_matches')
+    .select('id, protagonist_id, protagonist_submission')
+    .eq('beta_day', challenge.beta_day)
+    .eq('status', 'pending');
+
+  let resolved = 0;
+  for (const match of pending ?? []) {
+    const { data: sub } = await admin
+      .from('submissions')
+      .select('user_id, score, passed, submitted_at')
+      .eq('id', match.protagonist_submission as string)
+      .single();
+    if (!sub) continue;
+
+    const userWon = resolveMascotMatch(
+      challenge.victor_rule as H2HVictorRule,
+      {
+        userId: sub.user_id as string,
+        score: sub.score as number | null,
+        passed: sub.passed as boolean | null,
+        submittedAt: (sub.submitted_at as string | null) ?? '',
+      },
+      target,
+    );
+
+    const { error } = await admin
+      .from('h2h_matches')
+      .update({
+        vs_mascot: true,
+        mascot_target_score: target,
+        winner_user_id: userWon ? match.protagonist_id : null,
+        status: 'resolved',
+        resolved_at: new Date().toISOString(),
+      })
+      .eq('id', match.id as string)
+      .eq('status', 'pending');
+    if (error) throw new Error(error.message);
+
+    // Mascot matches notify only the user (spec §7.6).
+    await admin.from('notifications').insert({
+      user_id: match.protagonist_id,
+      type: 'h2h_result',
+      payload: {
+        beta_day: challenge.beta_day,
+        match_id: match.id,
+        won: userWon,
+        opponent_id: null,
+        vs_mascot: true,
+      },
+    });
+    resolved++;
+  }
+  return resolved;
+}
+
+/** Tally the day-3 community vote and notify every poster (spec §7.7). */
+async function closeVote(
+  admin: ReturnType<typeof createClient>,
+  challenge: ChallengeRow,
+): Promise<number> {
+  // Idempotence: one result set per beta day.
+  const { count } = await admin
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('type', 'vote_result')
+    .contains('payload', { beta_day: challenge.beta_day });
+  if ((count ?? 0) > 0) return 0;
+
+  const { data: posts } = await admin
+    .from('submissions')
+    .select('id, user_id')
+    .eq('challenge_id', challenge.id)
+    .eq('state', 'submitted');
+  if (!posts || posts.length === 0) return 0;
+
+  const { data: votes } = await admin
+    .from('votes')
+    .select('submission_id')
+    .eq('beta_day', challenge.beta_day);
+
+  const posterBySubmission = new Map(
+    posts.map((p) => [p.id as string, p.user_id as string]),
+  );
+  const counts = countVotesByPoster(
+    (votes ?? []).map((v) => ({ submissionId: v.submission_id as string })),
+    posterBySubmission,
+  );
+
+  let notified = 0;
+  for (const post of posts) {
+    const posterId = post.user_id as string;
+    const myVotes = counts.get(posterId) ?? 0;
+    const friends = await friendIdsOf(admin, posterId);
+    const friendVotes = friends.map((f) => counts.get(f) ?? 0);
+    const placement = votePlacement(myVotes, friendVotes);
+
+    await admin.from('notifications').insert({
+      user_id: posterId,
+      type: 'vote_result',
+      payload: {
+        beta_day: challenge.beta_day,
+        votes: myVotes,
+        placement, // 1 | 2 | 3 | null
+      },
+    });
+    notified++;
+  }
+  return notified;
+}

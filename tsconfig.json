@@ -16,5 +16,13 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+  ],
+  // Deno-only Edge Function code (jsr: imports, Deno globals, .ts-extension
+  // imports) is type-checked by Deno at deploy time, not by the app's tsc.
+  // The pure logic modules in _shared stay included and jest-covered.
+  "exclude": [
+    "node_modules",
+    "supabase/functions/**/index.ts",
+    "supabase/functions/_shared/pairing.ts"
   ]
 }
