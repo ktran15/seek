@@ -49,3 +49,6 @@ coverage/
 Thumbs.db
 desktop.ini
 *.orig.*
+
+# Supabase CLI local state
+supabase/.temp/
