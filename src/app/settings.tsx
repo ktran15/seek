@@ -14,7 +14,6 @@ interface StubRow {
 
 /** Settings rows per spec §5; every remaining stub is labeled with its milestone. */
 const STUB_ROWS: StubRow[] = [
-  { label: 'Blocked users', lands: 'M10' },
   { label: 'Privacy Policy', lands: 'M10' },
   { label: 'Terms', lands: 'M10' },
   { label: 'Delete account', lands: 'M10' },
@@ -42,6 +41,17 @@ export default function SettingsScreen() {
         >
           <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
             Edit avatar base
+          </Text>
+          <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/blocked-users')}
+          style={styles.row}
+        >
+          <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
+            Blocked users
           </Text>
           <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
         </Pressable>
