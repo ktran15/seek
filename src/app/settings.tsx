@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { useDeleteAccount } from '@/features/auth/useDeleteAccount';
+import { unregisterPushToken } from '@/features/push/registerPush';
 import { supabase } from '@/lib/supabase';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
@@ -30,6 +31,8 @@ export default function SettingsScreen() {
 
   const signOut = async () => {
     setBusy(true);
+    // Deregister this device first — the RLS delete needs the live session.
+    await unregisterPushToken();
     const { error } = await supabase.auth.signOut();
     setBusy(false);
     if (error) Alert.alert('Sign out failed', error.message);

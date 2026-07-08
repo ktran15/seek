@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
 import { goToNextStep } from '@/features/onboarding/steps';
+import { registerPushToken } from '@/features/push/registerPush';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
@@ -17,8 +18,11 @@ export default function NotificationsStep() {
     setBusy(true);
     try {
       await Notifications.requestPermissionsAsync();
+      // Grant just landed — register this device now rather than waiting
+      // for the next app start (no-op in Expo Go / if denied).
+      await registerPushToken();
     } catch {
-      // Denied or unavailable — fine; M11 re-checks before scheduling.
+      // Denied or unavailable — fine; scheduling re-checks permission.
     } finally {
       setBusy(false);
       goToNextStep('notifications');

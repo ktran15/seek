@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 
 import { useSession } from '@/features/auth/useSession';
 import { isOnboarded, useProfile } from '@/features/profile/useProfile';
+import { usePushNotifications } from '@/features/push/usePushNotifications';
 import { AppProviders } from '@/providers/AppProviders';
 import { colors, fontFamilies, radii } from '@/theme';
 
@@ -41,6 +42,11 @@ function RootNavigator() {
   );
 
   const ready = !sessionLoading && (!session || !profileLoading);
+  const signedIn = !!session;
+  const onboarded = signedIn && isOnboarded(profile);
+
+  // Token registration + notification-tap routing (M11, spec §13).
+  usePushNotifications(session?.user.id, ready && onboarded);
 
   useEffect(() => {
     if (ready) {
@@ -49,9 +55,6 @@ function RootNavigator() {
   }, [ready]);
 
   if (!ready) return null;
-
-  const signedIn = !!session;
-  const onboarded = signedIn && isOnboarded(profile);
 
   return (
     <Stack
