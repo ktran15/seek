@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 
 import { useSession } from '@/features/auth/useSession';
 import { isOnboarded, useProfile } from '@/features/profile/useProfile';
+import { useLocalNotificationSync } from '@/features/push/useLocalNotificationSync';
 import { usePushNotifications } from '@/features/push/usePushNotifications';
 import { AppProviders } from '@/providers/AppProviders';
 import { colors, fontFamilies, radii } from '@/theme';
@@ -47,6 +48,8 @@ function RootNavigator() {
 
   // Token registration + notification-tap routing (M11, spec §13).
   usePushNotifications(session?.user.id, ready && onboarded);
+  // Local schedule: daily live, evening reminder, invite nudge (M11).
+  useLocalNotificationSync(onboarded ? session?.user.id : undefined);
 
   useEffect(() => {
     if (ready) {

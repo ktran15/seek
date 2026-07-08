@@ -1,4 +1,10 @@
-import { currentBetaDay, dayState, POST_BETA, PRE_BETA } from '../betaCalendar';
+import {
+  currentBetaDay,
+  dayState,
+  localMidnightOfBetaDay,
+  POST_BETA,
+  PRE_BETA,
+} from '../betaCalendar';
 
 const START = '2026-07-13';
 
@@ -18,6 +24,23 @@ describe('currentBetaDay (local-midnight availability, spec §8)', () => {
 
   it('is POST_BETA after day 7', () => {
     expect(currentBetaDay(new Date(2026, 6, 20, 0, 1), START)).toBe(POST_BETA);
+  });
+});
+
+describe('localMidnightOfBetaDay (M11 daily-live fire instant)', () => {
+  it('day 1 fires at local midnight of the start date', () => {
+    expect(localMidnightOfBetaDay(1, START)).toEqual(new Date(2026, 6, 13, 0, 0, 0));
+  });
+
+  it('day N is N-1 calendar days later, crossing month boundaries', () => {
+    expect(localMidnightOfBetaDay(7, START)).toEqual(new Date(2026, 6, 19, 0, 0, 0));
+    expect(localMidnightOfBetaDay(3, '2026-07-30')).toEqual(new Date(2026, 7, 1, 0, 0, 0));
+  });
+
+  it('agrees with currentBetaDay: one minute past the boundary is that day', () => {
+    const midnight = localMidnightOfBetaDay(4, START);
+    expect(currentBetaDay(new Date(midnight.getTime() + 60_000), START)).toBe(4);
+    expect(currentBetaDay(new Date(midnight.getTime() - 60_000), START)).toBe(3);
   });
 });
 
