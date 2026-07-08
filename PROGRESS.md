@@ -4,9 +4,23 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M10 — Trust & compliance** — not started
+## Current milestone: **M10 — Trust & compliance** (spec §12, §15) — branch `m10-trust-and-compliance`
 
-**Next step:** outline the M10 plan (spec §15), get founder confirmation, then build. Do not work ahead of that confirmation.
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Admin removal path: `open_reports` triage view + service-gated `admin-moderate` Edge Fn (remove/restore/dismiss; removal actions every open report on the target); removed-propagation hardening — `cast_vote` rejects removed posts, vote-feed + day-close CV tally exclude them (8 tests; 102 total) | ✅ done — **founder must apply migration + deploy fn** |
+| 2 | Comment-report UI + community-guidelines one-liner in onboarding | ⬜ not started |
+| 3 | Blocked-users Settings screen with unblock | ⬜ not started |
+| 4 | Account-deletion cascade: `delete-account` Edge Fn (storage → rows → auth user; opponents' matches anonymized via existing set-null FKs) + Settings confirm flow + cascade-coverage unit tests | ⬜ not started |
+| 5 | Privacy policy + terms (GitHub Pages hosting — founder-approved) + Settings links | ⬜ not started |
+
+**Next step:** sub-step 2 — comment-report UI in the comment sheet.
+
+### M10 decisions so far (founder pre-approved in plan review)
+- **Legal docs host = GitHub Pages** on this repo (founder-approved 2026-07-07).
+- **Deleted user in others' H2H matches → anonymized, not deleted** (founder-approved 2026-07-07): survivors keep their match/W-L record; the schema's `on delete set null` on `opponent_id`/`winner_user_id` already encodes this.
+- Removal is founder-tooling only (spec §12 "minimal admin path"): SQL Editor `net.http_post` → `admin-moderate`, same invocation pattern as day-close/weekly-payout. No in-app admin UI.
+- A restore (un-remove) never rewrites report history; a removal closes every open report on that content as `actioned`.
 
 ## M9 — Leaderboard & weekly payout (spec §9.1, §9.2, §15) — **complete, founder-approved 2026-07-07** — branch `m9-leaderboard-and-payout` (PR #2 merged to main)
 

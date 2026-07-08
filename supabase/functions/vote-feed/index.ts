@@ -76,13 +76,28 @@ Deno.serve(async (req) => {
       return json({ window, my_vote: myVote?.submission_id ?? null, posts: [] });
     }
 
-    const { data: subs } = await admin
+    const { data: allSubs } = await admin
       .from('submissions')
       .select('id, user_id, media_paths, submitted_at')
       .eq('challenge_id', challenge.id)
       .eq('state', 'submitted')
       .in('user_id', friends);
-    if (!subs || subs.length === 0) {
+
+    // Admin-removed posts are gone from every surface (spec §12) — the vote
+    // feed reads submissions directly, so the removed flag is checked here.
+    let subs = allSubs ?? [];
+    if (subs.length > 0) {
+      const { data: removedPosts } = await admin
+        .from('feed_posts')
+        .select('submission_id')
+        .in('submission_id', subs.map((s) => s.id as string))
+        .eq('removed', true);
+      const removedIds = new Set(
+        (removedPosts ?? []).map((r) => r.submission_id as string),
+      );
+      subs = subs.filter((s) => !removedIds.has(s.id as string));
+    }
+    if (subs.length === 0) {
       return json({ window, my_vote: myVote?.submission_id ?? null, posts: [] });
     }
 
