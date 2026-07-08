@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Keyboard } from 'react-native';
+import { Alert, Keyboard } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useSession } from '@/features/auth/useSession';
@@ -11,9 +11,12 @@ import {
   uploadCommentImage,
 } from '@/features/feed/commentMedia';
 import {
+  REPORT_REASONS,
   useAddComment,
   useComments,
+  useReport,
   useToggleCommentLike,
+  type CommentView,
 } from '@/features/feed/useFeed';
 import { useProfile } from '@/features/profile/useProfile';
 
@@ -65,6 +68,26 @@ export default function CommentsScreen() {
   const { data: comments, isLoading, error, refetch, isRefetching } = useComments(postId);
   const addComment = useAddComment(userId);
   const toggleLike = useToggleCommentLike(userId);
+  const report = useReport(userId);
+
+  // Same reason picker as post reports (spec §12: any comment reportable).
+  const onReportComment = (comment: CommentView) => {
+    Alert.alert('Report comment', 'Why are you reporting this comment?', [
+      ...REPORT_REASONS.map(({ label, reason }) => ({
+        text: label,
+        onPress: () =>
+          report.mutate(
+            { reason, commentId: comment.id },
+            {
+              onSuccess: () =>
+                Alert.alert('Thanks', 'Your report is in — we review every one.'),
+              onError: () => Alert.alert('Report failed', 'Please try again.'),
+            },
+          ),
+      })),
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  };
 
   return (
     <ErrorBoundary screen="Comments">
@@ -85,6 +108,8 @@ export default function CommentsScreen() {
             liked: comment.viewer_liked,
           })
         }
+        onReport={onReportComment}
+        viewerId={userId}
         onSend={async ({ body, parentThreadId, imageUri }) => {
           if (!userId) throw new Error('Not signed in');
           const mediaPath = imageUri

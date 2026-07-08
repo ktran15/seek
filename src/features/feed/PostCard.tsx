@@ -9,20 +9,12 @@ import { colors, elevation, radii, spacing, textStyles } from '@/theme';
 
 import { MediaCarousel } from './MediaCarousel';
 import {
+  REPORT_REASONS,
   useBlockUser,
   useReport,
   useToggleLike,
   type FeedPost,
-  type ReportReason,
 } from './useFeed';
-
-const REPORT_REASONS: { label: string; reason: ReportReason }[] = [
-  { label: 'Inappropriate content', reason: 'inappropriate' },
-  { label: 'Spam', reason: 'spam' },
-  { label: 'Not real proof', reason: 'fake_proof' },
-  { label: 'Harassment', reason: 'harassment' },
-  { label: 'Something else', reason: 'other' },
-];
 
 function scoreCaption(post: FeedPost): string | null {
   switch (post.challenge.capture_type) {

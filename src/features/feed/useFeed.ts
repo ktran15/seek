@@ -43,6 +43,15 @@ export type ReportReason =
   | 'harassment'
   | 'other';
 
+/** Report reasons (spec §12 enum) — one list for post AND comment reports. */
+export const REPORT_REASONS: { label: string; reason: ReportReason }[] = [
+  { label: 'Inappropriate content', reason: 'inappropriate' },
+  { label: 'Spam', reason: 'spam' },
+  { label: 'Not real proof', reason: 'fake_proof' },
+  { label: 'Harassment', reason: 'harassment' },
+  { label: 'Something else', reason: 'other' },
+];
+
 export const feedKeys = {
   all: ['feed'] as const,
   scope: (scope: FeedScope) => ['feed', scope] as const,
