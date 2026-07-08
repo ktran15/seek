@@ -31,6 +31,7 @@ const USER_DATA_TABLES = [
   'points_ledger',
   'crates',
   'user_cosmetics',
+  'push_tokens',
 ].sort();
 
 describe('CASCADE_PLAN coverage', () => {
@@ -73,6 +74,7 @@ describe('CASCADE_PLAN coverage', () => {
       points_ledger: 'user_id',
       crates: 'user_id',
       user_cosmetics: 'user_id',
+      push_tokens: 'user_id',
     };
     for (const [table, column] of Object.entries(ownerColumn)) {
       expect({ table, disposition: CASCADE_PLAN[table]?.userColumns[column] }).toEqual({

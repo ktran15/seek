@@ -14,6 +14,8 @@ import { useEffect } from 'react';
 
 import { useSession } from '@/features/auth/useSession';
 import { isOnboarded, useProfile } from '@/features/profile/useProfile';
+import { useLocalNotificationSync } from '@/features/push/useLocalNotificationSync';
+import { usePushNotifications } from '@/features/push/usePushNotifications';
 import { AppProviders } from '@/providers/AppProviders';
 import { colors, fontFamilies, radii } from '@/theme';
 
@@ -41,6 +43,13 @@ function RootNavigator() {
   );
 
   const ready = !sessionLoading && (!session || !profileLoading);
+  const signedIn = !!session;
+  const onboarded = signedIn && isOnboarded(profile);
+
+  // Token registration + notification-tap routing (M11, spec §13).
+  usePushNotifications(session?.user.id, ready && onboarded);
+  // Local schedule: daily live, evening reminder, invite nudge (M11).
+  useLocalNotificationSync(onboarded ? session?.user.id : undefined);
 
   useEffect(() => {
     if (ready) {
@@ -49,9 +58,6 @@ function RootNavigator() {
   }, [ready]);
 
   if (!ready) return null;
-
-  const signedIn = !!session;
-  const onboarded = signedIn && isOnboarded(profile);
 
   return (
     <Stack
@@ -75,11 +81,15 @@ function RootNavigator() {
       <Stack.Protected guard={onboarded}>
         <Stack.Screen name="(main)" />
         <Stack.Screen name="add-friends" options={{ headerShown: true, title: 'Add Friends' }} />
+        <Stack.Screen name="friends" options={{ headerShown: true, title: 'Friends' }} />
+        <Stack.Screen name="user/[id]" options={{ headerShown: true, title: 'Profile' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="blocked-users" options={{ headerShown: true, title: 'Blocked Users' }} />
         <Stack.Screen name="edit-avatar" options={{ headerShown: true, title: 'Edit Avatar' }} />
-        <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: false }} />
+        {/* Swipe-back is allowed pre-arm; the screen itself flips
+            gestureEnabled off from capture onward (spec §7.4). */}
+        <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: true }} />
         <Stack.Screen name="vote" options={{ headerShown: true, title: 'Community Vote' }} />
         <Stack.Screen name="comments/[postId]" options={commentSheetOptions} />
       </Stack.Protected>

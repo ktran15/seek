@@ -19,6 +19,20 @@ function localDateOnly(date: Date): Date {
 }
 
 /**
+ * The user's LOCAL midnight starting beta day N — the instant day N's
+ * challenge goes live on this device (spec §8; the M11 "daily challenge
+ * live" local notification fires here). Date-constructor overflow keeps it
+ * DST-safe: midnight is always the calendar day's real 00:00.
+ */
+export function localMidnightOfBetaDay(
+  day: number,
+  startDate: string = config.beta.startDate,
+): Date {
+  const start = parseLocalDate(startDate);
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate() + (day - 1));
+}
+
+/**
  * Current beta day for this user: 1..lengthDays during the beta,
  * PRE_BETA (0) before it starts, POST_BETA after it ends.
  */

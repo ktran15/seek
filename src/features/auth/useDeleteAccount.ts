@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
+import { clearLocalNotifications } from '@/features/push/useLocalNotificationSync';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -17,6 +18,9 @@ export function useDeleteAccount() {
       if (payload.error || !payload.deleted) {
         throw new Error(payload.error ?? 'Account deletion failed. Try again.');
       }
+      // Scheduled local notifications die with the account (the server-side
+      // push_tokens rows already cascaded with the profile).
+      await clearLocalNotifications();
       await supabase.auth.signOut({ scope: 'local' });
     },
   });

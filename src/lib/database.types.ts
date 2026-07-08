@@ -425,6 +425,18 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      push_tokens: {
+        Row: {
+          token: string;
+          user_id: string;
+          platform: 'ios' | 'android';
+          updated_at: string;
+        };
+        /** Writes go through the register_push_token RPC (device may switch accounts). */
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -456,6 +468,10 @@ export interface Database {
       };
       cast_vote: {
         Args: { target_submission_id: string };
+        Returns: undefined;
+      };
+      register_push_token: {
+        Args: { p_token: string; p_platform: 'ios' | 'android' };
         Returns: undefined;
       };
       can_view_post: {

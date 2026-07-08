@@ -11,6 +11,7 @@
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+import { notifyAndPush } from '../_shared/notify.ts';
 import { friendIdsOf } from '../_shared/pairing.ts';
 import { bearerToken, isServiceToken, serviceKeySet } from '../_shared/serviceAuth.ts';
 import { weeklyPayout, type WeeklyPayoutAmounts } from '../_shared/weekly.ts';
@@ -111,19 +112,21 @@ Deno.serve(async (req) => {
         if (crateError) throw new Error(crateError.message);
       }
 
-      const { error: notifyError } = await admin.from('notifications').insert({
-        user_id: userId,
-        type: 'weekly_result',
-        payload: {
-          beta_week: BETA_WEEK,
-          rank: decision.rank,
-          points: pointsBy.get(userId) ?? 0,
-          coins: decision.coins,
-          gold_crate: decision.goldCrate,
-          solo: decision.solo,
+      // In-app row + best-effort device push (M11, spec §13).
+      await notifyAndPush(admin, [
+        {
+          user_id: userId,
+          type: 'weekly_result',
+          payload: {
+            beta_week: BETA_WEEK,
+            rank: decision.rank,
+            points: pointsBy.get(userId) ?? 0,
+            coins: decision.coins,
+            gold_crate: decision.goldCrate,
+            solo: decision.solo,
+          },
         },
-      });
-      if (notifyError) throw new Error(notifyError.message);
+      ]);
       paid++;
     }
 
