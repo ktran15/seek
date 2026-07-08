@@ -4,7 +4,11 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M9 — Leaderboard & weekly payout** (spec §9.1, §9.2, §15) — branch `m9-leaderboard-and-payout`
+## Current milestone: **M10 — Trust & compliance** — not started
+
+**Next step:** outline the M10 plan (spec §15), get founder confirmation, then build. Do not work ahead of that confirmation.
+
+## M9 — Leaderboard & weekly payout (spec §9.1, §9.2, §15) — **complete, founder-approved 2026-07-07** — branch `m9-leaderboard-and-payout` (PR #2 merged to main)
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -13,13 +17,13 @@
 | 3 | `weekly-payout` Edge Function: service-role gated (like day-close), idempotent per user, pays qualified tiers + gold crate (1st) or solo flat, writes weekly_result notifications | ✅ authored — **founder must deploy** |
 | 4 | Client: real egocentric Leaderboard view (rank, names, points, you-highlight), payout ladder footer + qualification state, weekly_result in Notifications | ✅ done |
 
-**Next step:** M9 complete — founder review (actions below), then M10 after approval.
+**Review outcome (2026-07-07):** full M9 review passed on device; both flagged decisions approved (see below). Milestone closed.
 
-### ⚠️ Founder actions for M9 (plus the 2 still-open M7 deploys above)
-1. ⬜ **Apply the migration:** `npx supabase db push`
-2. ⬜ **Deploy weekly-payout** (service-gated like day-close):
+### Founder actions for M9 (done during review, 2026-07-07)
+1. ✅ **Apply the migration:** `npx supabase db push`
+2. ✅ **Deploy weekly-payout** (service-gated like day-close):
    `npx supabase functions deploy weekly-payout --no-verify-jwt --project-ref aducawlftwdowvsnryar`
-3. ⬜ **Run the payout after day 7 closes** (or any time when testing — it's idempotent per user, re-runs skip already-paid users). SQL Editor:
+3. ✅ (tested; re-run is idempotent) **Run the payout after day 7 closes** (or any time when testing — it's idempotent per user, re-runs skip already-paid users). SQL Editor:
    ```sql
    select net.http_post(
      url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/weekly-payout',
@@ -38,9 +42,9 @@
 - **Simulated week-end:** run the SQL above → A (qualified, rank 1) gets +300 coins, a GOLD crate in Inventory, and a "👑" notification; ranks 2-3 get +150, 4-10 get +75 (no gold); C (unqualified, ≥1 completion) gets flat +75 solo with its own copy; a friendless account with zero submissions gets nothing.
 - **Idempotence:** run the SQL again → `{"paid": 0, "skipped": N}` — nobody double-paid.
 
-### M9 decisions (flag for founder)
-- **Zero weekly points never ranks/pays** (mirrors M5's "zero votes never places") — an inactive friend circle can't all "win 1st".
-- **Tied firsts each take the full 1st purse + gold crate** (competition ranking, same tie-sharing as the vote tally).
+### M9 decisions (✅ founder-approved 2026-07-07)
+- **D1 — approved: zero weekly points never ranks/pays** (mirrors M5's "zero votes never places") — an inactive friend circle can't all "win 1st".
+- **D2 — approved: tied firsts each take the full 1st purse (300) + gold crate** (competition ranking, same tie-sharing as the community-vote tally).
 - Payout runs **once per user ever** (single beta week) — dedupe is "any weekly ledger row exists".
 - The client board imports the same `weeklyRank` function the Edge Function uses (shared module, unit-tested) — displayed ranks can't drift from paid ranks.
 
@@ -60,7 +64,7 @@ All LayoutAnimation transitions are skipped under Reduce Motion (`useReducedMoti
 
 **On-device checks (round 2):** tap input at partial height → one continuous slide to full, identical feel to the button-open; swipe down while typing → keyboard drops, sheet stays big; swipe down again → sheet closes; post a comment → dimmed "Posting…" row → settles solid; post a reply into a collapsed thread → thread expands and shows it; a thread with 3 replies shows 1 + "View 2 more replies".
 
-## Current milestone: **M8 — Avatar & cosmetics** (spec §10, §15) — branch `m8-avatar-and-cosmetics`
+## M8 — Avatar & cosmetics (spec §10, §15) — **complete** — branch `m8-avatar-and-cosmetics`
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -314,11 +318,13 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M5: **complete** — all founder actions done (migration, functions, cron)
 - M6: **complete — awaiting founder review** (incl. M6.1 feedback pass)
 - M7: **complete — awaiting founder review** (apply migrations + deploy/redeploy functions, see actions above)
-- M8–M14: not started (do not work ahead — founder reviews after each milestone)
+- M8: **complete**
+- M9: **complete — founder-approved 2026-07-07** (review passed on device; decisions D1 + D2 approved)
+- M10–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
-- Weekly leaderboard payout + gold crate are M9 (points ledger already accumulates).
+- ~~Weekly leaderboard payout + gold crate are M9~~ — shipped in M9 (2026-07-07).
 - Post-submit "+50 coins" screen shows the config amount rather than reading the ledger row it just triggered (amounts always match; purely cosmetic shortcut).
 - Comments/users are reportable at the DB level (reports table takes post/comment/user targets); the client UI reports **posts** — comment-report UI + the admin removal path are M10.
 - Blocked-users list w/ unblock in Settings is M10 (blocks themselves fully enforced since M3; block UI on posts shipped in M6).
