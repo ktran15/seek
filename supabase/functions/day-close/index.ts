@@ -21,6 +21,7 @@ import { betaDayInTimezone } from '../_shared/betaDay.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
 import { attemptPair, friendIdsOf, type ChallengeRow } from '../_shared/pairing.ts';
+import { bearerToken, isServiceToken, serviceKeySet } from '../_shared/serviceAuth.ts';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -32,8 +33,11 @@ function json(body: unknown, status = 200): Response {
 Deno.serve(async (req) => {
   try {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!serviceKey || token !== serviceKey) {
+    const keys = serviceKeySet({
+      serviceRoleKey: serviceKey,
+      secretKeysJson: Deno.env.get('SUPABASE_SECRET_KEYS'),
+    });
+    if (!isServiceToken(bearerToken(req.headers.get('Authorization')), keys)) {
       return json({ error: 'Service calls only' }, 401);
     }
     const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);

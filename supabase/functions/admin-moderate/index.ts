@@ -28,6 +28,7 @@ import {
   resolveTarget,
   type ReportTargetRow,
 } from '../_shared/moderation.ts';
+import { bearerToken, isServiceToken, serviceKeySet } from '../_shared/serviceAuth.ts';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -46,8 +47,11 @@ interface ModerateBody {
 Deno.serve(async (req) => {
   try {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!serviceKey || token !== serviceKey) {
+    const keys = serviceKeySet({
+      serviceRoleKey: serviceKey,
+      secretKeysJson: Deno.env.get('SUPABASE_SECRET_KEYS'),
+    });
+    if (!isServiceToken(bearerToken(req.headers.get('Authorization')), keys)) {
       return json({ error: 'Service calls only' }, 401);
     }
     const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);
