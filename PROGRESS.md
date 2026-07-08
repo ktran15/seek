@@ -11,10 +11,10 @@
 | 1 | Admin removal path: `open_reports` triage view + service-gated `admin-moderate` Edge Fn (remove/restore/dismiss; removal actions every open report on the target); removed-propagation hardening — `cast_vote` rejects removed posts, vote-feed + day-close CV tally exclude them (8 tests; 102 total) | ✅ done — **founder must apply migration + deploy fn** |
 | 2 | Comment-report UI: Report action on others' comment rows (shared reason list with post reports) + "keep proof real, keep it kind" house-rules line on the onboarding Begin step | ✅ done |
 | 3 | Blocked-users Settings screen: block list w/ names, confirm-unblock (invalidates feeds/friends/suggestions), empty + error/retry states | ✅ done |
-| 4 | Account-deletion cascade: `delete-account` Edge Fn (storage → rows → auth user; opponents' matches anonymized via existing set-null FKs) + Settings confirm flow + cascade-coverage unit tests | ⬜ not started |
+| 4 | Account-deletion cascade: JWT-verified `delete-account` Edge Fn (recursive storage purge → auth-user delete → FK cascade; uid only from the verified token) + Settings double-destructive-confirm flow + `CASCADE_PLAN` tripwire tests pinning every user-data table's disposition (10 tests; 112 total) | ✅ done — **founder must deploy fn** |
 | 5 | Privacy policy + terms (GitHub Pages hosting — founder-approved) + Settings links | ⬜ not started |
 
-**Next step:** sub-step 4 — account-deletion cascade.
+**Next step:** sub-step 5 — privacy policy + terms (GitHub Pages) + Settings links.
 
 ### M10 decisions so far (founder pre-approved in plan review)
 - **Legal docs host = GitHub Pages** on this repo (founder-approved 2026-07-07).
