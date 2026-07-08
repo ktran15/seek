@@ -1,23 +1,28 @@
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PressButton } from '@/components/ui/PressButton';
+import { config } from '@/config';
 import { useDeleteAccount } from '@/features/auth/useDeleteAccount';
 import { supabase } from '@/lib/supabase';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
-interface StubRow {
-  label: string;
-  lands: string;
-}
-
-/** Settings rows per spec §5; every remaining stub is labeled with its milestone. */
-const STUB_ROWS: StubRow[] = [
-  { label: 'Privacy Policy', lands: 'M10' },
-  { label: 'Terms', lands: 'M10' },
+/** Legal documents (spec §12) — hosted pages opened in the in-app browser. */
+const LEGAL_ROWS: { label: string; url: string }[] = [
+  { label: 'Privacy Policy', url: config.legal.privacyPolicyUrl },
+  { label: 'Terms', url: config.legal.termsUrl },
 ];
+
+const openLegalPage = async (url: string) => {
+  try {
+    await WebBrowser.openBrowserAsync(url);
+  } catch {
+    Alert.alert('Couldn’t open the page', 'Check your connection and try again.');
+  }
+};
 
 export default function SettingsScreen() {
   const [busy, setBusy] = useState(false);
@@ -95,19 +100,17 @@ export default function SettingsScreen() {
           <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
         </Pressable>
 
-        {STUB_ROWS.map((row) => (
+        {LEGAL_ROWS.map((row) => (
           <Pressable
             key={row.label}
             accessibilityRole="button"
-            onPress={() =>
-              Alert.alert(row.label, `This lands in milestone ${row.lands}.`)
-            }
+            onPress={() => void openLegalPage(row.url)}
             style={styles.row}
           >
             <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
               {row.label}
             </Text>
-            <Text style={[textStyles.caption, styles.rowBadge]}>{row.lands}</Text>
+            <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
           </Pressable>
         ))}
 

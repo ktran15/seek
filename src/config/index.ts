@@ -108,6 +108,19 @@ export const config = {
     /** TUNE: local time (24h) for the evening incomplete-challenge reminder. */
     eveningReminderHour: 19,
   },
+
+  legal: {
+    /**
+     * FOUNDER-SET (spec §12): public URLs for the generated documents in
+     * docs/legal/, served by GitHub Pages (repo Settings → Pages → deploy
+     * from branch `main`, folder `/docs`). Linked from Settings and used in
+     * App Store Connect. Founder reviews the documents before submission.
+     */
+    privacyPolicyUrl: 'https://ktran15.github.io/seek/legal/privacy.html',
+    termsUrl: 'https://ktran15.github.io/seek/legal/terms.html',
+    /** FOUNDER-SET: support/privacy contact shown in the documents. */
+    contactEmail: 'alvaradof010407@gmail.com',
+  },
 } as const;
 
 export type AppConfig = typeof config;
