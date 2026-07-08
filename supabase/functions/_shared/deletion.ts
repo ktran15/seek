@@ -91,6 +91,7 @@ export const CASCADE_PLAN: Record<string, TableCascade> = {
   points_ledger: { userColumns: { user_id: 'cascade' } },
   crates: { userColumns: { user_id: 'cascade' } },
   user_cosmetics: { userColumns: { user_id: 'cascade' } },
+  push_tokens: { userColumns: { user_id: 'cascade' } },
 };
 
 /**
