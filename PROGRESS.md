@@ -4,6 +4,10 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Pre-M12 UI additions (founder-directed, 2026-07-08) — on `m11-push-notifications`
+1. **Friends list screen** — Profile's Friends count now opens `/friends`: the user's **accepted MUTUAL friends** (spec §6/§7.10 — the schema has no follower/following asymmetry; one accepted edge = friends both ways). Built on the same `friendIdsOf` as the header count so list and count can't disagree. Rows (letter avatar, display name, @username) tap through to a **new minimal `/user/[id]` profile** (full-look avatar + names — no other-user profile surface existed anywhere; stats/inventory stay owner-private by RLS, expanding it is a founder call). Empty state: "No friends yet — invite someone!" → the existing invite share sheet. Loading/error+retry states match Blocked Users.
+2. **Challenge swipe-back (partial — decision pending)** — the standard iOS edge swipe now exits the challenge flow back to the Mountain during `reveal` and `difficulty` (before the attempt is armed, spec §7.4 — BEGIN creates the in_progress row and enters capture in one step). The locked/missed/done-for-today notices are swipeable too. From `capture` onward the gesture stays OFF — **open founder decision (a) vs (b)**: (a) allow swipe mid-capture as an abandon (attempt not burned, per crash handling) or (b) keep it disabled while actively recording so a good take can't be lost to an accidental edge swipe (agent recommendation: b). Current behavior = (b) provisionally.
+
 ## Current milestone: **M11 — Push notifications** (spec §13, §15) — branch `m11-push-notifications`
 
 | # | Sub-step | Status |

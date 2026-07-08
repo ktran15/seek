@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -83,6 +83,17 @@ export default function ChallengeFlowScreen() {
   const today = currentBetaDay();
   const existing = submissions?.find((s) => s.beta_day === day) ?? null;
   const attemptState = deriveAttemptState(existing, true);
+
+  /**
+   * Swipe-back exit (founder-directed, pre-M12): the standard iOS edge swipe
+   * is on ONLY before the attempt is armed (spec §7.4) — reveal + difficulty.
+   * BEGIN creates the in_progress row and enters capture in one step, so from
+   * `capture` onward the gesture is off (mid-capture behavior is a pending
+   * founder decision — see PROGRESS). The early-return notices below
+   * (loading / locked / missed / done-for-today) inherit the layout default
+   * (enabled): they're inert screens whose only action IS leaving.
+   */
+  const canSwipeOut = step === 'reveal' || step === 'difficulty';
 
   if (!challenge) {
     return (
@@ -200,6 +211,7 @@ export default function ChallengeFlowScreen() {
 
   return (
     <ErrorBoundary screen="Challenge Flow">
+      <Stack.Screen options={{ gestureEnabled: canSwipeOut }} />
       {step === 'capture' &&
       (challenge.capture_type === 'timer_video' ||
         challenge.capture_type === 'camera_photo' ||

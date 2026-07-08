@@ -87,7 +87,9 @@ function RootNavigator() {
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="blocked-users" options={{ headerShown: true, title: 'Blocked Users' }} />
         <Stack.Screen name="edit-avatar" options={{ headerShown: true, title: 'Edit Avatar' }} />
-        <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: false }} />
+        {/* Swipe-back is allowed pre-arm; the screen itself flips
+            gestureEnabled off from capture onward (spec §7.4). */}
+        <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: true }} />
         <Stack.Screen name="vote" options={{ headerShown: true, title: 'Community Vote' }} />
         <Stack.Screen name="comments/[postId]" options={commentSheetOptions} />
       </Stack.Protected>
