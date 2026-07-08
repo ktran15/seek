@@ -4,9 +4,68 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M10 — Trust & compliance** — not started
+## Current milestone: **M10 — Trust & compliance** (spec §12, §15) — branch `m10-trust-and-compliance`
 
-**Next step:** outline the M10 plan (spec §15), get founder confirmation, then build. Do not work ahead of that confirmation.
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Admin removal path: `open_reports` triage view + service-gated `admin-moderate` Edge Fn (remove/restore/dismiss; removal actions every open report on the target); removed-propagation hardening — `cast_vote` rejects removed posts, vote-feed + day-close CV tally exclude them (8 tests; 102 total) | ✅ done — **founder must apply migration + deploy fn** |
+| 2 | Comment-report UI: Report action on others' comment rows (shared reason list with post reports) + "keep proof real, keep it kind" house-rules line on the onboarding Begin step | ✅ done |
+| 3 | Blocked-users Settings screen: block list w/ names, confirm-unblock (invalidates feeds/friends/suggestions), empty + error/retry states | ✅ done |
+| 4 | Account-deletion cascade: JWT-verified `delete-account` Edge Fn (recursive storage purge → auth-user delete → FK cascade; uid only from the verified token) + Settings double-destructive-confirm flow + `CASCADE_PLAN` tripwire tests pinning every user-data table's disposition (10 tests; 112 total) | ✅ done — **founder must deploy fn** |
+| 5 | Privacy policy + terms generated (`docs/legal/*.html`, GitHub Pages), config URL slots (`config.legal`), Settings rows open them in the in-app browser | ✅ done — **founder must enable Pages + review docs** |
+
+**Next step:** M10 complete — founder review (actions below), then M11 after approval.
+
+### ⚠️ Founder actions for M10
+1. ⬜ **Apply the migration:** `npx supabase db push`
+2. ⬜ **Deploy the two new functions:**
+   ```
+   npx supabase functions deploy admin-moderate --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy delete-account --project-ref aducawlftwdowvsnryar
+   ```
+3. ⬜ **Redeploy the two touched functions** (they gained the removed-content filters):
+   ```
+   npx supabase functions deploy vote-feed --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   ```
+   (This also finally ships the M7 award wiring in day-close if you never ran that deploy.)
+4. ⬜ **Enable GitHub Pages:** repo → Settings → Pages → "Deploy from a branch" → branch `main`, folder `/docs`. The app links to `https://ktran15.github.io/seek/legal/privacy.html` + `terms.html` (config slots in `src/config` → `legal`). **Note:** Pages on the free plan needs the repo public — if you want it private, say so and we'll host the two files elsewhere and update the two config URLs.
+5. ⬜ **Review the legal documents** (`docs/legal/privacy.html`, `terms.html`) before App Store submission — spec §12/§18. Contact email defaults to your gmail; the same URLs go into App Store Connect.
+
+### How to moderate (founder cheat-sheet)
+- **See open reports** — SQL Editor: `select * from public.open_reports;`
+- **Remove reported content** (actions every open report on it):
+  ```sql
+  select net.http_post(
+    url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/admin-moderate',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+    ),
+    body := '{"action": "remove", "report_id": "PASTE-REPORT-ID"}'::jsonb,
+    timeout_milliseconds := 30000
+  );
+  ```
+- Variants for `body`: `{"action":"remove","post_id":"…"}` / `{"action":"remove","comment_id":"…"}` (direct, no report needed), `{"action":"restore", …same targets…}` (undo a removal), `{"action":"dismiss","report_id":"…"}` (close a report, content stays), `{"action":"list"}` (same as the view).
+
+### M10 test guide
+- **Report a comment:** account B comments on A's post → A opens the sheet → "Report" sits next to "Reply" under B's comment (A's own comments show no Report) → pick a reason → row lands in `reports` (status `open`), visible in `open_reports`.
+- **Admin removal:** run the remove SQL above with that report's id → the comment vanishes from the sheet (≤15s poll or reopen) and the card's count drops; the report flips to `actioned`. Remove a **post** → gone from all three feeds, its comment sheet 404s. `restore` brings either back.
+- **Removed day-3 post can't win:** remove a day-3 post mid-window → it leaves the vote feed, `cast_vote` for it errors ("Submission not found"), and the day-close tally ignores it (its poster gets no placement/result).
+- **Blocked users:** block someone from a post's ⋯ → Settings → Blocked users lists them → UNBLOCK (confirm) → their posts/suggestions return on next refresh. Empty state when nobody's blocked.
+- **Account deletion (use a throwaway account with posts, comments, likes, friends, crates):** Settings → Delete account → two destructive confirms → app lands on Auth. From a friend's account: their posts/comments/likes are gone everywhere; your resolved H2H against them still shows in your W-L (opponent anonymized). DB spot-checks: no rows carrying the old uid in any user table; `proofs/<uid>/…` and `comment-media/<uid>/…` empty; the auth.users row gone. Deleting mid-flight failure leaves the account intact and retryable.
+- **House rules:** fresh signup → Begin step shows "keep proof real, keep it kind."
+- **Legal:** Settings → Privacy Policy / Terms open the hosted pages in the in-app browser (after step 4; before that they 404 — expected).
+
+### M10 decisions (2 pre-approved in plan review; rest flagged for founder)
+- ✅ **Legal docs host = GitHub Pages** on this repo (founder-approved 2026-07-07).
+- ✅ **Deleted user in others' H2H matches → anonymized, not deleted** (founder-approved 2026-07-07): survivors keep their match/W-L record; the schema's `on delete set null` on `opponent_id`/`winner_user_id` already encodes this, and `CASCADE_PLAN` tests pin it.
+- Removal is founder-tooling only (spec §12 "minimal admin path"): SQL Editor `net.http_post` → `admin-moderate`, same invocation pattern as day-close/weekly-payout. No in-app admin UI.
+- A restore (un-remove) never rewrites report history; a removal closes every open report on that content as `actioned`. User-target reports have no removable content — dismiss them or act on the user's posts/comments directly.
+- **Comment "Report" is an inline action next to "Reply"** (not a hidden long-press/overflow) — discoverable + accessible; hidden on your own comments.
+- **Delete-account is storage-first, then auth**: any failure leaves the account intact and the call retryable; the deleted uid comes only from the verified JWT (no "delete user X" parameter exists).
+- Deletion removes the user's votes/likes retroactively; already-paid rewards other users earned are ledger history and stay (append-only ledgers, spec §6).
+- Legal contact email defaults to the founder's gmail — swap in `src/config` (`legal.contactEmail`) + the two HTML docs if you want a dedicated address.
 
 ## M9 — Leaderboard & weekly payout (spec §9.1, §9.2, §15) — **complete, founder-approved 2026-07-07** — branch `m9-leaderboard-and-payout` (PR #2 merged to main)
 
@@ -320,14 +379,15 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M7: **complete — awaiting founder review** (apply migrations + deploy/redeploy functions, see actions above)
 - M8: **complete**
 - M9: **complete — founder-approved 2026-07-07** (review passed on device; decisions D1 + D2 approved)
-- M10–M14: not started (do not work ahead — founder reviews after each milestone)
+- M10: **complete — awaiting founder review** (apply migration, deploy/redeploy functions, enable GitHub Pages, review legal docs — see actions above)
+- M11–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
 - ~~Weekly leaderboard payout + gold crate are M9~~ — shipped in M9 (2026-07-07).
 - Post-submit "+50 coins" screen shows the config amount rather than reading the ledger row it just triggered (amounts always match; purely cosmetic shortcut).
-- Comments/users are reportable at the DB level (reports table takes post/comment/user targets); the client UI reports **posts** — comment-report UI + the admin removal path are M10.
-- Blocked-users list w/ unblock in Settings is M10 (blocks themselves fully enforced since M3; block UI on posts shipped in M6).
+- ~~Comment-report UI + admin removal path are M10~~ — shipped in M10 (posts + comments reportable; `admin-moderate` actions them). Reporting a **user** directly still has no client UI (DB supports it; no spec §5 surface owns it — flagged).
+- ~~Blocked-users list w/ unblock in Settings is M10~~ — shipped in M10.
 - vote-feed still reads day-3 submissions directly (it predates feed_posts and its vote semantics are per-submission) — harmless duplication, unify if it ever drifts.
 - Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is M13.
 - Push notifications (incl. "voting closes in 2h") are M11 — in-app Notifications screen carries results today.

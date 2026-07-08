@@ -116,6 +116,10 @@ export interface CommentSheetProps {
   /** Uppercase initial for the viewer's composer avatar. */
   myInitial: string;
   onToggleLike: (comment: CommentView) => void;
+  /** Report a comment (spec §12) — omitted rows (own comments) show no action. */
+  onReport?: (comment: CommentView) => void;
+  /** Viewer's user id — hides Report on the viewer's own comments. */
+  viewerId?: string;
   onSend: (input: CommentSendInput) => Promise<void>;
   /** Both return a local URI, or null if the user cancels. */
   onPickImage: () => Promise<string | null>;
@@ -135,11 +139,13 @@ function CommentRow({
   isReply,
   onLike,
   onReply,
+  onReport,
 }: {
   comment: CommentView;
   isReply: boolean;
   onLike: () => void;
   onReply: () => void;
+  onReport?: () => void;
 }) {
   const name = comment.display_name || comment.username;
   return (
@@ -162,15 +168,28 @@ function CommentRow({
             accessibilityLabel={`Image comment by ${name}`}
           />
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Reply to ${name}`}
-          onPress={onReply}
-          hitSlop={8}
-          style={styles.replyButton}
-        >
-          <Text style={[textStyles.caption, styles.replyLabel]}>Reply</Text>
-        </Pressable>
+        <View style={styles.rowActions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Reply to ${name}`}
+            onPress={onReply}
+            hitSlop={8}
+            style={styles.replyButton}
+          >
+            <Text style={[textStyles.caption, styles.replyLabel]}>Reply</Text>
+          </Pressable>
+          {onReport && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Report comment by ${name}`}
+              onPress={onReport}
+              hitSlop={8}
+              style={styles.replyButton}
+            >
+              <Text style={[textStyles.caption, styles.replyLabel]}>Report</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
       <Pressable
         accessibilityRole="button"
@@ -206,6 +225,8 @@ export function CommentSheet({
   posterName,
   myInitial,
   onToggleLike,
+  onReport,
+  viewerId,
   onSend,
   onPickImage,
   onTakePhoto,
@@ -376,6 +397,11 @@ export function CommentSheet({
                 isReply={false}
                 onLike={() => onToggleLike(item)}
                 onReply={() => startReply(item)}
+                onReport={
+                  onReport && item.user_id !== viewerId
+                    ? () => onReport(item)
+                    : undefined
+                }
               />
               {visibleReplies.map((reply) => (
                 <CommentRow
@@ -384,6 +410,11 @@ export function CommentSheet({
                   isReply
                   onLike={() => onToggleLike(reply)}
                   onReply={() => startReply(reply)}
+                  onReport={
+                    onReport && reply.user_id !== viewerId
+                      ? () => onReport(reply)
+                      : undefined
+                  }
                 />
               ))}
               {hiddenCount > 0 && (
@@ -635,6 +666,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.surfaceNature,
     marginTop: spacing.xxs,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   replyButton: {
     minHeight: 28,

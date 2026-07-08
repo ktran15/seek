@@ -21,6 +21,7 @@ import { betaDayInTimezone } from '../_shared/betaDay.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
 import { attemptPair, friendIdsOf, type ChallengeRow } from '../_shared/pairing.ts';
+import { bearerToken, isServiceToken, serviceKeySet } from '../_shared/serviceAuth.ts';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -32,8 +33,11 @@ function json(body: unknown, status = 200): Response {
 Deno.serve(async (req) => {
   try {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!serviceKey || token !== serviceKey) {
+    const keys = serviceKeySet({
+      serviceRoleKey: serviceKey,
+      secretKeysJson: Deno.env.get('SUPABASE_SECRET_KEYS'),
+    });
+    if (!isServiceToken(bearerToken(req.headers.get('Authorization')), keys)) {
       return json({ error: 'Service calls only' }, 401);
     }
     const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceKey);
@@ -187,12 +191,25 @@ async function closeVote(
     .contains('payload', { beta_day: challenge.beta_day });
   if ((count ?? 0) > 0) return 0;
 
-  const { data: posts } = await admin
+  const { data: allPosts } = await admin
     .from('submissions')
     .select('id, user_id')
     .eq('challenge_id', challenge.id)
     .eq('state', 'submitted');
-  if (!posts || posts.length === 0) return 0;
+  if (!allPosts || allPosts.length === 0) return 0;
+
+  // Admin-removed posts (spec §12) never tally, place, or get a result —
+  // their votes count for nobody.
+  const { data: removedRows } = await admin
+    .from('feed_posts')
+    .select('submission_id')
+    .in('submission_id', allPosts.map((p) => p.id as string))
+    .eq('removed', true);
+  const removedIds = new Set(
+    (removedRows ?? []).map((r) => r.submission_id as string),
+  );
+  const posts = allPosts.filter((p) => !removedIds.has(p.id as string));
+  if (posts.length === 0) return 0;
 
   const { data: votes } = await admin
     .from('votes')
