@@ -7,6 +7,7 @@
  * DB choreography around it.
  */
 import { awardH2HWin } from './awards.ts';
+import { notifyAndPush } from './notify.ts';
 import {
   pickOpponent,
   resolveFriendMatch,
@@ -199,7 +200,8 @@ export async function attemptPair(
   // Winner's purse: coins + points + blue crate (M7; ref-deduped inside).
   await awardH2HWin(db, winnerUserId, match.id);
 
-  const { error: notifyError } = await db.from('notifications').insert([
+  // In-app rows + best-effort device pushes in one call (M11, spec §13).
+  await notifyAndPush(db, [
     {
       user_id: protagonistId,
       type: 'h2h_result',
@@ -223,7 +225,6 @@ export async function attemptPair(
       },
     },
   ]);
-  if (notifyError) throw new Error(notifyError.message);
 
   return { status: 'resolved', winnerUserId };
 }

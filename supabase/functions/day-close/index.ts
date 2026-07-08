@@ -19,6 +19,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { awardH2HWin, awardVotePlacement } from '../_shared/awards.ts';
 import { betaDayInTimezone } from '../_shared/betaDay.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
+import { notifyAndPush } from '../_shared/notify.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
 import { attemptPair, friendIdsOf, type ChallengeRow } from '../_shared/pairing.ts';
 import { bearerToken, isServiceToken, serviceKeySet } from '../_shared/serviceAuth.ts';
@@ -161,18 +162,20 @@ async function closeH2H(
       await awardH2HWin(admin, match.protagonist_id as string, match.id as string);
     }
 
-    // Mascot matches notify only the user (spec §7.6).
-    await admin.from('notifications').insert({
-      user_id: match.protagonist_id,
-      type: 'h2h_result',
-      payload: {
-        beta_day: challenge.beta_day,
-        match_id: match.id,
-        won: userWon,
-        opponent_id: null,
-        vs_mascot: true,
+    // Mascot matches notify only the user (spec §7.6); in-app row + push (M11).
+    await notifyAndPush(admin, [
+      {
+        user_id: match.protagonist_id as string,
+        type: 'h2h_result',
+        payload: {
+          beta_day: challenge.beta_day,
+          match_id: match.id,
+          won: userWon,
+          opponent_id: null,
+          vs_mascot: true,
+        },
       },
-    });
+    ]);
     resolved++;
   }
   return resolved;
@@ -237,15 +240,18 @@ async function closeVote(
       await awardVotePlacement(admin, posterId, placement, post.id as string);
     }
 
-    await admin.from('notifications').insert({
-      user_id: posterId,
-      type: 'vote_result',
-      payload: {
-        beta_day: challenge.beta_day,
-        votes: myVotes,
-        placement, // 1 | 2 | 3 | null
+    // In-app row + best-effort device push (M11, spec §13).
+    await notifyAndPush(admin, [
+      {
+        user_id: posterId,
+        type: 'vote_result',
+        payload: {
+          beta_day: challenge.beta_day,
+          votes: myVotes,
+          placement, // 1 | 2 | 3 | null
+        },
       },
-    });
+    ]);
     notified++;
   }
   return notified;

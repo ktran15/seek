@@ -70,6 +70,23 @@ export function dayCloseInstant(
 }
 
 /**
+ * True when `now` sits inside the final `hours` before beta day N closes on
+ * the global clock — the "voting closes in 2h" push window (spec §13). The
+ * vote-countdown cron fires daily; this guard makes every run outside
+ * [close − hours, close) a no-op.
+ */
+export function inPreCloseWindow(
+  startDate: string,
+  timezone: string,
+  betaDay: number,
+  now: Date,
+  hours = 2,
+): boolean {
+  const close = dayCloseInstant(startDate, timezone, betaDay).getTime();
+  return now.getTime() >= close - hours * 60 * 60 * 1000 && now.getTime() < close;
+}
+
+/**
  * Beta day (1-based) on the global clock. Day 1 = startDate itself;
  * 0 or negative = beta not started; > lengthDays = beta over.
  */
