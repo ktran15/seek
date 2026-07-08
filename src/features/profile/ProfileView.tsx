@@ -58,12 +58,17 @@ export function ProfileView() {
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
       <View style={styles.headerRow}>
-        <View style={styles.counters}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Friends: ${friendCount}. Open friends list`}
+          onPress={() => router.push('/friends')}
+          style={styles.counters}
+        >
           <Text style={[textStyles.headerS, styles.counter]}>
             {friendCount}
             {'\n'}Friends
           </Text>
-        </View>
+        </Pressable>
         <AvatarPreview config={profile?.avatar_config ?? {}} cosmetics={catalog ?? []} />
         <Pressable
           accessibilityRole="button"

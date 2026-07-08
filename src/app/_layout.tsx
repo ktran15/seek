@@ -81,6 +81,8 @@ function RootNavigator() {
       <Stack.Protected guard={onboarded}>
         <Stack.Screen name="(main)" />
         <Stack.Screen name="add-friends" options={{ headerShown: true, title: 'Add Friends' }} />
+        <Stack.Screen name="friends" options={{ headerShown: true, title: 'Friends' }} />
+        <Stack.Screen name="user/[id]" options={{ headerShown: true, title: 'Profile' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="blocked-users" options={{ headerShown: true, title: 'Blocked Users' }} />
