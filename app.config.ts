@@ -64,11 +64,11 @@ const expoConfig: ExpoConfig = {
   ],
   extra: {
     eas: {
-      // FOUNDER-SET after `npx eas-cli init` (M11 founder actions): the EAS
-      // project id — an identifier, not a secret. Remote push tokens
-      // (getExpoPushTokenAsync) need it; while empty, remote push is a
-      // silent no-op and local notifications still work.
-      projectId: '',
+      // FOUNDER-SET (eas init, 2026-07-08): the EAS project id — an
+      // identifier, not a secret. Remote push tokens (getExpoPushTokenAsync)
+      // need it; without a dev build it stays a silent no-op and local
+      // notifications still work.
+      projectId: 'b37bbe6b-57bf-46bd-9f6b-e8a1839b7416',
     },
   },
   experiments: {
