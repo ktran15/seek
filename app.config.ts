@@ -62,6 +62,15 @@ const expoConfig: ExpoConfig = {
       },
     ],
   ],
+  extra: {
+    eas: {
+      // FOUNDER-SET after `npx eas-cli init` (M11 founder actions): the EAS
+      // project id — an identifier, not a secret. Remote push tokens
+      // (getExpoPushTokenAsync) need it; while empty, remote push is a
+      // silent no-op and local notifications still work.
+      projectId: '',
+    },
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,

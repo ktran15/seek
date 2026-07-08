@@ -4,7 +4,76 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M10 — Trust & compliance** (spec §12, §15) — branch `m10-trust-and-compliance`
+## Current milestone: **M11 — Push notifications** (spec §13, §15) — branch `m11-push-notifications`
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | `push_tokens` migration (device-keyed rows, account-reassigning `register_push_token` RPC, RLS, deletion cascade pinned in `CASCADE_PLAN`) + shared push module: §13 copy/tap-route builder + Expo Push sender (100-chunk, never-throws) — client and server import the SAME builder so wording/routes can't drift (14 tests) | ✅ done — **founder must apply migration** |
+| 2 | Server push wiring: `notifyAndPush` (in-app row + best-effort device push) replaces every notifications insert in h2h-pair / day-close / weekly-payout; NEW `vote-countdown` Edge Fn — service-gated, `[close−2h, close)` window guard on the CV day, once-only app_settings marker, push-only (4 tests) | ✅ done — **founder must deploy 4 fns + schedule cron** |
+| 3 | Client push plumbing: device-token registration (silent no-op in Expo Go / missing projectId / permission denied), registers at sign-in AND right after the onboarding grant, deregisters on sign-out, whitelisted notification-tap routing incl. cold start | ✅ done |
+| 4 | Local scheduled notifications: stateless absolute-date planner — daily-live at local midnight, evening reminder (`TUNE` 19:00, dropped when that day completes), one-shot invite nudge (`TUNE` day 2 noon, <3 friends); re-syncs on data change + app foreground; cleared on sign-out/account deletion (13 tests; 154 total) | ✅ done |
+| 5 | `extra.eas.projectId` config slot + PROGRESS/test guide | ✅ done |
+
+**Next step:** M11 complete — founder review (actions below), then M12 after approval.
+
+### ⚠️ Founder actions for M11
+1. ⬜ **Apply the migration:** `npx supabase db push`
+2. ⬜ **Deploy the new function + redeploy the three that now push:**
+   ```
+   npx supabase functions deploy vote-countdown --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy h2h-pair --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   npx supabase functions deploy weekly-payout --no-verify-jwt --project-ref aducawlftwdowvsnryar
+   ```
+3. ⬜ **Schedule the countdown cron** (SQL Editor). 02:00 UTC = 2h before the 04:00 UTC day-close during EDT; on every day except day 3's window the function no-ops:
+   ```sql
+   select cron.schedule(
+     'seek-vote-countdown',
+     '0 2 * * *',
+     $$
+     select net.http_post(
+       url := 'https://aducawlftwdowvsnryar.supabase.co/functions/v1/vote-countdown',
+       headers := jsonb_build_object(
+         'Content-Type', 'application/json',
+         'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+       ),
+       body := '{}'::jsonb,
+       timeout_milliseconds := 30000
+     );
+     $$
+   );
+   ```
+4. ⬜ **Remote-push prerequisites** (one-time; required to RECEIVE server pushes — Expo Go can't, remote push was removed from it in SDK 53):
+   1. `npx eas-cli login`, then `npx eas-cli init` — links the repo to an EAS project and prints the project id.
+   2. Paste that id into `app.config.ts` → `extra.eas.projectId` (an identifier, not a secret) and commit.
+   3. Build + install a **development build**: `npx eas-cli build --profile development --platform ios` (EAS sets up APNs push credentials during the first build — sign in with the Apple Developer account when prompted). Install it on the phone, run `npx expo start`, open via the dev build.
+
+   Until step 4 is done: the local notifications (daily live / evening reminder / invite nudge) already work in Expo Go on iOS; remote pushes are a silent no-op — nothing breaks.
+
+### M11 test guide
+**Local notifications (Expo Go is fine; permission granted in onboarding):**
+- **Daily live:** leave the app closed past local midnight → "Today's challenge is live — one shot." fires at 00:00; tap → Challenge screen.
+- **Evening reminder:** leave today incomplete → reminder at 19:00 local; complete the challenge earlier → that day's reminder never fires.
+- **Invite nudge:** account with <3 friends → ONE nudge at noon on beta day 2; with 3+ friends (or once the moment has passed) → none, ever.
+- **Sign out** → every scheduled local notification is cleared (nothing fires for a signed-out device).
+
+**Remote pushes (dev build required; two devices A + B, friends):**
+- **H2H result:** both submit on an H2H day → both devices get the ⚔️ result push at resolution; tap → Notifications. Friendless C resolves vs. the mascot at day-close → mascot-flavored copy.
+- **Vote countdown:** day 3, 2h before close, the cron fires → "⏳ Voting closes in 2 hours" on every registered device; tap → /vote. Manual test any time — same `net.http_post` pattern with url `…/functions/v1/vote-countdown` and body `'{"force": true}'::jsonb`; to re-send first `delete from app_settings where key = 'vote_countdown_sent_day_3';`
+- **Vote result:** run day-close for day 3 → 🥇/🥈/🥉/votes-in push per poster.
+- **Weekly result:** run weekly-payout → 👑 (1st) / 🏅 (ranked) / 🏔️ (solo) push per paid user.
+- **Deregistration:** sign out on B → trigger any of the above → B's device stays silent (its push_tokens row was deleted).
+
+### M11 decisions (flag for founder)
+- **Daily-live fires at the exact LOCAL midnight boundary** (spec §13 "local-day boundary") — the same instant the challenge unlocks on that device's calendar.
+- **vote-countdown is push-only**: the in-app countdown is the persistent Challenge banner (spec §7.7), so no notifications row is written — an hours-stale "closes in 2h" line in the Results list would be noise. Once-only via an `app_settings` marker; recipients = every registered device (voting is open to all users).
+- **Evening reminders for future days are scheduled ahead** (a local notification can't check completion at fire time); completing a day re-syncs the plan and drops that day's reminder. If the user never opens the app that day, it correctly fires — the challenge IS incomplete.
+- **Invite nudge is one-shot structurally**: every local notification has an absolute calendar fire-date; a date in the past is never re-planned, so nothing can fire twice — no stored "fired" flag to lose on reinstall. Threshold is checked at schedule time and at every re-sync until it fires (fire-time evaluation isn't possible on iOS).
+- **friend_accepted stays in-app only** — it isn't a §13 trigger.
+- **Foreground arrivals show a quiet banner** (no sound/badge) — the Notifications screen stays the primary surface.
+- **A push can never fail an award**: the Expo send is best-effort, chunked, and never throws into a resolution path (unit-pinned).
+
+## M10 — Trust & compliance (spec §12, §15) — **complete, founder-approved 2026-07-08** — branch `m10-trust-and-compliance` (PR #3 merged to main)
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -14,23 +83,23 @@
 | 4 | Account-deletion cascade: JWT-verified `delete-account` Edge Fn (recursive storage purge → auth-user delete → FK cascade; uid only from the verified token) + Settings double-destructive-confirm flow + `CASCADE_PLAN` tripwire tests pinning every user-data table's disposition (10 tests; 112 total) | ✅ done — **founder must deploy fn** |
 | 5 | Privacy policy + terms generated (`docs/legal/*.html`, GitHub Pages), config URL slots (`config.legal`), Settings rows open them in the in-app browser | ✅ done — **founder must enable Pages + review docs** |
 
-**Next step:** M10 complete — founder review (actions below), then M11 after approval.
+**Review outcome (2026-07-08):** infrastructure verified in session (migration live, all four functions deployed + service-auth 200, GitHub Pages enabled + repo public); founder confirmed everything clean and approved starting M11. Milestone closed.
 
-### ⚠️ Founder actions for M10
-1. ⬜ **Apply the migration:** `npx supabase db push`
-2. ⬜ **Deploy the two new functions:**
+### Founder actions for M10 (all done, 2026-07-07/08 — collaborator + founder)
+1. ✅ **Apply the migration:** `npx supabase db push`
+2. ✅ **Deploy the two new functions:**
    ```
    npx supabase functions deploy admin-moderate --no-verify-jwt --project-ref aducawlftwdowvsnryar
    npx supabase functions deploy delete-account --project-ref aducawlftwdowvsnryar
    ```
-3. ⬜ **Redeploy the two touched functions** (they gained the removed-content filters):
+3. ✅ **Redeploy the two touched functions** (they gained the removed-content filters):
    ```
    npx supabase functions deploy vote-feed --project-ref aducawlftwdowvsnryar
    npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar
    ```
    (This also finally ships the M7 award wiring in day-close if you never ran that deploy.)
-4. ⬜ **Enable GitHub Pages:** repo → Settings → Pages → "Deploy from a branch" → branch `main`, folder `/docs`. The app links to `https://ktran15.github.io/seek/legal/privacy.html` + `terms.html` (config slots in `src/config` → `legal`). **Note:** Pages on the free plan needs the repo public — if you want it private, say so and we'll host the two files elsewhere and update the two config URLs.
-5. ⬜ **Review the legal documents** (`docs/legal/privacy.html`, `terms.html`) before App Store submission — spec §12/§18. Contact email defaults to your gmail; the same URLs go into App Store Connect.
+4. ✅ **Enable GitHub Pages** (done 2026-07-08; repo made public): branch `main`, folder `/docs` → the app links to `https://ktran15.github.io/seek/legal/privacy.html` + `terms.html` (config slots in `src/config` → `legal`).
+5. ✅ **Review the legal documents** — founder confirmed 2026-07-08. Contact email defaults to the founder gmail; the same URLs go into App Store Connect.
 
 ### How to moderate (founder cheat-sheet)
 - **See open reports** — SQL Editor: `select * from public.open_reports;`
@@ -379,8 +448,9 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M7: **complete — awaiting founder review** (apply migrations + deploy/redeploy functions, see actions above)
 - M8: **complete**
 - M9: **complete — founder-approved 2026-07-07** (review passed on device; decisions D1 + D2 approved)
-- M10: **complete — awaiting founder review** (apply migration, deploy/redeploy functions, enable GitHub Pages, review legal docs — see actions above)
-- M11–M14: not started (do not work ahead — founder reviews after each milestone)
+- M10: **complete — founder-approved 2026-07-08** (all founder actions done; infra verified in session)
+- M11: **complete — awaiting founder review** (apply migration, deploy 4 fns, schedule countdown cron, EAS init + dev build for remote-push testing — see actions above)
+- M12–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
@@ -390,7 +460,7 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - ~~Blocked-users list w/ unblock in Settings is M10~~ — shipped in M10.
 - vote-feed still reads day-3 submissions directly (it predates feed_posts and its vote semantics are per-submission) — harmless duplication, unify if it ever drifts.
 - Post-submit stages are static screens; expressive animation (climb, crate pop, confetti) is M13.
-- Push notifications (incl. "voting closes in 2h") are M11 — in-app Notifications screen carries results today.
+- ~~Push notifications (incl. "voting closes in 2h") are M11~~ — shipped in M11 (all §13 triggers). Receiving REMOTE pushes still needs the founder's EAS init + dev build (M11 founder actions); `extra.eas.projectId` in app.config.ts is an empty FOUNDER-SET slot until then.
 - Profile header shows a single mutual **Friends** count (mutual friendship model; flagged for founder).
 - Declined requests show as "REQUESTED" to the requester (silent decline — no re-request in v1).
 - Invite coin reward (+50) not paid yet (M7); invite row recorded now. Share URL is a founder-set placeholder until TestFlight (M14).
