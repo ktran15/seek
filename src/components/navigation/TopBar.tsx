@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getAsset } from '@/assets/registry';
 import { config } from '@/config';
-import { colors, spacing, textStyles } from '@/theme';
+import { colors, spacing } from '@/theme';
 
 /** Persistent top bar (spec §5): Add Friends | Notifications. */
 export function TopBar() {
@@ -12,7 +13,12 @@ export function TopBar() {
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.xxs }]}>
-      <Text style={[textStyles.hero, styles.brand]}>{config.appName}</Text>
+      <Image
+        source={getAsset('appLogoWordmark')}
+        style={styles.brand}
+        resizeMode="contain"
+        accessibilityLabel={config.appName}
+      />
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
@@ -46,10 +52,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     backgroundColor: colors.background,
   },
+  // Sized to the text it replaced (22/28 "Seek" ≈ 28px tall).
   brand: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    lineHeight: 28,
+    width: 42,
+    height: 28,
   },
   actions: {
     flexDirection: 'row',

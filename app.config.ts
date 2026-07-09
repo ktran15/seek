@@ -14,7 +14,9 @@ const expoConfig: ExpoConfig = {
   scheme: appName.toLowerCase(),
   userInterfaceStyle: 'light',
   ios: {
-    icon: './assets/expo.icon',
+    // Plain PNG icon (SEEK wordmark on the cream box, scripts/make-icons.js);
+    // the Icon Composer bundle in assets/expo.icon was the template default.
+    icon: './assets/images/icon.png',
     supportsTablet: false,
     bundleIdentifier: 'com.smokeysummit.seek',
     usesAppleSignIn: true,
