@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getAsset } from '@/assets/registry';
 import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
+import { useMyFriendships } from '@/features/friends/useFriends';
 import { useMyNotifications } from '@/features/h2h/useH2H';
 import { colors, spacing, textStyles } from '@/theme';
 
@@ -13,8 +14,16 @@ import { colors, spacing, textStyles } from '@/theme';
 export function TopBar() {
   const insets = useSafeAreaInsets();
   const { session } = useSession();
-  const { data: notifications } = useMyNotifications(session?.user.id);
-  const unreadCount = (notifications ?? []).filter((n) => !n.read).length;
+  const myId = session?.user.id;
+  const { data: notifications } = useMyNotifications(myId);
+  const { data: friendships } = useMyFriendships(myId);
+  // Unread rows plus incoming friend requests — everything the notifications
+  // screen surfaces that still needs the user's attention.
+  const unreadCount =
+    (notifications ?? []).filter((n) => !n.read).length +
+    (friendships ?? []).filter(
+      (f) => f.status === 'pending' && f.addressee_id === myId,
+    ).length;
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.xxs }]}>
