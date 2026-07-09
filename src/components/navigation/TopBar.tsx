@@ -1,15 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getAsset } from '@/assets/registry';
 import { config } from '@/config';
-import { colors, spacing } from '@/theme';
+import { useSession } from '@/features/auth/useSession';
+import { useMyFriendships } from '@/features/friends/useFriends';
+import { useMyNotifications } from '@/features/h2h/useH2H';
+import { colors, spacing, textStyles } from '@/theme';
 
 /** Persistent top bar (spec §5): Add Friends | Notifications. */
 export function TopBar() {
   const insets = useSafeAreaInsets();
+  const { session } = useSession();
+  const myId = session?.user.id;
+  const { data: notifications } = useMyNotifications(myId);
+  const { data: friendships } = useMyFriendships(myId);
+  // Unread rows plus incoming friend requests — everything the notifications
+  // screen surfaces that still needs the user's attention.
+  const unreadCount =
+    (notifications ?? []).filter((n) => !n.read).length +
+    (friendships ?? []).filter(
+      (f) => f.status === 'pending' && f.addressee_id === myId,
+    ).length;
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.xxs }]}>
@@ -31,12 +45,23 @@ export function TopBar() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Notifications"
+          accessibilityLabel={
+            unreadCount > 0
+              ? `Notifications, ${unreadCount} unread`
+              : 'Notifications'
+          }
           onPress={() => router.push('/notifications')}
           style={styles.iconButton}
           hitSlop={4}
         >
           <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={[textStyles.caption, styles.badgeCount]}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </Pressable>
       </View>
     </View>
@@ -67,5 +92,25 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Anchored to the bell glyph (24px, centered in the 44px button), not the
+  // button corner, so the dot reads as attached to the bell.
+  badge: {
+    position: 'absolute',
+    top: 6,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: spacing.xxs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.danger,
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  badgeCount: {
+    color: colors.textOnPrimary,
+    lineHeight: 14,
   },
 });
