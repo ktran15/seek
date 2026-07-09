@@ -37,6 +37,51 @@ export const assetRegistry = {
   // reference every cosmetic layer is generated against. Never regenerate.
   hikerBase: require('./art/hiker-base.png'),
 
+  // Avatar body per skin tone (catalog skin1–skin5): shape-identical recolors
+  // of the frozen base (Rig Bible §4.3). skin2 is the master's own tone.
+  bodySkin1: require('./art/hiker-base.png'),
+  bodySkin2: require('./art/hiker-base.png'),
+  bodySkin3: require('./art/hiker-base.png'),
+  bodySkin4: require('./art/hiker-base.png'),
+  bodySkin5: require('./art/hiker-base.png'),
+
+  // Cosmetic layers — 8 slots × 4 rarities, slot names seeded in the M7
+  // cosmetics catalog (`asset_slot_name`). Placeholder = translucent
+  // rarity-colored box at the slot's LOCKED-ON-BASE anchor zone on the 1024²
+  // master canvas; the M12 batch pass swaps each file for isolated layer art.
+  cosBootsCommon: require('./placeholders/cos-boots-common.png'),
+  cosBootsRare: require('./placeholders/cos-boots-rare.png'),
+  cosBootsEpic: require('./placeholders/cos-boots-epic.png'),
+  cosBootsLegendary: require('./placeholders/cos-boots-legendary.png'),
+  cosPantsCommon: require('./placeholders/cos-pants-common.png'),
+  cosPantsRare: require('./placeholders/cos-pants-rare.png'),
+  cosPantsEpic: require('./placeholders/cos-pants-epic.png'),
+  cosPantsLegendary: require('./placeholders/cos-pants-legendary.png'),
+  cosBackpackCommon: require('./placeholders/cos-backpack-common.png'),
+  cosBackpackRare: require('./placeholders/cos-backpack-rare.png'),
+  cosBackpackEpic: require('./placeholders/cos-backpack-epic.png'),
+  cosBackpackLegendary: require('./placeholders/cos-backpack-legendary.png'),
+  cosHatsCommon: require('./placeholders/cos-hats-common.png'),
+  cosHatsRare: require('./placeholders/cos-hats-rare.png'),
+  cosHatsEpic: require('./placeholders/cos-hats-epic.png'),
+  cosHatsLegendary: require('./placeholders/cos-hats-legendary.png'),
+  cosSunglassesCommon: require('./placeholders/cos-sunglasses-common.png'),
+  cosSunglassesRare: require('./placeholders/cos-sunglasses-rare.png'),
+  cosSunglassesEpic: require('./placeholders/cos-sunglasses-epic.png'),
+  cosSunglassesLegendary: require('./placeholders/cos-sunglasses-legendary.png'),
+  cosShirtsCommon: require('./placeholders/cos-shirts-common.png'),
+  cosShirtsRare: require('./placeholders/cos-shirts-rare.png'),
+  cosShirtsEpic: require('./placeholders/cos-shirts-epic.png'),
+  cosShirtsLegendary: require('./placeholders/cos-shirts-legendary.png'),
+  cosJacketCommon: require('./placeholders/cos-jacket-common.png'),
+  cosJacketRare: require('./placeholders/cos-jacket-rare.png'),
+  cosJacketEpic: require('./placeholders/cos-jacket-epic.png'),
+  cosJacketLegendary: require('./placeholders/cos-jacket-legendary.png'),
+  cosPetCommon: require('./placeholders/cos-pet-common.png'),
+  cosPetRare: require('./placeholders/cos-pet-rare.png'),
+  cosPetEpic: require('./placeholders/cos-pet-epic.png'),
+  cosPetLegendary: require('./placeholders/cos-pet-legendary.png'),
+
   // Crates — one design, five recolors (spec §9.3)
   crateWooden: require('./art/crate-wooden.png'),
   crateBlue: require('./art/crate-blue.png'),
@@ -56,4 +101,15 @@ export type AssetSlot = keyof typeof assetRegistry;
 /** Preferred accessor — keeps call sites slot-name-based and typo-safe. */
 export function getAsset(slot: AssetSlot): ImageSourcePropType {
   return assetRegistry[slot];
+}
+
+/**
+ * Lookup for slot names that arrive as data, not code — the cosmetics
+ * catalog's `asset_slot_name`, base-variant names built from avatar_config
+ * ids (`baseEyes2`, `baseHair4Hc1`, …). Returns null for a slot with no
+ * registered art yet (the compositor skips that layer) — a catalog row or
+ * stale config can never crash the render.
+ */
+export function getAssetOrNull(slot: string): ImageSourcePropType | null {
+  return slot in assetRegistry ? assetRegistry[slot as AssetSlot] : null;
 }

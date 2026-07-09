@@ -67,3 +67,26 @@ export const DEFAULT_AVATAR: Required<
 export function swatchById(options: SwatchOption[], id: string | undefined) {
   return options.find((o) => o.id === id) ?? options[0];
 }
+
+/**
+ * Registry slot names for the base-variant layer art (M12 naming
+ * convention): body master per skin tone, eyes variant, hair style × color.
+ * Resolved via getAssetOrNull — a name whose art hasn't landed yet (eyes /
+ * hair before the batch pass) skips that layer and the frozen base's baked
+ * features show. Unknown config ids fall back like the pickers do.
+ */
+export function baseLayerSlotNames(config: AvatarConfig): {
+  body: string;
+  eyes: string;
+  hair: string;
+} {
+  const skin = swatchById(SKIN_TONES, config.skinTone).id;
+  const eyes = (EYES.find((o) => o.id === config.eyes) ?? EYES[0]).id;
+  const hair = (HAIR_STYLES.find((o) => o.id === config.hair) ?? HAIR_STYLES[0]).id;
+  const hairColor = swatchById(HAIR_COLORS, config.hairColor).id;
+  return {
+    body: `bodySkin${skin.slice('skin'.length)}`,
+    eyes: `baseEyes${eyes.slice('eyes'.length)}`,
+    hair: `baseHair${hair.slice('hair'.length)}Hc${hairColor.slice('hc'.length)}`,
+  };
+}

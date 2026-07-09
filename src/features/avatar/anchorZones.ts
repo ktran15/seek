@@ -7,7 +7,8 @@
  * every layer is a full-canvas registered image — these exist for the dev
  * QA overlay and intake validation.
  */
-import zonesJson from '@/assets/art/anchor-zones.json';
+// Relative path (not @/assets) so Jest resolves it without extra mapper config.
+import zonesJson from '../../../assets/art/anchor-zones.json';
 
 import type { CosmeticSlot } from './layers';
 
