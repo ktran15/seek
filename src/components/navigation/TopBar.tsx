@@ -14,7 +14,7 @@ export function TopBar() {
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.xxs }]}>
       <Image
-        source={getAsset('appLogoWordmark')}
+        source={getAsset('appLogoWide')}
         style={styles.brand}
         resizeMode="contain"
         accessibilityLabel={config.appName}
@@ -52,10 +52,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     backgroundColor: colors.background,
   },
-  // Sized to the text it replaced (22/28 "Seek" ≈ 28px tall).
+  // Wide lockup (aspect 2.32): at 34px tall the letters read ~22px — larger
+  // than the old 22pt text — without growing the bar (icons are 44px).
   brand: {
-    width: 42,
-    height: 28,
+    width: 79,
+    height: 34,
   },
   actions: {
     flexDirection: 'row',

@@ -85,7 +85,7 @@ async function callGemini(key, item) {
       contents: [{ parts }],
       generationConfig: {
         responseModalities: ['TEXT', 'IMAGE'],
-        imageConfig: { aspectRatio: '1:1' },
+        imageConfig: { aspectRatio: item.aspect ?? '1:1' },
       },
     }),
   });

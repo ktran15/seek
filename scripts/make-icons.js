@@ -53,6 +53,19 @@ async function main() {
     `wordmark ${wordmarkPng.width}x${wordmarkPng.height} -> assets/art/app-logo-wordmark.png`,
   );
 
+  // Wide banner lockup (top bar): trimmed at its natural aspect — never
+  // square-padded, the letters must own the height. Input is the STRIPPED
+  // (transparent) intermediate: process-art strip first, then this re-trim
+  // undoes its square padding.
+  const wideSrc = 'assets/art/inbox/app-logo-wide-stripped.png';
+  if (fs.existsSync(wideSrc)) {
+    const wide = trim(PNG.sync.read(fs.readFileSync(wideSrc)));
+    fs.writeFileSync('assets/art/app-logo-wide.png', PNG.sync.write(wide));
+    console.log(
+      `wide lockup ${wide.width}x${wide.height} (aspect ${(wide.width / wide.height).toFixed(2)}) -> assets/art/app-logo-wide.png`,
+    );
+  }
+
   const wordmark = await Jimp.read('assets/art/app-logo-wordmark.png');
 
   // App icon: cream box, wordmark centered at ~78% width.

@@ -18,9 +18,11 @@ import type { ImageSourcePropType } from 'react-native';
 export const assetRegistry = {
   // Brand
   appLogo: require('./art/app-logo.png'),
-  /** Tight-trimmed transparent wordmark for inline UI (top bar, auth) —
+  /** Tight-trimmed transparent wordmark for inline UI (auth screen) —
    *  derived from the logo master by scripts/make-icons.js. */
   appLogoWordmark: require('./art/app-logo-wordmark.png'),
+  /** Wide banner lockup (letters own the height) for the top bar. */
+  appLogoWide: require('./art/app-logo-wide.png'),
   loadingScreen: require('./art/loading-screen.png'),
 
   // Mascot — frozen beaver canonical (Rig Bible §7); cheer/defeat states are

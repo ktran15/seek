@@ -199,6 +199,23 @@ BATCHES.world = [
       'behind the letters',
   ),
   {
+    // Founder 2026-07-09: the square-ish lockup reads too small at top-bar
+    // height — a wide banner lockup where the letters own the height.
+    id: 'app-logo-wide',
+    out: 'assets/art/inbox/app-logo-wide.png',
+    refs: [CRATE_REF, MOUNTAIN_REF],
+    aspect: '16:9',
+    prompt:
+      'Matching the craft level, outline weight, cel-shading, and warm ' +
+      'earthy palette of the two reference images exactly, draw an app ' +
+      'wordmark in a WIDE horizontal banner layout: the word "SEEK" in ' +
+      'heavy carved-slab national-park-poster lettering, jungle green, the ' +
+      'four letters in one line spanning nearly the full width, with a ' +
+      'small cadmium-orange mountain peak rising behind the letters. ' +
+      `${STYLE} Wide rectangular composition on a plain solid pure-white ` +
+      'background.',
+  },
+  {
     id: 'loading-screen',
     out: 'assets/art/inbox/loading-screen.png',
     refs: [CRATE_REF, MOUNTAIN_REF],
