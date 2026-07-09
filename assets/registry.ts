@@ -23,8 +23,8 @@ export const assetRegistry = {
   // Mascot — frozen beaver canonical (Rig Bible §7); cheer/defeat states are
   // reference-conditioned generations against this base (M12 batch pass)
   mascotAvatar: require('./art/mascot-avatar.png'),
-  mascotCheer: require('./placeholders/mascot-cheer.png'),
-  mascotDefeat: require('./placeholders/mascot-defeat.png'),
+  mascotCheer: require('./art/mascot-cheer.png'),
+  mascotDefeat: require('./art/mascot-defeat.png'),
 
   // Mountain world
   mountainBackground: require('./art/mountain-background.png'),
@@ -61,10 +61,10 @@ export const assetRegistry = {
   cosBackpackRare: require('./placeholders/cos-backpack-rare.png'),
   cosBackpackEpic: require('./placeholders/cos-backpack-epic.png'),
   cosBackpackLegendary: require('./placeholders/cos-backpack-legendary.png'),
-  cosHatsCommon: require('./placeholders/cos-hats-common.png'),
-  cosHatsRare: require('./placeholders/cos-hats-rare.png'),
-  cosHatsEpic: require('./placeholders/cos-hats-epic.png'),
-  cosHatsLegendary: require('./placeholders/cos-hats-legendary.png'),
+  cosHatsCommon: require('./art/cos-hats-common.png'),
+  cosHatsRare: require('./art/cos-hats-rare.png'),
+  cosHatsEpic: require('./art/cos-hats-epic.png'),
+  cosHatsLegendary: require('./art/cos-hats-legendary.png'),
   cosSunglassesCommon: require('./placeholders/cos-sunglasses-common.png'),
   cosSunglassesRare: require('./placeholders/cos-sunglasses-rare.png'),
   cosSunglassesEpic: require('./placeholders/cos-sunglasses-epic.png'),

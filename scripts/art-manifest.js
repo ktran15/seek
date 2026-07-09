@@ -85,10 +85,15 @@ const BATCHES = {
       id: 'mascot-defeat',
       out: 'assets/art/inbox/mascot-defeat.png',
       refs: [MASCOT_REF],
+      // First roll came back nearly identical to the neutral canonical —
+      // the pose change must be spelled out limb by limb.
       prompt:
-        `${ON_MASCOT}change ONLY the pose and expression to a good-natured ` +
-        'defeat: shoulders slumped, ears drooping, a sheepish "you got me" ' +
-        `smile — endearing and comic, never miserable.${TAIL}`,
+        `${ON_MASCOT}change ONLY the pose and expression to an exaggerated, ` +
+        'comic defeat: head hung low and tilted, whole upper body slumped ' +
+        'forward, both arms dangling limply, one big sigh — eyes closed, ' +
+        'mouth a wobbly frown with the buck teeth still showing, a single ' +
+        'large sweat drop by the head. Clearly just lost, but endearing and ' +
+        `funny, never miserable.${TAIL}`,
     },
   ],
 

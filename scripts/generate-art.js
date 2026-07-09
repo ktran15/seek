@@ -7,8 +7,9 @@
  * in assets/art/inbox/ (gitignored) for the intake pass (process-art.js /
  * layer extraction) — this script never touches registry assets.
  *
- * HARD rate limits (founder-set, free tier):
- * - max 10 API calls per minute: after every 10 calls the runner sleeps 60s;
+ * HARD rate limits (founder-set; billing enabled 2026-07-09, ~$10 budget,
+ * account RPM ~20 so we run under it at 15):
+ * - max 15 API calls per minute: after every 15 calls the runner sleeps 60s;
  * - max 250 calls per day: attempts are counted in scripts/.gen-quota.json
  *   (gitignored, per calendar date) and the runner REFUSES to exceed the
  *   cap — every attempt counts, including failures and retries.
@@ -26,7 +27,7 @@ const { BATCHES } = require('./art-manifest');
 
 const MODEL = 'gemini-2.5-flash-image';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-const CALLS_PER_BURST = 10;
+const CALLS_PER_BURST = 15;
 const BURST_WAIT_MS = 60_000;
 const DAILY_CAP = 250;
 const QUOTA_FILE = path.join(__dirname, '.gen-quota.json');
