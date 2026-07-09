@@ -3,12 +3,15 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+
+import { getAsset } from '@/assets/registry';
 
 import { useSession } from '@/features/auth/useSession';
 import { AvatarPreview } from '@/features/avatar/AvatarPreview';
@@ -22,6 +25,7 @@ import {
 } from '@/features/economy/useEconomy';
 import { useFriendCount } from '@/features/friends/useFriends';
 import { sendInvite } from '@/features/invites/sendInvite';
+import { useBadges } from '@/features/profile/useBadges';
 import { useProfile } from '@/features/profile/useProfile';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
@@ -45,6 +49,7 @@ export function ProfileView() {
   const { data: crates } = useMyCrates(userId);
   const votesWon = (crates ?? []).filter((c) => c.source === 'vote_win').length;
   const { data: catalog } = useCosmeticsCatalog();
+  const badges = useBadges(userId);
 
   const invite = async () => {
     if (!session) return;
@@ -169,19 +174,27 @@ export function ProfileView() {
       {section === 'Badges' && (
         <View style={styles.sectionBody}>
           <View style={styles.badgeGrid}>
-            {['Summit Reached', 'First Win', 'Vote Winner', 'Perfect Week'].map(
-              (badge) => (
-                <View key={badge} style={styles.badgeCell}>
-                  <View style={styles.badgeCircle} />
-                  <Text style={[textStyles.caption, styles.badgeLabel]}>
-                    {badge}
+            {badges.map((badge) => (
+              <View key={badge.id} style={styles.badgeCell}>
+                <Image
+                  source={getAsset(badge.slot)}
+                  style={[styles.badgeArt, !badge.earned && styles.badgeLocked]}
+                  resizeMode="contain"
+                  accessibilityLabel={`${badge.name}${badge.earned ? '' : ' (locked)'}`}
+                />
+                <Text style={[textStyles.caption, styles.badgeLabel]}>
+                  {badge.name}
+                </Text>
+                {!badge.earned && (
+                  <Text style={[textStyles.caption, styles.badgeHint]}>
+                    {badge.hint}
                   </Text>
-                </View>
-              ),
-            )}
+                )}
+              </View>
+            ))}
           </View>
           <Text style={[textStyles.caption, styles.sectionNote]}>
-            Badges unlock for real once challenges run (M4+).
+            {badges.filter((b) => b.earned).length} of {badges.length} earned
           </Text>
         </View>
       )}
@@ -304,14 +317,18 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     width: 96,
   },
-  badgeCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.surfaceSecondary,
-    opacity: 0.6,
+  badgeArt: {
+    width: 72,
+    height: 72,
+  },
+  badgeLocked: {
+    opacity: 0.22,
   },
   badgeLabel: {
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  badgeHint: {
     color: colors.textSecondary,
     textAlign: 'center',
   },

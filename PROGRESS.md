@@ -4,7 +4,22 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Current milestone: **M12 — Real assets pass** (spec §14, §15; Rig Bible governs all character art) — branch `m12-real-assets`
+## Current milestone: **M13 — Polish & animation** (spec §15, aesthetic §8) — branch `m12-real-assets` (continues; founder approved starting while the artist works)
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Badge system (spec §6 catalog — previously an unowned stub): pure `deriveBadges` (Summit Reached = final day submitted; First Win = any resolved H2H win incl. mascot; Vote Winner = a CV 1st; Perfect Week = all 7 days), derived live from RLS-readable data (no new tables/awards, nothing to backfill), 8 tests (167 total); Profile Badges tab now renders the real badge art w/ locked (dimmed + hint) / earned states and an earned count | ✅ done |
+| 2 | Mountain climb animation: avatar advances up the trail on submit + flag-plant moment (Reanimated), reduced-motion fallback | ⬜ next |
+| 3 | Crate-open reveal: anticipation → pop → rarity flourish; win confetti moments | ⬜ |
+| 4 | Post-submit sequence: animate the stages (success → coins → crate → climb → feed confirm) | ⬜ |
+| 5 | Transition/press-feel audit + empty/error-state sweep + wire the `loadingScreen` art (auth/boot backdrop) + final QA | ⬜ |
+
+**Next step:** sub-step 2 (climb animation). Founder is posting `SEEK_ARTIST_BRIEF.md`; artist deliveries drop into registry slots whenever they land.
+
+### Pre-M13 brand punch list (founder-directed, 2026-07-09) — done
+Auth screen: "Seek" text removed, wordmark ~20% bigger. TopBar: brand text → tight wordmark image (derived by `scripts/make-icons.js` from the logo master, registry `appLogoWordmark`). App icon + Expo splash + Android adaptive icons: wordmark on the cream box (`ios.icon` → plain png; the Icon Composer template bundle retired). Founder loves the generated logo.
+
+## M12 — Real assets pass (spec §14, §15; Rig Bible governs all character art) — branch `m12-real-assets`
 
 | # | Sub-step | Status |
 |---|----------|--------|
