@@ -1,0 +1,27 @@
+{
+  "$comment": "LOCKED-ON-BASE (Rig Bible §1/§5): traced 2026-07-09 from the frozen hiker master assets/art/hiker-base.png (1024², content bbox x348-676 y55-969). referenceLines are exact base landmarks every generated layer must align to; zones are containment boxes (item must stay inside) with headroom for item variety. Edit only if the frozen base is ever regenerated — it must never be.",
+  "canvas": 1024,
+  "referenceLines": {
+    "centerX": 512,
+    "crownY": 55,
+    "eyeLineY": 156,
+    "chinY": 232,
+    "shoulderY": 245,
+    "waistY": 600,
+    "ankleY": 912,
+    "feetY": 969
+  },
+  "bodyBox": { "x": [348, 676], "y": [55, 969] },
+  "zones": {
+    "hair": { "x": [420, 608], "y": [40, 310] },
+    "eyes": { "x": [462, 560], "y": [130, 185] },
+    "hats": { "x": [400, 626], "y": [28, 250] },
+    "sunglasses": { "x": [448, 575], "y": [124, 200] },
+    "shirts": { "x": [358, 668], "y": [235, 635] },
+    "jacket": { "x": [344, 680], "y": [228, 665] },
+    "backpack": { "x": [330, 694], "y": [228, 650] },
+    "pants": { "x": [390, 635], "y": [540, 920] },
+    "boots": { "x": [355, 680], "y": [855, 985] },
+    "pet": { "x": [676, 1012], "y": [690, 1000] }
+  }
+}
