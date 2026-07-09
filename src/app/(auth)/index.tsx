@@ -36,11 +36,11 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={getAsset('appLogo')}
+        source={getAsset('appLogoWordmark')}
         style={styles.logo}
-        accessibilityLabel={`${config.appName} logo placeholder`}
+        resizeMode="contain"
+        accessibilityLabel={`${config.appName} logo`}
       />
-      <Text style={[textStyles.heroXL, styles.title]}>{config.appName}</Text>
       <Text style={[textStyles.body, styles.tagline]}>
         Do hard things. Together.
       </Text>
@@ -79,14 +79,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
+  // The old 96px square held the padded master (visible mark ≈ 96px wide);
+  // the tight wordmark at 170×115 shows the mark ~20% larger, no dead space.
   logo: {
-    width: 96,
-    height: 96,
-    borderRadius: radii.card,
+    width: 170,
+    height: 115,
     marginBottom: spacing.md,
-  },
-  title: {
-    color: colors.textPrimary,
   },
   tagline: {
     marginTop: spacing.xs,

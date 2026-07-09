@@ -150,9 +150,12 @@ export function MediaCarousel({
     }
   };
 
+  // 250ms between taps proved stricter than a natural human double-tap
+  // (founder-reported misses); 400ms registers "quick succession" reliably
+  // while the gallery tap still waits for this gesture to fail first.
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
-    .maxDelay(250)
+    .maxDelay(400)
     .onEnd((_event, success) => {
       if (success) runOnJS(handleDoubleTap)();
     });

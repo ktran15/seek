@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getAsset } from '@/assets/registry';
 import { config } from '@/config';
-import { colors, spacing, textStyles } from '@/theme';
+import { colors, spacing } from '@/theme';
 
 /** Persistent top bar (spec §5): Add Friends | Notifications. */
 export function TopBar() {
@@ -12,7 +13,12 @@ export function TopBar() {
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.xxs }]}>
-      <Text style={[textStyles.hero, styles.brand]}>{config.appName}</Text>
+      <Image
+        source={getAsset('appLogoWide')}
+        style={styles.brand}
+        resizeMode="contain"
+        accessibilityLabel={config.appName}
+      />
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
@@ -46,10 +52,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     backgroundColor: colors.background,
   },
+  // Wide lockup (aspect 2.32): at 34px tall the letters read ~22px — larger
+  // than the old 22pt text — without growing the bar (icons are 44px).
   brand: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    lineHeight: 28,
+    width: 79,
+    height: 34,
   },
   actions: {
     flexDirection: 'row',

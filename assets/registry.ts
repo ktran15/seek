@@ -17,21 +17,26 @@ import type { ImageSourcePropType } from 'react-native';
 
 export const assetRegistry = {
   // Brand
-  appLogo: require('./placeholders/app-logo.png'),
-  loadingScreen: require('./placeholders/loading-screen.png'),
+  appLogo: require('./art/app-logo.png'),
+  /** Tight-trimmed transparent wordmark for inline UI (auth screen) —
+   *  derived from the logo master by scripts/make-icons.js. */
+  appLogoWordmark: require('./art/app-logo-wordmark.png'),
+  /** Wide banner lockup (letters own the height) for the top bar. */
+  appLogoWide: require('./art/app-logo-wide.png'),
+  loadingScreen: require('./art/loading-screen.png'),
 
   // Mascot — frozen beaver canonical (Rig Bible §7); cheer/defeat states are
   // reference-conditioned generations against this base (M12 batch pass)
   mascotAvatar: require('./art/mascot-avatar.png'),
-  mascotCheer: require('./placeholders/mascot-cheer.png'),
-  mascotDefeat: require('./placeholders/mascot-defeat.png'),
+  mascotCheer: require('./art/mascot-cheer.png'),
+  mascotDefeat: require('./art/mascot-defeat.png'),
 
   // Mountain world
   mountainBackground: require('./art/mountain-background.png'),
-  trail: require('./placeholders/trail.png'),
-  flagStart: require('./placeholders/flag-start.png'),
-  flagPlanted: require('./placeholders/flag-planted.png'),
-  summitState: require('./placeholders/summit-state.png'),
+  trail: require('./art/trail.png'),
+  flagStart: require('./art/flag-start.png'),
+  flagPlanted: require('./art/flag-planted.png'),
+  summitState: require('./art/summit-state.png'),
 
   // Avatar base — frozen hiker canonical (Rig Bible §4): the immutable fit
   // reference every cosmetic layer is generated against. Never regenerate.
@@ -61,10 +66,10 @@ export const assetRegistry = {
   cosBackpackRare: require('./placeholders/cos-backpack-rare.png'),
   cosBackpackEpic: require('./placeholders/cos-backpack-epic.png'),
   cosBackpackLegendary: require('./placeholders/cos-backpack-legendary.png'),
-  cosHatsCommon: require('./placeholders/cos-hats-common.png'),
-  cosHatsRare: require('./placeholders/cos-hats-rare.png'),
-  cosHatsEpic: require('./placeholders/cos-hats-epic.png'),
-  cosHatsLegendary: require('./placeholders/cos-hats-legendary.png'),
+  cosHatsCommon: require('./art/cos-hats-common.png'),
+  cosHatsRare: require('./art/cos-hats-rare.png'),
+  cosHatsEpic: require('./art/cos-hats-epic.png'),
+  cosHatsLegendary: require('./art/cos-hats-legendary.png'),
   cosSunglassesCommon: require('./placeholders/cos-sunglasses-common.png'),
   cosSunglassesRare: require('./placeholders/cos-sunglasses-rare.png'),
   cosSunglassesEpic: require('./placeholders/cos-sunglasses-epic.png'),
@@ -90,10 +95,10 @@ export const assetRegistry = {
   crateGold: require('./art/crate-gold.png'),
 
   // Badges (v1 catalog, spec §6)
-  badgeSummitReached: require('./placeholders/badge-summit-reached.png'),
-  badgeFirstWin: require('./placeholders/badge-first-win.png'),
-  badgeVoteWinner: require('./placeholders/badge-vote-winner.png'),
-  badgePerfectWeek: require('./placeholders/badge-perfect-week.png'),
+  badgeSummitReached: require('./art/badge-summit-reached.png'),
+  badgeFirstWin: require('./art/badge-first-win.png'),
+  badgeVoteWinner: require('./art/badge-vote-winner.png'),
+  badgePerfectWeek: require('./art/badge-perfect-week.png'),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type AssetSlot = keyof typeof assetRegistry;

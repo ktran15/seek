@@ -25,8 +25,9 @@ export const config = {
   appName,
 
   beta: {
-    /** TUNE (FOUNDER-SET): first day of the fixed 7-day global beta (day 1). */
-    startDate: '2026-07-06',
+    /** TUNE (FOUNDER-SET): first day of the fixed 7-day global beta (day 1).
+     *  Reset 2026-07-09 for the founder demo (keep in sync w/ app_settings.beta). */
+    startDate: '2026-07-09',
     /** Locked: global vote-window / payout clock timezone (spec §7.7). */
     timezone: 'America/New_York',
     lengthDays: 7,

@@ -52,3 +52,7 @@ desktop.ini
 
 # Supabase CLI local state
 supabase/.temp/
+
+# M12 generation intermediates (raw Gemini outputs + daily quota counter)
+assets/art/inbox/
+scripts/.gen-quota.json
