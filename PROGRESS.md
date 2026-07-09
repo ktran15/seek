@@ -4,11 +4,33 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Current milestone: **M12 — Real assets pass** (spec §14, §15; Rig Bible governs all character art) — branch `m12-real-assets`
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Style anchors generated + founder-selected (hiker, beaver, wooden crate, mountain) via Gemini | ✅ done (founder, 2026-07-08) |
+| 2 | Art intake tooling: `scripts/process-art.js` (white-bg strip via edge flood fill + halo cleanup, trim, pad, 1024² master) + `scripts/recolor-crates.js` (hue/sat replace, lightness preserved) | ✅ done |
+| 3 | Crate family live: wooden master stripped + blue/red/yellow/gold recolors, all 5 registry slots → `assets/art/` | ✅ done |
+| 4 | Mountain background live: downscaled to 1290×2311, slot → `assets/art/` | ✅ done |
+| 5 | Canonical hiker + beaver frozen | ⬜ **blocked on founder re-export** — both selects have a BAKED-IN checkerboard (Gemini drew a fake transparency preview) + a ground patch under the feet (Rig Bible §8 forbids baked ground). One Gemini edit round each: same image, remove ground, solid white background → then intake + freeze |
+| 6 | Anchor zones traced from frozen base, `LOCKED-ON-BASE` constants | ⬜ not started (needs 5) |
+| 7 | Registry expansion (32 cosmetic slots + skin/eyes/hair variants) + real image compositor replacing shape-drawn AvatarPreview | ⬜ not started |
+| 8 | Skin/hair recolor script + dev QA screen (overlay/swap/silhouette tests) | ⬜ not started |
+| 9 | Batch generation: eyes (3), hair (5×5), cosmetics (32), mascot states (cheer/defeat), badges (4), flags/trail/summit, logo/loading | ⬜ not started (art = founder w/ Gemini; intake = agent) |
+
+**Next step:** founder re-exports hiker + beaver via Gemini edit (prompts provided in session), agent freezes canonicals + builds sub-steps 6–8 in parallel.
+
+### M12 decisions (flag for founder)
+- **Crate tier hues** (recolor script): blue = bice blue `#2774B4`, red = vermillon `#D45735`, yellow = indian yellow `#ECA945`, gold = brighter metallic gold (46°, S .85, slight lightness lift). Yellow vs. gold are close-ish — founder judges on device; tweaking = edit `TIERS` in `scripts/recolor-crates.js` + re-run.
+- Mountain master downscaled 1536×2752 → 1290×2311 (~3× iPhone width) for bundle size; original stays in founder's Downloads.
+- Real art lives in `assets/art/` (placeholders untouched in `assets/placeholders/` — registry path is the single switch per slot).
+- Pre-existing tsc errors (2) from the pre-M12 `/friends` + `/user/[id]` routes: stale generated `.expo/types/router.d.ts` — clears on next `npx expo start`; not M12 code.
+
 ## Pre-M12 UI additions (founder-directed, 2026-07-08) — on `m11-push-notifications`
 1. **Friends list screen** — Profile's Friends count now opens `/friends`: the user's **accepted MUTUAL friends** (spec §6/§7.10 — the schema has no follower/following asymmetry; one accepted edge = friends both ways). Built on the same `friendIdsOf` as the header count so list and count can't disagree. Rows (letter avatar, display name, @username) tap through to a **new minimal `/user/[id]` profile** (full-look avatar + names — no other-user profile surface existed anywhere; stats/inventory stay owner-private by RLS, expanding it is a founder call). Empty state: "No friends yet — invite someone!" → the existing invite share sheet. Loading/error+retry states match Blocked Users.
 2. **Challenge swipe-back (partial — decision pending)** — the standard iOS edge swipe now exits the challenge flow back to the Mountain during `reveal` and `difficulty` (before the attempt is armed, spec §7.4 — BEGIN creates the in_progress row and enters capture in one step). The locked/missed/done-for-today notices are swipeable too. From `capture` onward the gesture stays OFF — **open founder decision (a) vs (b)**: (a) allow swipe mid-capture as an abandon (attempt not burned, per crash handling) or (b) keep it disabled while actively recording so a good take can't be lost to an accidental edge swipe (agent recommendation: b). Current behavior = (b) provisionally.
 
-## Current milestone: **M11 — Push notifications** (spec §13, §15) — branch `m11-push-notifications`
+## M11 — Push notifications (spec §13, §15) — **complete, founder-approved 2026-07-08** — branch `m11-push-notifications` (merged to main)
 
 | # | Sub-step | Status |
 |---|----------|--------|
@@ -453,8 +475,9 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M8: **complete**
 - M9: **complete — founder-approved 2026-07-07** (review passed on device; decisions D1 + D2 approved)
 - M10: **complete — founder-approved 2026-07-08** (all founder actions done; infra verified in session)
-- M11: **complete — awaiting founder review** (apply migration, deploy 4 fns, schedule countdown cron, EAS init + dev build for remote-push testing — see actions above)
-- M12–M14: not started (do not work ahead — founder reviews after each milestone)
+- M11: **complete — founder-approved 2026-07-08** (confirm the 4 ops actions — migration, 4 fn deploys, countdown cron, EAS dev build — are done; checkboxes above)
+- M12: **in progress** — branch `m12-real-assets` (anchors accepted; crates + mountain live; hiker/beaver blocked on founder re-export)
+- M13–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)
 - Badges tab is still a visual placeholder (no badge award logic yet — catalog is spec §6; no milestone owns it explicitly, flagged).
