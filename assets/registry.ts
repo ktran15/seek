@@ -17,8 +17,8 @@ import type { ImageSourcePropType } from 'react-native';
 
 export const assetRegistry = {
   // Brand
-  appLogo: require('./placeholders/app-logo.png'),
-  loadingScreen: require('./placeholders/loading-screen.png'),
+  appLogo: require('./art/app-logo.png'),
+  loadingScreen: require('./art/loading-screen.png'),
 
   // Mascot — frozen beaver canonical (Rig Bible §7); cheer/defeat states are
   // reference-conditioned generations against this base (M12 batch pass)
@@ -28,10 +28,10 @@ export const assetRegistry = {
 
   // Mountain world
   mountainBackground: require('./art/mountain-background.png'),
-  trail: require('./placeholders/trail.png'),
-  flagStart: require('./placeholders/flag-start.png'),
-  flagPlanted: require('./placeholders/flag-planted.png'),
-  summitState: require('./placeholders/summit-state.png'),
+  trail: require('./art/trail.png'),
+  flagStart: require('./art/flag-start.png'),
+  flagPlanted: require('./art/flag-planted.png'),
+  summitState: require('./art/summit-state.png'),
 
   // Avatar base — frozen hiker canonical (Rig Bible §4): the immutable fit
   // reference every cosmetic layer is generated against. Never regenerate.
@@ -90,10 +90,10 @@ export const assetRegistry = {
   crateGold: require('./art/crate-gold.png'),
 
   // Badges (v1 catalog, spec §6)
-  badgeSummitReached: require('./placeholders/badge-summit-reached.png'),
-  badgeFirstWin: require('./placeholders/badge-first-win.png'),
-  badgeVoteWinner: require('./placeholders/badge-vote-winner.png'),
-  badgePerfectWeek: require('./placeholders/badge-perfect-week.png'),
+  badgeSummitReached: require('./art/badge-summit-reached.png'),
+  badgeFirstWin: require('./art/badge-first-win.png'),
+  badgeVoteWinner: require('./art/badge-vote-winner.png'),
+  badgePerfectWeek: require('./art/badge-perfect-week.png'),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type AssetSlot = keyof typeof assetRegistry;

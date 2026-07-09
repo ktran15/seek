@@ -26,6 +26,10 @@ const STYLE =
 
 const HIKER_REF = 'assets/art/canonical/avatar_body_canonical.png';
 const MASCOT_REF = 'assets/art/canonical/mascot_beaver_canonical.png';
+// Style anchors for standalone (non-character) art: the founder-approved
+// crate (craft level) + mountain (world palette).
+const CRATE_REF = 'assets/art/crate-wooden.png';
+const MOUNTAIN_REF = 'assets/art/mountain-background.png';
 
 /** Shared prefix for every hiker edit (Rig Bible §6 prompt pattern). */
 const ON_HIKER =
@@ -119,5 +123,92 @@ const BATCHES = {
     ),
   ],
 };
+
+/** A standalone hero object in the established world style (aesthetic §5:
+ *  full rich treatment — texture, cel-shading, outline, 3/4 form). */
+function standalone(id, subject) {
+  return {
+    id,
+    out: `assets/art/inbox/${id}.png`,
+    refs: [CRATE_REF, MOUNTAIN_REF],
+    prompt:
+      `Matching the craft level, outline weight, cel-shading, and warm ` +
+      `earthy palette of the two reference images exactly, draw ${subject} ` +
+      `${STYLE} Single centered object filling most of the frame, on a ` +
+      'plain solid pure-white background, 1024x1024.',
+  };
+}
+
+/** Badge medallions read as a set: identical framing, distinct emblems. */
+function badge(id, accent, emblem) {
+  return standalone(
+    id,
+    `a circular embossed achievement badge medallion with a ${accent} rim ` +
+      `and ribbon, its center emblem: ${emblem}. Chunky, tactile, ` +
+      'prize-like — the same family as a hiking merit badge.',
+  );
+}
+
+// Founder-directed 2026-07-09: generate the non-character art via the API
+// as strong placeholders / possible finals (artist may replace in review).
+BATCHES.world = [
+  badge(
+    'badge-summit-reached',
+    'russian-green',
+    'a snowy mountain summit with a small planted flag',
+  ),
+  badge(
+    'badge-first-win',
+    'bice-blue',
+    'a single laurel wreath around a bold number 1',
+  ),
+  badge(
+    'badge-vote-winner',
+    'indian-yellow gold',
+    'a raised trophy cup with a small heart',
+  ),
+  badge(
+    'badge-perfect-week',
+    'cadmium-orange',
+    'a ring of seven small stars around one big star',
+  ),
+  standalone(
+    'flag-start',
+    'a small triangular trail pennant flag in bice blue on a simple wooden ' +
+      'pole, planted at a slight angle in a tiny mound of earth',
+  ),
+  standalone(
+    'flag-planted',
+    'a triumphant triangular summit flag in cadmium orange on a wooden ' +
+      'pole, planted at a slight angle, waving proudly',
+  ),
+  standalone(
+    'trail',
+    'a winding dirt hiking trail segment seen from above, tall vertical ' +
+      'S-curve with small rocks and grass tufts along its edges',
+  ),
+  standalone(
+    'summit-state',
+    'a snowy mountain summit celebration emblem: the peak tip with a ' +
+      'planted cadmium-orange flag and radiating sun rays behind it',
+  ),
+  standalone(
+    'app-logo',
+    'an app logo: the word "SEEK" in heavy carved-slab national-park-poster ' +
+      'lettering, jungle green with a cadmium-orange mountain peak rising ' +
+      'behind the letters',
+  ),
+  {
+    id: 'loading-screen',
+    out: 'assets/art/inbox/loading-screen.png',
+    refs: [CRATE_REF, MOUNTAIN_REF],
+    prompt:
+      'A full-frame mobile app loading screen: a warm cream sky over ' +
+      'layered earthy green mountains with a winding trail climbing to a ' +
+      'sunlit peak with a small orange flag, calm and inviting, generous ' +
+      `empty cream space in the upper third. ${STYLE} Full-bleed scene, no ` +
+      'text, no characters, 1024x1024.',
+  },
+];
 
 module.exports = { STYLE, BATCHES };
