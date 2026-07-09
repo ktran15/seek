@@ -13,18 +13,21 @@
 | 3 | Crate family live: wooden master stripped + blue/red/yellow/gold recolors, all 5 registry slots → `assets/art/` | ✅ done |
 | 4 | Mountain background live: downscaled to 1290×2311, slot → `assets/art/` | ✅ done |
 | 5 | Canonical hiker + beaver frozen: founder re-exports intaken (2026-07-09) → `assets/art/hiker-base.png` + `assets/art/mascot-avatar.png` (1024² masters, registry slots flipped — real hiker on Mountain/post-submit, real beaver on mascot surfaces); source exports archived in `assets/art/canonical/` (the reference images all future generations condition on). Intake tooling grew: de-card crop (Gemini bakes a rounded-rect card frame that walls off the flood fill), soft-ground sweep (light neutral wash reachable from bg — bold outlines seal real art), despeckle (tiny disconnected blobs), `--erase x,y,w,h` for outlined debris fused to art. Beaver's pebble patch removed via `--erase 295,1150,82,108 --erase 377,1238,103,20` (recorded for reproducibility) | ✅ done |
-| 6 | Anchor zones traced from frozen base, `LOCKED-ON-BASE` constants | ⬜ not started (needs 5) |
-| 7 | Registry expansion (32 cosmetic slots + skin/eyes/hair variants) + real image compositor replacing shape-drawn AvatarPreview | ⬜ not started |
-| 8 | Skin/hair recolor script + dev QA screen (overlay/swap/silhouette tests) | ⬜ not started |
+| 6 | Anchor zones traced from frozen base → `assets/art/anchor-zones.json` (LOCKED-ON-BASE: reference lines crown/eye/chin/shoulder/waist/ankle/feet + containment zones per slot, verified by rendered overlay) + typed wrapper `src/features/avatar/anchorZones.ts` | ✅ done |
+| 7 | Registry expansion + image compositor: 32 `cos*` slots (placeholder = translucent rarity-colored box at the slot's anchor zone on the 1024² canvas — equips composite with real registration before art exists), `bodySkin1–5`, `getAssetOrNull` for DB-driven slot names; AvatarPreview v3 = plain stack of full-canvas registered images, framing via pure `frame.ts` (5 tests; 159 total) | ✅ done |
+| 8 | `scripts/recolor-avatar.js` (skin: HSL-band select + outline-sealed flood mask excludes the same-hue rust shirt, multiplicative lightness keeps cel shading — 5 real body masters live in registry; hair mode ready for isolated style layers) + dev Art QA screen (`/dev/art-qa`, Settings row in dev builds: variant/cosmetic cycling, anchor-zone overlay, dark-bg silhouette check) | ✅ done |
 | 9 | Batch generation: eyes (3), hair (5×5), cosmetics (32), mascot states (cheer/defeat), badges (4), flags/trail/summit, logo/loading | ⬜ not started (art = founder w/ Gemini; intake = agent) |
 
-**Next step:** sub-step 6 — trace anchor zones from the frozen hiker master → `LOCKED-ON-BASE` constants, then 7 (registry expansion + image compositor) and 8 (recolor script + QA screen).
+**Next step:** sub-step 9 — founder generates the batch with Gemini against the canonical references (`assets/art/canonical/`), agent intakes each set (strip → zone QA → registry flip). Suggested batch order: mascot cheer/defeat → eyes/hair → cosmetics per slot → badges/flags/logo.
 
 ### M12 decisions (flag for founder)
 - **Crate tier hues** (recolor script): blue = bice blue `#2774B4`, red = vermillon `#D45735`, yellow = indian yellow `#ECA945`, gold = brighter metallic gold (46°, S .85, slight lightness lift). Yellow vs. gold are close-ish — founder judges on device; tweaking = edit `TIERS` in `scripts/recolor-crates.js` + re-run.
 - Mountain master downscaled 1536×2752 → 1290×2311 (~3× iPhone width) for bundle size; original stays in founder's Downloads.
 - Real art lives in `assets/art/` (placeholders untouched in `assets/placeholders/` — registry path is the single switch per slot).
 - Pre-existing tsc errors (2) from the pre-M12 `/friends` + `/user/[id]` routes: stale generated `.expo/types/router.d.ts` — clears on next `npx expo start`; not M12 code.
+- **Base gear is baked into the frozen body master** (tee/shorts/boots drawn on): base shirt/pants fallback layers render as no layer at all; cosmetic garments are generated worn on the reference so they cover the baked ones. There is **no visible base backpack** (the master has none) — spec §10 lists backpack as base gear; either accept "no pack until one is equipped" or bake one into a batch-pass edit (founder call).
+- **Skin picks are live** (5 recolored masters). **Eyes/hair/hair-color picks don't change the render yet** — the frozen master's baked features show until sub-step 9's variant layers land. Note for that batch: hairstyles SMALLER than the baked crew cut (e.g. Buzz) need a **bald/de-haired body edit** as the layering base, else the baked hair pokes out — generate it as part of the batch (one Gemini edit on the canonical).
+- The beaver mascot canonical carried a baked pebble/dirt patch fused to a boot; removed reproducibly via the intake tool's new `--erase` rects (exact command recorded in sub-step 5 row).
 
 ## Pre-M12 UI additions (founder-directed, 2026-07-08) — on `m11-push-notifications`
 1. **Friends list screen** — Profile's Friends count now opens `/friends`: the user's **accepted MUTUAL friends** (spec §6/§7.10 — the schema has no follower/following asymmetry; one accepted edge = friends both ways). Built on the same `friendIdsOf` as the header count so list and count can't disagree. Rows (letter avatar, display name, @username) tap through to a **new minimal `/user/[id]` profile** (full-look avatar + names — no other-user profile surface existed anywhere; stats/inventory stay owner-private by RLS, expanding it is a founder call). Empty state: "No friends yet — invite someone!" → the existing invite share sheet. Loading/error+retry states match Blocked Users.
@@ -476,7 +479,7 @@ EAS pipeline config. Founder still owes the interactive EAS login steps:
 - M9: **complete — founder-approved 2026-07-07** (review passed on device; decisions D1 + D2 approved)
 - M10: **complete — founder-approved 2026-07-08** (all founder actions done; infra verified in session)
 - M11: **complete — founder-approved 2026-07-08** (confirm the 4 ops actions — migration, 4 fn deploys, countdown cron, EAS dev build — are done; checkboxes above)
-- M12: **in progress** — branch `m12-real-assets` (anchors accepted; crates + mountain live; hiker/beaver blocked on founder re-export)
+- M12: **in progress** — branch `m12-real-assets` (sub-steps 1–8 done: crates, mountain, canonical hiker + beaver frozen + live, anchor zones locked, image compositor + 5 skin masters, Art QA screen; remaining: sub-step 9 batch generation — founder art w/ Gemini, agent intake)
 - M13–M14: not started (do not work ahead — founder reviews after each milestone)
 
 ## Visible stubs (reported per spec §2.1)

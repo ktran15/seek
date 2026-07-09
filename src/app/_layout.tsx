@@ -94,10 +94,13 @@ function RootNavigator() {
         <Stack.Screen name="comments/[postId]" options={commentSheetOptions} />
       </Stack.Protected>
 
-      {/* Dev-only sheet preview (mock data, no auth) — the route itself
-          redirects away in release builds. */}
+      {/* Dev-only screens (mock data, no auth) — the routes themselves
+          redirect away in release builds. */}
       {__DEV__ && (
         <Stack.Screen name="dev/comment-sheet-preview" options={commentSheetOptions} />
+      )}
+      {__DEV__ && (
+        <Stack.Screen name="dev/art-qa" options={{ headerShown: true, title: 'Art QA' }} />
       )}
     </Stack>
   );

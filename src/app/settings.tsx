@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -104,6 +104,22 @@ export default function SettingsScreen() {
           </Text>
           <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
         </Pressable>
+
+        {/* Dev builds only — the route also self-gates on __DEV__. */}
+        {__DEV__ && (
+          <Pressable
+            accessibilityRole="button"
+            // Href cast: generated route types (.expo/types) don't refresh
+            // until the next `expo start`, and this dev route is real.
+            onPress={() => router.push('/dev/art-qa' as Href)}
+            style={styles.row}
+          >
+            <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
+              Art QA (dev)
+            </Text>
+            <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
+          </Pressable>
+        )}
 
         {LEGAL_ROWS.map((row) => (
           <Pressable

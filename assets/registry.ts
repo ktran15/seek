@@ -38,12 +38,12 @@ export const assetRegistry = {
   hikerBase: require('./art/hiker-base.png'),
 
   // Avatar body per skin tone (catalog skin1–skin5): shape-identical recolors
-  // of the frozen base (Rig Bible §4.3). skin2 is the master's own tone.
-  bodySkin1: require('./art/hiker-base.png'),
-  bodySkin2: require('./art/hiker-base.png'),
-  bodySkin3: require('./art/hiker-base.png'),
-  bodySkin4: require('./art/hiker-base.png'),
-  bodySkin5: require('./art/hiker-base.png'),
+  // of the frozen base (Rig Bible §4.3; scripts/recolor-avatar.js skin).
+  bodySkin1: require('./art/body-skin1.png'),
+  bodySkin2: require('./art/body-skin2.png'),
+  bodySkin3: require('./art/body-skin3.png'),
+  bodySkin4: require('./art/body-skin4.png'),
+  bodySkin5: require('./art/body-skin5.png'),
 
   // Cosmetic layers — 8 slots × 4 rarities, slot names seeded in the M7
   // cosmetics catalog (`asset_slot_name`). Placeholder = translucent
