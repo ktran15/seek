@@ -12,13 +12,13 @@
 | 2 | Art intake tooling: `scripts/process-art.js` (white-bg strip via edge flood fill + halo cleanup, trim, pad, 1024² master) + `scripts/recolor-crates.js` (hue/sat replace, lightness preserved) | ✅ done |
 | 3 | Crate family live: wooden master stripped + blue/red/yellow/gold recolors, all 5 registry slots → `assets/art/` | ✅ done |
 | 4 | Mountain background live: downscaled to 1290×2311, slot → `assets/art/` | ✅ done |
-| 5 | Canonical hiker + beaver frozen | ⬜ **blocked on founder re-export** — both selects have a BAKED-IN checkerboard (Gemini drew a fake transparency preview) + a ground patch under the feet (Rig Bible §8 forbids baked ground). One Gemini edit round each: same image, remove ground, solid white background → then intake + freeze |
+| 5 | Canonical hiker + beaver frozen: founder re-exports intaken (2026-07-09) → `assets/art/hiker-base.png` + `assets/art/mascot-avatar.png` (1024² masters, registry slots flipped — real hiker on Mountain/post-submit, real beaver on mascot surfaces); source exports archived in `assets/art/canonical/` (the reference images all future generations condition on). Intake tooling grew: de-card crop (Gemini bakes a rounded-rect card frame that walls off the flood fill), soft-ground sweep (light neutral wash reachable from bg — bold outlines seal real art), despeckle (tiny disconnected blobs), `--erase x,y,w,h` for outlined debris fused to art. Beaver's pebble patch removed via `--erase 295,1150,82,108 --erase 377,1238,103,20` (recorded for reproducibility) | ✅ done |
 | 6 | Anchor zones traced from frozen base, `LOCKED-ON-BASE` constants | ⬜ not started (needs 5) |
 | 7 | Registry expansion (32 cosmetic slots + skin/eyes/hair variants) + real image compositor replacing shape-drawn AvatarPreview | ⬜ not started |
 | 8 | Skin/hair recolor script + dev QA screen (overlay/swap/silhouette tests) | ⬜ not started |
 | 9 | Batch generation: eyes (3), hair (5×5), cosmetics (32), mascot states (cheer/defeat), badges (4), flags/trail/summit, logo/loading | ⬜ not started (art = founder w/ Gemini; intake = agent) |
 
-**Next step:** founder re-exports hiker + beaver via Gemini edit (prompts provided in session), agent freezes canonicals + builds sub-steps 6–8 in parallel.
+**Next step:** sub-step 6 — trace anchor zones from the frozen hiker master → `LOCKED-ON-BASE` constants, then 7 (registry expansion + image compositor) and 8 (recolor script + QA screen).
 
 ### M12 decisions (flag for founder)
 - **Crate tier hues** (recolor script): blue = bice blue `#2774B4`, red = vermillon `#D45735`, yellow = indian yellow `#ECA945`, gold = brighter metallic gold (46°, S .85, slight lightness lift). Yellow vs. gold are close-ish — founder judges on device; tweaking = edit `TIERS` in `scripts/recolor-crates.js` + re-run.

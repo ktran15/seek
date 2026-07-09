@@ -20,8 +20,9 @@ export const assetRegistry = {
   appLogo: require('./placeholders/app-logo.png'),
   loadingScreen: require('./placeholders/loading-screen.png'),
 
-  // Mascot (identity TBD — founder supplies; spec §7.9)
-  mascotAvatar: require('./placeholders/mascot-avatar.png'),
+  // Mascot — frozen beaver canonical (Rig Bible §7); cheer/defeat states are
+  // reference-conditioned generations against this base (M12 batch pass)
+  mascotAvatar: require('./art/mascot-avatar.png'),
   mascotCheer: require('./placeholders/mascot-cheer.png'),
   mascotDefeat: require('./placeholders/mascot-defeat.png'),
 
@@ -32,8 +33,9 @@ export const assetRegistry = {
   flagPlanted: require('./placeholders/flag-planted.png'),
   summitState: require('./placeholders/summit-state.png'),
 
-  // Avatar base (layered rig lands in M8; base slot exists from day one)
-  hikerBase: require('./placeholders/hiker-base.png'),
+  // Avatar base — frozen hiker canonical (Rig Bible §4): the immutable fit
+  // reference every cosmetic layer is generated against. Never regenerate.
+  hikerBase: require('./art/hiker-base.png'),
 
   // Crates — one design, five recolors (spec §9.3)
   crateWooden: require('./art/crate-wooden.png'),
