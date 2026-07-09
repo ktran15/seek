@@ -27,6 +27,8 @@ export interface CatalogEntry {
   slot: CosmeticSlot;
   name: string;
   rarity: CosmeticRarity;
+  /** Registry slot holding the item's layer art (DB `asset_slot_name`). */
+  asset_slot_name?: string;
 }
 
 /** Back-to-front draw order (LOCKED layering, spec §10). */

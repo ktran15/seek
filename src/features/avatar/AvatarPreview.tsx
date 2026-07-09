@@ -1,242 +1,67 @@
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { Image, View } from 'react-native';
 
+import { getAssetOrNull } from '@/assets/registry';
 import type { AvatarConfig } from '@/lib/database.types';
-import { colors, palette } from '@/theme';
 
-import { HAIR_COLORS, SKIN_TONES, swatchById } from './catalog';
-import { resolveLayers, type CatalogEntry, type CosmeticSlot } from './layers';
+import { baseLayerSlotNames } from './catalog';
+import { canvasRect, frameFor } from './frame';
+import { resolveLayers, type CatalogEntry, type ResolvedLayer } from './layers';
 
 /**
- * Placeholder layered avatar render — simple shapes standing in for the real
- * layer art (M12, Rig Bible). Reads the same `avatar_config` the real renderer
- * will (base choices + equipped cosmetics), so persistence and the LOCKED
- * layering rules (resolveLayers, unit-tested) are exercised for real.
- *
- * Cosmetic layers draw as slot-shaped blocks tinted by rarity; base gear
- * keeps the earth-tone palette. Pass the cosmetics catalog to render equips;
- * omit it (onboarding) for the base-only avatar.
+ * Layered avatar compositor (Rig Bible §3): every layer is a full 1024²
+ * image registered on the master canvas, so compositing is a plain stack of
+ * <Image>s at one shared rect — no per-layer positioning code. What's worn
+ * comes from resolveLayers (LOCKED z-order + jacket-closed rule,
+ * unit-tested). Base shirt/pants fallbacks are baked into the frozen body
+ * master, so a null-cosmetic layer renders nothing. Cosmetic art still
+ * pending shows as its translucent anchor-zone box (placeholder registry
+ * files); base eyes/hair variant layers skip entirely until the batch art
+ * lands (the master's baked features show instead).
  */
 export function AvatarPreview({
   config,
   cosmetics = [],
+  height = 200,
 }: {
   config: AvatarConfig;
   cosmetics?: readonly CatalogEntry[];
+  height?: number;
 }) {
-  const skin = swatchById(SKIN_TONES, config.skinTone).color;
-  const hairColor = swatchById(HAIR_COLORS, config.hairColor).color;
-  const hair = config.hair ?? 'hair1';
-  const eyes = config.eyes ?? 'eyes1';
+  const worn = resolveLayers(config.equipped, cosmetics).filter((l) => l.cosmetic !== null);
+  const frame = frameFor(worn.map((l) => l.slot));
+  const width = Math.round(
+    (height * (frame.x[1] - frame.x[0])) / (frame.y[1] - frame.y[0]),
+  );
+  const rect = canvasRect(frame, width, height);
+  const base = baseLayerSlotNames(config);
 
-  const layers = resolveLayers(config.equipped, cosmetics);
-  const worn = new Map(layers.map((l) => [l.slot, l.cosmetic]));
-  /** Fill for a slot: rarity tint when a cosmetic is worn, base color else. */
-  const fill = (slot: CosmeticSlot, base: string): string => {
-    const cosmetic = worn.get(slot);
-    return cosmetic ? colors.rarity[cosmetic.rarity] : base;
+  const layerStyle = {
+    position: 'absolute' as const,
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
   };
+  const layer = (slotName: string, key: string) => {
+    const source = getAssetOrNull(slotName);
+    return source ? (
+      <Image key={key} source={source} style={layerStyle} resizeMode="contain" />
+    ) : null;
+  };
+  const cosmeticLayer = (l: ResolvedLayer) =>
+    l.cosmetic?.asset_slot_name ? layer(l.cosmetic.asset_slot_name, l.slot) : null;
 
   return (
-    <View style={styles.stage} accessibilityLabel="Avatar preview">
-      {/* backpack (z0 — peeks out behind the body) */}
-      {worn.has('backpack') && (
-        <View
-          style={[styles.backpack, { backgroundColor: fill('backpack', palette.chestnut) }]}
-        />
-      )}
-      {/* body: shirt (hidden under a jacket — LOCKED) + pants */}
-      <View style={styles.body}>
-        {worn.has('shirts') && (
-          <View
-            style={[styles.shirt, { backgroundColor: fill('shirts', palette.russianGreen) }]}
-          />
-        )}
-        {worn.has('jacket') && (
-          <View style={[styles.jacket, jacketFill(worn.get('jacket'))]} />
-        )}
-        {worn.has('pants') && (
-          <View
-            style={[styles.pants, { backgroundColor: fill('pants', palette.rifleGreen) }]}
-          />
-        )}
-        {worn.has('boots') && (
-          <View style={styles.bootRow}>
-            <View style={[styles.boot, { backgroundColor: fill('boots', palette.darkSienna) }]} />
-            <View style={[styles.boot, { backgroundColor: fill('boots', palette.darkSienna) }]} />
-          </View>
-        )}
-      </View>
-      {/* head (skin) */}
-      <View style={[styles.head, { backgroundColor: skin }]}>
-        <View style={styles.eyeRow}>
-          <View style={[styles.eye, eyeStyles[eyes]]} />
-          <View style={[styles.eye, eyeStyles[eyes]]} />
-        </View>
-      </View>
-      {/* hair style variants (over head) */}
-      <View style={[styles.hairBase, hairStyles[hair], { backgroundColor: hairColor }]} />
-      {hair === 'hair5' && (
-        <View style={[styles.bunKnot, { backgroundColor: hairColor }]} />
-      )}
-      {hair === 'hair4' && (
-        <View style={[styles.longSides, { backgroundColor: hairColor }]} />
-      )}
-      {/* accessories over hair/face */}
-      {worn.has('hats') && (
-        <View style={[styles.hat, { backgroundColor: fill('hats', palette.chestnut) }]} />
-      )}
-      {worn.has('sunglasses') && (
-        <View
-          style={[styles.sunglasses, { backgroundColor: fill('sunglasses', palette.jungleGreen) }]}
-        />
-      )}
-      {/* pet companion, front */}
-      {worn.has('pet') && (
-        <View style={[styles.pet, { backgroundColor: fill('pet', palette.russianGreen) }]} />
-      )}
+    <View
+      style={{ width, height, alignSelf: 'center', overflow: 'hidden' }}
+      accessibilityLabel="Avatar preview"
+    >
+      {/* backpack sits behind the body (z0) */}
+      {worn.filter((l) => l.slot === 'backpack').map(cosmeticLayer)}
+      {layer(base.body, 'body')}
+      {layer(base.eyes, 'eyes')}
+      {layer(base.hair, 'hair')}
+      {worn.filter((l) => l.slot !== 'backpack').map(cosmeticLayer)}
     </View>
   );
 }
-
-/** Jacket fill (always a cosmetic — no base jacket). */
-function jacketFill(cosmetic: CatalogEntry | null | undefined): ViewStyle {
-  return { backgroundColor: cosmetic ? colors.rarity[cosmetic.rarity] : palette.rifleGreen };
-}
-
-const HEAD_SIZE = 84;
-
-const styles = StyleSheet.create({
-  stage: {
-    width: 160,
-    height: 200,
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
-  backpack: {
-    position: 'absolute',
-    top: 96,
-    left: 18,
-    width: 44,
-    height: 62,
-    borderRadius: 14,
-  },
-  body: {
-    position: 'absolute',
-    top: 78,
-    width: 76,
-    height: 122,
-    alignItems: 'center',
-  },
-  shirt: {
-    width: '100%',
-    height: 62,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-  },
-  jacket: {
-    position: 'absolute',
-    top: -2,
-    width: '112%',
-    height: 66,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-  pants: {
-    position: 'absolute',
-    top: 62,
-    width: '86%',
-    height: 44,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  bootRow: {
-    position: 'absolute',
-    top: 104,
-    flexDirection: 'row',
-    gap: 10,
-  },
-  boot: {
-    width: 24,
-    height: 14,
-    borderRadius: 5,
-  },
-  head: {
-    position: 'absolute',
-    top: 8,
-    width: HEAD_SIZE,
-    height: HEAD_SIZE,
-    borderRadius: HEAD_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eyeRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 10,
-  },
-  eye: {
-    backgroundColor: colors.textPrimary,
-  },
-  hairBase: {
-    position: 'absolute',
-  },
-  bunKnot: {
-    position: 'absolute',
-    top: 0,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-  },
-  longSides: {
-    position: 'absolute',
-    top: 30,
-    width: HEAD_SIZE + 18,
-    height: 46,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: -1,
-  },
-  hat: {
-    position: 'absolute',
-    top: -4,
-    width: HEAD_SIZE - 4,
-    height: 22,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
-  },
-  sunglasses: {
-    position: 'absolute',
-    top: 36,
-    width: HEAD_SIZE - 20,
-    height: 12,
-    borderRadius: 6,
-  },
-  pet: {
-    position: 'absolute',
-    bottom: 4,
-    right: 14,
-    width: 30,
-    height: 26,
-    borderRadius: 12,
-  },
-});
-
-/** Eye shape per variant id. */
-const eyeStyles: Record<string, object> = {
-  eyes1: { width: 10, height: 10, borderRadius: 5 },
-  eyes2: { width: 12, height: 6, borderRadius: 3 },
-  eyes3: { width: 12, height: 4, borderRadius: 2 },
-};
-
-/** Hair silhouette per style id (positioned over the head). */
-const hairStyles: Record<string, object> = {
-  hair1: { top: 6, width: HEAD_SIZE - 8, height: 18, borderTopLeftRadius: 40, borderTopRightRadius: 40 },
-  hair2: { top: 2, width: HEAD_SIZE - 2, height: 26, borderTopLeftRadius: 42, borderTopRightRadius: 42 },
-  hair3: { top: -2, width: HEAD_SIZE + 8, height: 34, borderRadius: 24 },
-  hair4: { top: 0, width: HEAD_SIZE + 2, height: 28, borderTopLeftRadius: 42, borderTopRightRadius: 42 },
-  hair5: { top: 4, width: HEAD_SIZE - 6, height: 22, borderTopLeftRadius: 40, borderTopRightRadius: 40 },
-};
