@@ -60,8 +60,7 @@ export function LeaderboardView() {
         <View style={styles.header}>
           <Text style={[textStyles.headerL, styles.title]}>This week</Text>
           <Text style={[textStyles.caption, styles.note]}>
-            Points come from completing, winning, and placing — never from
-            coins.
+            This week’s top hikers
           </Text>
         </View>
       }
