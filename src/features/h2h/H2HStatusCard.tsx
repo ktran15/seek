@@ -67,11 +67,6 @@ export function H2HStatusCard() {
         {won === null ? 'HEAD-TO-HEAD' : won ? 'H2H — VICTORY' : 'H2H — DEFEAT'}
       </Text>
       <Text style={[textStyles.bodySmall, styles.line]}>{line}</Text>
-      {won !== null && (
-        <Text style={[textStyles.caption, styles.note]}>
-          Win bonus coins + blue crate arrive with the economy pass (M7).
-        </Text>
-      )}
     </View>
   );
 }
@@ -97,8 +92,5 @@ const styles = StyleSheet.create({
   },
   line: {
     color: colors.textPrimary,
-  },
-  note: {
-    color: colors.textSecondary,
   },
 });

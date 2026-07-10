@@ -60,8 +60,8 @@ export function LeaderboardView() {
         <View style={styles.header}>
           <Text style={[textStyles.headerL, styles.title]}>This week</Text>
           <Text style={[textStyles.caption, styles.note]}>
-            You + your friends, ranked by points. Points come from completing,
-            winning, and placing — never from coins.
+            Points come from completing, winning, and placing — never from
+            coins.
           </Text>
         </View>
       }

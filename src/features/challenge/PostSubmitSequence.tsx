@@ -80,15 +80,9 @@ export function PostSubmitSequence({ day, onDone }: PostSubmitSequenceProps) {
       )}
 
       {stage === 'feed' && (
-        <>
-          <Text style={[textStyles.headerL, styles.title]}>
-            Posted to your friends’ feed
-          </Text>
-          <Text style={[textStyles.body, styles.copy]}>
-            Your proof is public to your circle — likes, comments, and bragging
-            rights start now. (Feed goes live in M6.)
-          </Text>
-        </>
+        <Text style={[textStyles.headerL, styles.title]}>
+          Posted to your friends’ feed
+        </Text>
       )}
 
       <PressButton

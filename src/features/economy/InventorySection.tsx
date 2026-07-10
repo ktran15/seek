@@ -210,7 +210,7 @@ export function InventorySection({ userId }: { userId: string | undefined }) {
       </Text>
       {(cosmetics ?? []).length === 0 ? (
         <Text style={[textStyles.caption, styles.note]}>
-          Open crates to collect cosmetics — tap one here to try it on.
+          Open crates to collect cosmetics.
         </Text>
       ) : (
         <View style={styles.cosmeticList}>
