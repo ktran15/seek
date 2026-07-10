@@ -17,7 +17,11 @@ import {
   View,
   type KeyboardEvent,
 } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
 
@@ -49,37 +53,38 @@ const MAX_COMMENT_LENGTH = 500;
  */
 
 /**
- * Keyboard overlap height in window coordinates (0 when hidden). The dock's
- * padding tracks this value; the layout change is animated with the
- * keyboard's own duration/curve so the dock RIDES the keyboard instead of
- * jumping (founder polish fix 2) — skipped under reduced motion.
+ * Keyboard clearance for the LIST's bottom padding — updated only once the
+ * keyboard SETTLES, never mid-animation. (The old implementation animated
+ * this per keyboard event with LayoutAnimation on the JS thread: state
+ * change → dock relayout → onLayout → second state change → full thread-
+ * list relayout, all racing UIKit's native sheet-with-keyboard slide — the
+ * founder-reported stutter. The dock itself now rides the keyboard
+ * per-frame on the UI thread via useAnimatedKeyboard below; this value only
+ * keeps the thread's tail scrollable above the dock once things are still,
+ * and that padding sits behind dock+keyboard, so a late single update is
+ * invisible.)
  */
-function useKeyboardHeight(reducedMotion: boolean): number {
-  const [height, setHeight] = useState(0);
+function useKeyboardClearance(): number {
+  const [clearance, setClearance] = useState(0);
   useEffect(() => {
-    const onFrame = (event: KeyboardEvent) => {
-      const windowHeight = Dimensions.get('window').height;
-      if (Platform.OS === 'ios' && !reducedMotion && event.duration > 0) {
-        LayoutAnimation.configureNext({
-          duration: event.duration,
-          update: { duration: event.duration, type: 'keyboard' },
-        });
-      }
-      setHeight(Math.max(0, windowHeight - event.endCoordinates.screenY));
-    };
     if (Platform.OS === 'ios') {
-      // Covers show, hide, and height changes (emoji keyboard etc.).
-      const sub = Keyboard.addListener('keyboardWillChangeFrame', onFrame);
+      // Fires after show, hide, AND height changes (emoji keyboard etc.).
+      const sub = Keyboard.addListener('keyboardDidChangeFrame', (event: KeyboardEvent) => {
+        const windowHeight = Dimensions.get('window').height;
+        setClearance(Math.max(0, windowHeight - event.endCoordinates.screenY));
+      });
       return () => sub.remove();
     }
-    const show = Keyboard.addListener('keyboardDidShow', onFrame);
-    const hide = Keyboard.addListener('keyboardDidHide', () => setHeight(0));
+    const show = Keyboard.addListener('keyboardDidShow', (event: KeyboardEvent) =>
+      setClearance(event.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setClearance(0));
     return () => {
       show.remove();
       hide.remove();
     };
-  }, [reducedMotion]);
-  return height;
+  }, []);
+  return clearance;
 }
 
 interface ReplyTarget {
@@ -237,7 +242,10 @@ export function CommentSheet({
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [sending, setSending] = useState(false);
-  const [dockHeight, setDockHeight] = useState(0);
+  // Height of the dock's CONTENT (reply bar + preview + composer) — measured
+  // on an inner wrapper so the animated keyboard padding below it can't
+  // retrigger onLayout every frame.
+  const [dockContentHeight, setDockContentHeight] = useState(0);
   const [pending, setPending] = useState<PendingComment | null>(null);
   // Threads showing all replies (founder refinement 4 — default is first
   // reply + "View X more replies").
@@ -245,18 +253,27 @@ export function CommentSheet({
 
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
-  const keyboardHeight = useKeyboardHeight(reducedMotion);
+  const keyboardClearance = useKeyboardClearance();
   const { height: windowHeight } = useWindowDimensions();
 
   // Idle: flush above the home indicator. Keyboard up: the keyboard's whole
   // height becomes dock PADDING (not a translate), so the dock's surface
   // paints continuously from the input pill down behind the keyboard — no
   // seam can appear against the keyboard's top edge at any size or mid-
-  // animation (founder polish fix 2).
-  const dockPadBottom =
-    keyboardHeight > 0
-      ? keyboardHeight + spacing.xs
-      : Math.max(insets.bottom, spacing.xs);
+  // animation (founder polish fix 2). The padding is a Reanimated worklet
+  // driven by useAnimatedKeyboard: it tracks the native keyboard frame
+  // PER-FRAME ON THE UI THREAD, so the dock moves in true lockstep with
+  // UIKit's own keyboard/sheet animation (the same animator as the
+  // comment-button open) — no JS round-trip, no LayoutAnimation to race it.
+  // Under system Reduce Motion the keyboard's native (reduced) transition
+  // is still what drives every frame — we add no animation of our own.
+  const idlePadBottom = Math.max(insets.bottom, spacing.xs);
+  const keyboard = useAnimatedKeyboard();
+  const dockPadStyle = useAnimatedStyle(() => ({
+    // max() keeps the transition continuous where the rising keyboard
+    // crosses the home-indicator inset (no branch pop).
+    paddingBottom: Math.max(keyboard.height.value + spacing.xs, idlePadBottom),
+  }));
 
   const topLevel = (comments ?? []).filter((c) => c.parent_comment_id === null);
   const repliesOf = (id: string) =>
@@ -368,9 +385,18 @@ export function CommentSheet({
         style={[styles.list, { height: windowHeight }]}
         contentContainerStyle={[
           styles.listContent,
-          // Keep the thread's tail clear of the floating dock (whose height
-          // already includes the keyboard-height padding while typing).
-          { paddingBottom: dockHeight + spacing.sm },
+          // Keep the thread's tail clear of the floating dock. Composed from
+          // the settled clearance values — never animated (see
+          // useKeyboardClearance): a list-wide relayout mid-slide was the
+          // stutter's other half.
+          {
+            paddingBottom:
+              dockContentHeight +
+              (keyboardClearance > 0
+                ? keyboardClearance + spacing.xs
+                : idlePadBottom) +
+              spacing.sm,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         // Stage-1 collapse (founder refinement 2): while typing the sheet's
@@ -479,10 +505,10 @@ export function CommentSheet({
       {/* Composer dock — window-bottom pinned (see LAYOUT CONTRACT). */}
       <FullWindowOverlay>
         <View style={styles.overlayRoot} pointerEvents="box-none">
-          <View
-            style={[styles.dock, { paddingBottom: dockPadBottom }]}
-            onLayout={(e) => setDockHeight(e.nativeEvent.layout.height)}
-          >
+          <Animated.View style={[styles.dock, dockPadStyle]}>
+            <View
+              onLayout={(e) => setDockContentHeight(e.nativeEvent.layout.height)}
+            >
             {replyTo && (
               <View style={styles.replyBar}>
                 <Text style={[textStyles.caption, styles.replyBarText]} numberOfLines={1}>
@@ -567,7 +593,8 @@ export function CommentSheet({
                 )}
               </View>
             </View>
-          </View>
+            </View>
+          </Animated.View>
         </View>
       </FullWindowOverlay>
     </>
