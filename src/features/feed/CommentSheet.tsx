@@ -242,6 +242,13 @@ export function CommentSheet({
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [sending, setSending] = useState(false);
+  // True while the system camera / photo picker is presented. The composer
+  // dock lives in a FullWindowOverlay, which renders at the WINDOW level —
+  // above ANY presented view controller, including the camera. Left mounted,
+  // it paints over (and steals touches from) the camera's bottom controls
+  // (Cancel / Retake / Use Photo), dead-ending the flow — so the overlay
+  // unmounts for exactly the picker's lifetime.
+  const [nativePickerOpen, setNativePickerOpen] = useState(false);
   // Height of the dock's CONTENT (reply bar + preview + composer) — measured
   // on an inner wrapper so the animated keyboard padding below it can't
   // retrigger onLayout every frame.
@@ -306,11 +313,14 @@ export function CommentSheet({
     });
 
   const attachImage = async (source: 'gallery' | 'camera') => {
+    setNativePickerOpen(true);
     try {
       const uri = source === 'gallery' ? await onPickImage() : await onTakePhoto();
       if (uri) setImageUri(uri);
     } catch (e) {
       Alert.alert('Cannot attach photo', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setNativePickerOpen(false);
     }
   };
 
@@ -502,7 +512,9 @@ export function CommentSheet({
         }
       />
 
-      {/* Composer dock — window-bottom pinned (see LAYOUT CONTRACT). */}
+      {/* Composer dock — window-bottom pinned (see LAYOUT CONTRACT).
+          Unmounted while a native picker is up (see nativePickerOpen). */}
+      {!nativePickerOpen && (
       <FullWindowOverlay>
         <View style={styles.overlayRoot} pointerEvents="box-none">
           <Animated.View style={[styles.dock, dockPadStyle]}>
@@ -597,6 +609,7 @@ export function CommentSheet({
           </Animated.View>
         </View>
       </FullWindowOverlay>
+      )}
     </>
   );
 }
