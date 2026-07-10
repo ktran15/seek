@@ -184,8 +184,7 @@ export function InventorySection({ userId }: { userId: string | undefined }) {
       </Text>
       {unopened.length === 0 ? (
         <Text style={[textStyles.caption, styles.note]}>
-          No unopened crates — complete challenges, win matchups, or visit the
-          Shop.
+          Low on crates? Complete challenges, win matchups, or visit the Shop.
         </Text>
       ) : (
         <View style={styles.crateGrid}>

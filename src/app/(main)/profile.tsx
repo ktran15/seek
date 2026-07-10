@@ -51,10 +51,13 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
   },
+  // Right-edge band beside the avatar (fixed 200pt preview): below the
+  // +Invite column, above the name block — open at every screen size
+  // because everything above the name has token/constant heights.
   shopHint: {
     position: 'absolute',
     right: 0,
-    top: '46%',
+    top: 160,
     backgroundColor: colors.info,
     opacity: 0.55,
     borderTopLeftRadius: radii.card,

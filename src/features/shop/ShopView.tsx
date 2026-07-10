@@ -65,9 +65,6 @@ export function ShopView() {
           </Text>
         </View>
       </View>
-      <Text style={[textStyles.caption, styles.note]}>
-        Spend your coins on crates
-      </Text>
       <View style={styles.grid}>
         {CRATES.map((crate) => {
           const affordable = balance >= crate.price;
@@ -101,6 +98,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: spacing.md,
   },
   title: {
     color: colors.textPrimary,
@@ -114,11 +112,6 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     color: colors.celebration,
-  },
-  note: {
-    color: colors.textSecondary,
-    marginTop: spacing.xxs,
-    marginBottom: spacing.md,
   },
   grid: {
     flexDirection: 'row',

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   Alert,
@@ -10,7 +11,6 @@ import {
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { FormTextInput } from '@/components/ui/FormTextInput';
-import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
 import { relationshipWith, type Relationship } from '@/features/friends/graph';
 import {
@@ -84,18 +84,22 @@ export default function AddFriendsScreen() {
             </Text>
           }
           ListFooterComponent={
-            <Pressable
-              accessibilityRole="button"
-              onPress={invite}
-              style={styles.inviteCard}
-            >
+            <View style={styles.inviteCard}>
               <Text style={[textStyles.headerS, styles.inviteTitle]}>
-                Friend not on {config.appName} yet?
+                Invite friends
               </Text>
-              <Text style={[textStyles.bodySmall, styles.inviteCopy]}>
-                Invite them — you need a rival. Tap to share.
-              </Text>
-            </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Share an invite"
+                onPress={invite}
+                style={styles.inviteShare}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.textOnPrimary} />
+                <Text style={[textStyles.caption, styles.inviteShareLabel]}>
+                  SHARE
+                </Text>
+              </Pressable>
+            </View>
           }
           renderItem={({ item }) => {
             const rel = myId
@@ -209,12 +213,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSecondary,
     borderRadius: radii.card,
     padding: spacing.md,
-    gap: spacing.xxs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   inviteTitle: {
     color: colors.textPrimary,
   },
-  inviteCopy: {
-    color: colors.textPrimary,
+  inviteShare: {
+    minHeight: 44,
+    minWidth: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xxs,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+  },
+  inviteShareLabel: {
+    color: colors.textOnPrimary,
   },
 });
