@@ -1,14 +1,9 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
-import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
-import { useFriendCount } from '@/features/friends/useFriends';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 import { useLeaderboard, type LeaderboardRow } from './useLeaderboard';
-
-const { weeklyPayout, soloWeeklyPayout } = config.economy.coins;
-const MIN_FRIENDS = config.economy.weeklyPayoutMinFriends;
 
 function Row({ row }: { row: LeaderboardRow }) {
   const name = row.isMe ? 'You' : row.display_name || row.username;
@@ -35,14 +30,12 @@ function Row({ row }: { row: LeaderboardRow }) {
 
 /**
  * Egocentric weekly leaderboard (spec §5, §9.2): you + your friends by
- * weekly points, with the payout ladder and your qualification state.
+ * weekly points.
  */
 export function LeaderboardView() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { data: rows, isLoading, error, refetch, isRefetching } = useLeaderboard(userId);
-  const friendCount = useFriendCount(userId);
-  const qualified = friendCount >= MIN_FRIENDS;
 
   return (
     <FlatList
@@ -58,8 +51,7 @@ export function LeaderboardView() {
       }
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text style={[textStyles.headerL, styles.title]}>This week</Text>
-          <Text style={[textStyles.caption, styles.note]}>
+          <Text style={[textStyles.headerL, styles.title]}>
             This week’s top hikers
           </Text>
         </View>
@@ -77,30 +69,6 @@ export function LeaderboardView() {
           )}
         </View>
       }
-      ListFooterComponent={
-        <View style={styles.payoutCard}>
-          <Text style={[textStyles.headerS, styles.payoutTitle]}>
-            Weekly payout
-          </Text>
-          <Text style={[textStyles.bodySmall, styles.payoutLine]}>
-            1st: {weeklyPayout.first} coins + GOLD crate · Top 3:{' '}
-            {weeklyPayout.top3} · Top 10: {weeklyPayout.top10}
-          </Text>
-          {qualified ? (
-            <Text style={[textStyles.caption, styles.qualifiedNote]}>
-              You’re qualified ({friendCount} friends) — payouts land when the
-              week closes.
-            </Text>
-          ) : (
-            <Text style={[textStyles.caption, styles.note]}>
-              Add {MIN_FRIENDS - friendCount} more friend
-              {MIN_FRIENDS - friendCount === 1 ? '' : 's'} to qualify for tier
-              payouts. Solo payout: {soloWeeklyPayout} coins if you complete a
-              challenge this week.
-            </Text>
-          )}
-        </View>
-      }
     />
   );
 }
@@ -113,7 +81,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    gap: spacing.xxs,
     marginBottom: spacing.xs,
   },
   title: {
@@ -172,21 +139,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xs,
     padding: spacing.lg,
-  },
-  payoutCard: {
-    marginTop: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: spacing.md,
-    gap: spacing.xxs,
-  },
-  payoutTitle: {
-    color: colors.textPrimary,
-  },
-  payoutLine: {
-    color: colors.textPrimary,
-  },
-  qualifiedNote: {
-    color: colors.textSecondary,
   },
 });

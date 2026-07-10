@@ -3,31 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 
-export type H2HMatch = Database['public']['Tables']['h2h_matches']['Row'];
 export type AppNotification = Database['public']['Tables']['notifications']['Row'];
 
 export const h2hKeys = {
-  myMatch: (userId: string, betaDay: number) => ['h2h-match', userId, betaDay] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
 };
-
-/** My match (as protagonist) for an H2H day — RLS scopes the read. */
-export function useMyMatch(userId: string | undefined, betaDay: number) {
-  return useQuery({
-    queryKey: h2hKeys.myMatch(userId ?? 'anonymous', betaDay),
-    enabled: !!userId,
-    queryFn: async (): Promise<H2HMatch | null> => {
-      const { data, error } = await supabase
-        .from('h2h_matches')
-        .select('*')
-        .eq('protagonist_id', userId as string)
-        .eq('beta_day', betaDay)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-}
 
 /**
  * Ask the server to pair (and resolve) after an H2H-day submission
