@@ -11,18 +11,17 @@ const SUGGESTIONS_AFTER = 2;
 
 type FeedItem = { kind: 'post'; post: FeedPost } | { kind: 'suggestions' };
 
-const EMPTY_COPY: Record<FeedScope, { title: string; copy: string }> = {
+const EMPTY_COPY: Record<FeedScope, { title: string; copy?: string }> = {
   friends: {
     title: 'Nothing here yet',
     copy: 'Complete today’s challenge — your proof posts here. Add friends to fill this feed with theirs.',
   },
   fof: {
     title: 'No friends-of-friends yet',
-    copy: 'When your friends make friends, their posts show up here.',
   },
   explore: {
     title: 'No posts today yet',
-    copy: 'Explore shows everyone’s proof from today’s challenge, most-liked first. Be the first!',
+    copy: 'Everyone’s proof from today’s challenge lands here. Be the first!',
   },
 };
 
@@ -61,7 +60,7 @@ export function Feed({ scope }: { scope: FeedScope }) {
           <Text style={[textStyles.headerL, styles.emptyTitle]}>
             {isLoading ? 'Loading…' : error ? 'Could not load the feed' : empty.title}
           </Text>
-          {!isLoading && (
+          {!isLoading && (error || empty.copy) && (
             <Text style={[textStyles.body, styles.emptyCopy]}>
               {error ? 'Pull to retry.' : empty.copy}
             </Text>

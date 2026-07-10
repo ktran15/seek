@@ -111,8 +111,7 @@ export default function BlockedUsersScreen() {
                   Nobody’s blocked
                 </Text>
                 <Text style={[textStyles.body, styles.emptyCopy]}>
-                  Blocking someone (from any post’s ⋯ menu) hides you from each
-                  other everywhere. They’ll show up here.
+                  Block from any post’s ⋯ menu.
                 </Text>
               </>
             )}

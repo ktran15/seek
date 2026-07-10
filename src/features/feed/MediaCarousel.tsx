@@ -10,7 +10,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useEvent } from 'expo';
+import { Gesture, GestureDetector, type TapGesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   runOnJS,
@@ -34,10 +35,50 @@ function mediaKind(path: string): 'image' | 'video' {
   return /\.(mp4|mov)$/i.test(path) ? 'video' : 'image';
 }
 
-function VideoProof({ url }: { url: string }) {
+/**
+ * Feed video with IG-style gestures: single tap toggles play/pause, double
+ * tap likes. Native controls are off — AVPlayer's own tap recognizers
+ * swallow the first tap, so a double-tap can never accumulate over them.
+ */
+function VideoProof({ url, doubleTap }: { url: string; doubleTap?: TapGesture }) {
   const player = useVideoPlayer(url);
+  const { isPlaying } = useEvent(player, 'playingChange', {
+    isPlaying: player.playing,
+  });
+  const togglePlayback = () => {
+    if (player.playing) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  };
+  // Exclusive(double, single): play/pause waits out the like window, so a
+  // double-tap never also toggles playback.
+  const playTap = Gesture.Tap().onEnd((_event, success) => {
+    if (success) runOnJS(togglePlayback)();
+  });
+  const gesture = doubleTap ? Gesture.Exclusive(doubleTap, playTap) : playTap;
   return (
-    <VideoView player={player} style={styles.media} contentFit="cover" nativeControls />
+    <GestureDetector gesture={gesture}>
+      <View
+        collapsable={false}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={isPlaying ? 'Pause video' : 'Play video'}
+      >
+        <VideoView
+          player={player}
+          style={styles.media}
+          contentFit="cover"
+          nativeControls={false}
+        />
+        {!isPlaying && (
+          <View style={styles.playBadge} pointerEvents="none">
+            <Ionicons name="play" size={32} color={colors.textOnDark} />
+          </View>
+        )}
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -153,12 +194,15 @@ export function MediaCarousel({
   // 250ms between taps proved stricter than a natural human double-tap
   // (founder-reported misses); 400ms registers "quick succession" reliably
   // while the gallery tap still waits for this gesture to fail first.
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .maxDelay(400)
-    .onEnd((_event, success) => {
-      if (success) runOnJS(handleDoubleTap)();
-    });
+  // Factory, not a shared instance: RNGH forbids attaching one gesture
+  // object to multiple GestureDetectors (the carousel has one per page).
+  const makeDoubleTap = () =>
+    Gesture.Tap()
+      .numberOfTaps(2)
+      .maxDelay(400)
+      .onEnd((_event, success) => {
+        if (success) runOnJS(handleDoubleTap)();
+      });
 
   const heartOverlay = (
     <Animated.View pointerEvents="none" style={[styles.heartOverlay, heartStyle]}>
@@ -198,13 +242,17 @@ export function MediaCarousel({
         </View>
       );
     }
-    // Videos keep native controls — a tap gesture on top would fight them.
     if (mediaKind(first.path) === 'video') {
-      return <VideoProof url={first.url} />;
+      return (
+        <View>
+          <VideoProof url={first.url} doubleTap={makeDoubleTap()} />
+          {heartOverlay}
+        </View>
+      );
     }
     return (
-      <GestureDetector gesture={doubleTap}>
-        <View>
+      <GestureDetector gesture={makeDoubleTap()}>
+        <View collapsable={false}>
           <Image source={{ uri: first.url }} style={styles.media} resizeMode="cover" />
           {heartOverlay}
         </View>
@@ -228,16 +276,16 @@ export function MediaCarousel({
           }
         }}
         renderItem={({ item, index }) => {
-          // Single tap opens the gallery only after the double-tap (like)
-          // window has passed, so a double-tap never opens the gallery.
-          const openTap = Gesture.Tap()
-            .requireExternalGestureToFail(doubleTap)
-            .onEnd((_event, success) => {
-              if (success) runOnJS(setGalleryAt)(index);
-            });
+          // Exclusive(double, open): the gallery tap activates only once the
+          // double-tap (like) window fails, so a double-tap never opens the
+          // gallery. Fresh gesture instances per page — see makeDoubleTap.
+          const openTap = Gesture.Tap().onEnd((_event, success) => {
+            if (success) runOnJS(setGalleryAt)(index);
+          });
           return (
-            <GestureDetector gesture={Gesture.Exclusive(doubleTap, openTap)}>
+            <GestureDetector gesture={Gesture.Exclusive(makeDoubleTap(), openTap)}>
               <View
+                collapsable={false}
                 accessible
                 accessibilityRole="imagebutton"
                 accessibilityLabel={`Open photo ${index + 1} of ${media.length}`}
@@ -300,6 +348,17 @@ const styles = StyleSheet.create({
     height: MEDIA_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  playBadge: {
+    position: 'absolute',
+    top: MEDIA_HEIGHT / 2 - 28,
+    alignSelf: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.scrim,
   },
   dots: {
     flexDirection: 'row',

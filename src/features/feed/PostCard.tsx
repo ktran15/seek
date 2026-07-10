@@ -127,15 +127,13 @@ export function PostCard({ post }: { post: FeedPost }) {
         )}
       </View>
 
-      {/* Double-tap likes (never unlikes — IG behavior); the heart button
-          below is the reversible toggle. */}
+      {/* Double-tap toggles the like (founder-directed), same server path
+          as the heart button below. */}
       <MediaCarousel
         media={post.media}
-        onDoubleTap={() => {
-          if (!post.viewer_liked) {
-            toggleLike.mutate({ postId: post.post_id, liked: false });
-          }
-        }}
+        onDoubleTap={() =>
+          toggleLike.mutate({ postId: post.post_id, liked: post.viewer_liked })
+        }
       />
 
       <View style={styles.actions}>

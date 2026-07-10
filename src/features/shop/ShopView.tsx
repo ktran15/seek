@@ -66,7 +66,7 @@ export function ShopView() {
         </View>
       </View>
       <Text style={[textStyles.caption, styles.note]}>
-        Crates only — every coin is earned. Gold crates are weekly prizes.
+        Spend your coins on crates
       </Text>
       <View style={styles.grid}>
         {CRATES.map((crate) => {
