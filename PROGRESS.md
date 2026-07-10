@@ -17,6 +17,10 @@
 
 **Next step:** sub-step 2 (climb animation). Founder is posting `SEEK_ARTIST_BRIEF.md`; artist deliveries drop into registry slots whenever they land.
 
+### Founder fixes (2026-07-09) — done
+- **Notification badge** (merged to main `bbad45e`): unread-count pill (vermillon, 9+ cap) on the TopBar bell — unread `notifications` rows + incoming pending friend requests; clears via the existing mark-read / accept-decline flows. No schema change (`notifications.read` existed since M5).
+- **Double-tap like** (root cause found + fixed, sim-verified): (1) video posts had NO double-tap gesture — `VideoProof` returned bare native controls, and AVPlayer's own tap recognizers swallow taps anyway, so Day-1 (timer_video) posts could never like; cure = `nativeControls={false}`, single tap = play/pause (scrim ▶ badge when paused), double tap = like, composed `Gesture.Exclusive(double, single)`. (2) Day-5 carousel shared ONE `doubleTap` instance across per-page detectors (RNGH forbids; undefined behavior) — now a `makeDoubleTap()` factory per detector. (3) double-tap now **toggles** (was like-only, founder-directed). Verified on iOS simulator against live feed: video like/unlike + burst, photo like/unlike, play/pause, heart button, scroll — all ✓. **Founder still to confirm feel on physical iPhone.**
+
 ### Pre-M13 brand punch list (founder-directed, 2026-07-09) — done
 Auth screen: "Seek" text removed, wordmark ~20% bigger. TopBar: brand text → tight wordmark image (derived by `scripts/make-icons.js` from the logo master, registry `appLogoWordmark`). App icon + Expo splash + Android adaptive icons: wordmark on the cream box (`ios.icon` → plain png; the Icon Composer template bundle retired). Founder loves the generated logo.
 
