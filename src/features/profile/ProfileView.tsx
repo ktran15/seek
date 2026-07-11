@@ -14,6 +14,7 @@ import {
 
 import { getAsset } from '@/assets/registry';
 
+import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
 import { AvatarPreview } from '@/features/avatar/AvatarPreview';
@@ -82,9 +83,13 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const { data: crates } = useMyCrates(selfId);
   const { data: catalog } = useCosmeticsCatalog();
   const ownBadges = useBadges(selfId);
-  const { data: publicStats, isLoading: statsLoading } = usePublicProfileStats(
-    isSelf ? undefined : targetId,
-  );
+  const {
+    data: publicStats,
+    isLoading: statsLoading,
+    isError: statsError,
+    isRefetching: statsRefetching,
+    refetch: refetchStats,
+  } = usePublicProfileStats(isSelf ? undefined : targetId);
 
   const { data: friendships } = useMyFriendships(myId);
   const sendRequest = useSendFriendRequest(myId);
@@ -137,6 +142,26 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
           <Text style={[textStyles.body, styles.stateCopy]}>
             The account may have been deleted.
           </Text>
+        </View>
+      );
+    }
+    // A FAILED stats call (network, backend) is not "unavailable" — show the
+    // app's standard error + retry state so an outage never reads as a block.
+    if (statsError) {
+      return (
+        <View style={styles.centerState}>
+          <Text style={[textStyles.headerL, styles.stateTitle]}>
+            Profile didn’t load
+          </Text>
+          <Text style={[textStyles.body, styles.stateCopy]}>
+            Check your connection and try again.
+          </Text>
+          <PressButton
+            label={statsRefetching ? 'Retrying…' : 'Retry'}
+            onPress={() => void refetchStats()}
+            disabled={statsRefetching}
+            style={styles.retryButton}
+          />
         </View>
       );
     }
@@ -430,6 +455,10 @@ const styles = StyleSheet.create({
   stateCopy: {
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: spacing.sm,
+    minWidth: 160,
   },
   sectionTabs: {
     flexDirection: 'row',
