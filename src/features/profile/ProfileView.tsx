@@ -4,15 +4,12 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-
-import { getAsset } from '@/assets/registry';
 
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
@@ -34,12 +31,15 @@ import {
 } from '@/features/friends/useFriends';
 import { sendInvite } from '@/features/invites/sendInvite';
 import { deriveBadges } from '@/features/profile/badges';
+import { StatsShowcase } from '@/features/profile/StatsShowcase';
 import { useBadges } from '@/features/profile/useBadges';
 import { useProfile } from '@/features/profile/useProfile';
 import { usePublicProfileStats } from '@/features/profile/usePublicProfile';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
-const SECTIONS = ['Stats', 'Badges', 'Inventory'] as const;
+// Badges live on the Trail Log stats page now (founder-approved direction) —
+// no separate Badges tab. The read-only other-user view shows no tabs at all.
+const SECTIONS = ['Stats', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /**
@@ -94,9 +94,13 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const { data: friendships } = useMyFriendships(myId);
   const sendRequest = useSendFriendRequest(myId);
 
-  const completedCount = isSelf
-    ? (submissions ?? []).filter((s) => s.state === 'submitted').length
-    : (publicStats?.submittedDays.length ?? 0);
+  const submittedDays: ReadonlySet<number> = isSelf
+    ? new Set(
+        (submissions ?? [])
+          .filter((s) => s.state === 'submitted')
+          .map((s) => s.beta_day),
+      )
+    : new Set(publicStats?.submittedDays ?? []);
   const record = isSelf
     ? h2hRecord
     : publicStats
@@ -109,12 +113,11 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const badges = isSelf
     ? ownBadges
     : deriveBadges({
-        submittedDays: new Set(publicStats?.submittedDays ?? []),
+        submittedDays,
         lengthDays: config.beta.lengthDays,
         h2hWins: publicStats?.h2hWins ?? 0,
         voteFirsts: publicStats?.voteFirsts ?? 0,
       });
-  const sections: readonly Section[] = isSelf ? SECTIONS : ['Stats', 'Badges'];
 
   const invite = async () => {
     if (!session) return;
@@ -274,89 +277,42 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
         </Pressable>
       )}
 
-      <View style={styles.sectionTabs}>
-        {sections.map((s) => {
-          const active = s === section;
-          return (
-            <Pressable
-              key={s}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              onPress={() => setSection(s)}
-              style={[styles.sectionTab, active && styles.sectionTabActive]}
-            >
-              <Text
-                style={[
-                  textStyles.headerS,
-                  active ? styles.sectionLabelActive : styles.sectionLabel,
-                ]}
+      {isSelf && (
+        <View style={styles.sectionTabs}>
+          {SECTIONS.map((s) => {
+            const active = s === section;
+            return (
+              <Pressable
+                key={s}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                onPress={() => setSection(s)}
+                style={[styles.sectionTab, active && styles.sectionTabActive]}
               >
-                {s}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {section === 'Stats' && (
-        <View style={styles.sectionBody}>
-          <View style={styles.statRow}>
-            <Text style={[textStyles.body, styles.statLabel]}>Stops climbed</Text>
-            <Text style={[textStyles.headerS, styles.statValueLive]}>
-              {completedCount}
-            </Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={[textStyles.body, styles.statLabel]}>
-              Challenges completed
-            </Text>
-            <Text style={[textStyles.headerS, styles.statValueLive]}>
-              {completedCount}
-            </Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={[textStyles.body, styles.statLabel]}>H2H record (W-L)</Text>
-            <Text style={[textStyles.headerS, styles.statValueLive]}>
-              {record ? `${record.wins}-${record.losses}` : '—'}
-            </Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={[textStyles.body, styles.statLabel]}>Votes won</Text>
-            <Text style={[textStyles.headerS, styles.statValueLive]}>{votesWon}</Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={[textStyles.body, styles.statLabel]}>Coins earned</Text>
-            <Text style={[textStyles.headerS, styles.statValueLive]}>
-              {coins ?? '—'}
-            </Text>
-          </View>
+                <Text
+                  style={[
+                    textStyles.headerS,
+                    active ? styles.sectionLabelActive : styles.sectionLabel,
+                  ]}
+                >
+                  {s}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       )}
-      {section === 'Badges' && (
+
+      {(!isSelf || section === 'Stats') && (
         <View style={styles.sectionBody}>
-          <View style={styles.badgeGrid}>
-            {badges.map((badge) => (
-              <View key={badge.id} style={styles.badgeCell}>
-                <Image
-                  source={getAsset(badge.slot)}
-                  style={[styles.badgeArt, !badge.earned && styles.badgeLocked]}
-                  resizeMode="contain"
-                  accessibilityLabel={`${badge.name}${badge.earned ? '' : ' (locked)'}`}
-                />
-                <Text style={[textStyles.caption, styles.badgeLabel]}>
-                  {badge.name}
-                </Text>
-                {!badge.earned && (
-                  <Text style={[textStyles.caption, styles.badgeHint]}>
-                    {badge.hint}
-                  </Text>
-                )}
-              </View>
-            ))}
-          </View>
-          <Text style={[textStyles.caption, styles.sectionNote]}>
-            {badges.filter((b) => b.earned).length} of {badges.length} earned
-          </Text>
+          <StatsShowcase
+            submittedDays={submittedDays}
+            lengthDays={config.beta.lengthDays}
+            record={record}
+            votesWon={votesWon}
+            coinsEarned={coins}
+            badges={badges}
+          />
         </View>
       )}
       {isSelf && section === 'Inventory' && (
@@ -489,54 +445,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: spacing.md,
     gap: spacing.xs,
-  },
-  statRow: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    paddingHorizontal: spacing.md,
-  },
-  statLabel: {
-    color: colors.textPrimary,
-  },
-  statValue: {
-    color: colors.textSecondary,
-  },
-  statValueLive: {
-    color: colors.textPrimary,
-  },
-  badgeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    justifyContent: 'center',
-  },
-  badgeCell: {
-    alignItems: 'center',
-    gap: spacing.xxs,
-    width: 96,
-  },
-  badgeArt: {
-    width: 72,
-    height: 72,
-  },
-  badgeLocked: {
-    opacity: 0.22,
-  },
-  badgeLabel: {
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  badgeHint: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  sectionNote: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.xs,
   },
 });
