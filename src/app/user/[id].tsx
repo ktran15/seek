@@ -1,73 +1,22 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AvatarPreview } from '@/features/avatar/AvatarPreview';
-import { useCosmeticsCatalog } from '@/features/economy/useEconomy';
-import { useProfile } from '@/features/profile/useProfile';
-import { colors, spacing, textStyles } from '@/theme';
+import { ProfileView } from '@/features/profile/ProfileView';
 
 /**
- * Another user's profile — the navigation target for friends-list rows
- * (founder-directed, pre-M12). Deliberately minimal: full-look avatar +
- * names, the profile data every authenticated user can already read. Stats/
- * inventory stay private to their owner (their queries are RLS-scoped to
- * auth.uid()); expanding this surface is a founder call, not a default.
+ * Another user's profile (founder-directed, 2026-07-10): the full Profile
+ * screen in read-only mode — avatar, names, public §11 stats + badges, and a
+ * friend-request control. Reached from feed posts and friends-list rows.
+ * Blocked pairs get the screen's "Profile unavailable" state (the block-aware
+ * stats RPC returns nothing); feeds never surface them in the first place.
  */
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = typeof id === 'string' ? id : undefined;
-  const { data: profile, isLoading } = useProfile(userId);
-  const { data: catalog } = useCosmeticsCatalog();
 
   return (
     <ErrorBoundary screen="UserProfile">
-      <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
-        {isLoading ? (
-          <ActivityIndicator color={colors.textSecondary} />
-        ) : !profile ? (
-          <>
-            <Text style={[textStyles.headerL, styles.title]}>
-              This climber is gone
-            </Text>
-            <Text style={[textStyles.body, styles.copy]}>
-              The account may have been deleted.
-            </Text>
-          </>
-        ) : (
-          <>
-            <AvatarPreview
-              config={profile.avatar_config ?? {}}
-              cosmetics={catalog ?? []}
-            />
-            <Text style={[textStyles.headerL, styles.title]}>
-              {profile.display_name ?? '—'}
-            </Text>
-            <Text style={[textStyles.body, styles.copy]}>
-              @{profile.username ?? '—'}
-            </Text>
-          </>
-        )}
-      </ScrollView>
+      <ProfileView viewUserId={userId} />
     </ErrorBoundary>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  container: {
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
-    alignItems: 'center',
-    gap: spacing.xxs,
-  },
-  title: {
-    color: colors.textPrimary,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-  },
-  copy: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});

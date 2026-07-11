@@ -496,6 +496,17 @@ export interface Database {
           points: number;
         }[];
       };
+      get_public_profile_stats: {
+        Args: { target: string };
+        Returns: {
+          submitted_days: number[];
+          h2h_wins: number;
+          h2h_losses: number;
+          votes_won: number;
+          coins_earned: number;
+          vote_firsts: number;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
