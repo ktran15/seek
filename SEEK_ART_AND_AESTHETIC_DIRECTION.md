@@ -1,6 +1,7 @@
 # Seek — Art & Aesthetic Direction
 
-> **Purpose:** the single source of truth for Seek's *entire* visual identity. Both consumers read from this document: (1) the **design tokens / coded UI** (colors, type, component feel) and (2) the **generated art** (nano banana / Gemini, at build-time). One aesthetic, two output methods — so the coded UI and the illustrated art always feel like one product.
+> **Purpose:** the single source of truth for Seek's *entire* visual identity. Both consumers read from this document: (1) the **design tokens / coded UI** (colors, type, component feel) and (2) the **art assets**. One aesthetic, two output methods — so the coded UI and the illustrated art always feel like one product.
+> **Asset production (revised 2026-07-10):** assets are **founder-curated** — the founders generate/select final art themselves with tools of their choice and hand over finished files for the registry slots. This document's direction is tool-agnostic and unchanged; it now guides the founders' curation (and any artist they engage) rather than an automated generation pipeline.
 > **Status:** Sections 1–4 (vibe, color, type, UI feel) are **locked** and govern the app from M0. Sections 5–8 (illustration, mascot, crate/reward, motion) are art-direction for the asset-generation pass (M12) and polish (M13); locked in direction, refined against real output.
 > **Companion:** pairs with `SEEK_MVP_BUILD_SPEC_V2.md` (the build spec). Where the spec says "style bible," it means this document. Referenced fonts/colors here override the placeholder defaults in the spec.
 

@@ -1,8 +1,8 @@
-# Seek — Character Rig Bible (Consistent Generation Spec)
+# Seek — Character Rig Bible (Consistent Character-Art Spec)
 
-> **Purpose:** guarantee that (a) the beaver mascot looks like the *same character* every time it appears, and (b) every customizable-avatar cosmetic (hats, pants, jackets, etc.) **aligns perfectly** on the shared body when equipped in any combination. This is the hard part of the art pipeline; naive per-asset generation will produce misaligned, inconsistent output. Follow this exactly.
-> **Companion to:** `SEEK_ART_AND_AESTHETIC_DIRECTION.md` (the look) and `SEEK_MVP_BUILD_SPEC_V2.md` (the build). This document is a **hard constraint on the asset-generation pass (spec §14 / milestone M12)**.
-> **Generation tool:** nano banana (Gemini image model), used **build/admin-time only, key server-side** (never in the shipped app).
+> **Purpose:** guarantee that (a) the beaver mascot looks like the *same character* every time it appears, and (b) every customizable-avatar cosmetic (hats, pants, jackets, etc.) **aligns perfectly** on the shared body when equipped in any combination. This is the hard part of the art pipeline; naive per-asset production will produce misaligned, inconsistent output. Follow this exactly.
+> **Companion to:** `SEEK_ART_AND_AESTHETIC_DIRECTION.md` (the look) and `SEEK_MVP_BUILD_SPEC_V2.md` (the build). This document is a **hard constraint on the asset pass (spec §14 / milestone M12)**.
+> **Who this binds (revised 2026-07-10):** these rig/anchor/layering/z-order rules constrain **whatever tool or artist produces the character assets** — the founders using nano banana / Gemini manually outside the app, any other generator, or a human artist. Assets arrive as founder-supplied final files; there is **no automated in-app or build-time generation pipeline and no server-side API call**. Where this document says "generate against the frozen base," read it as an instruction to the asset producer, whoever that is — the frozen base, fixed canvas, anchor zones, jacket-closed rule, and consistent registration apply identically to generated and hand-made art.
 
 ---
 

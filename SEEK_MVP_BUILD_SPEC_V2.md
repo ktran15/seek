@@ -59,7 +59,7 @@ Build in milestone order (§15). After each milestone: deliver a runnable increm
 - **Build:** EAS Build → TestFlight. Configure bundle ID, signing, and pipeline in M0.
 - **Config module (typed, central):** app name, beta start date, **beta timezone = America/New_York (EST/EDT)**, all `TUNE` values, feature flags (`enableMascotOpponent`, `inviteGate`), mascot config, media limits.
 
-> **Founder tooling slot:** iOS-dev MCPs/skills (founder researching — integrate when provided). Figma Dev-Mode MCP for founder-flagged screens. Image-generation API (nano banana / Gemini) for asset creation at build/admin time only (§14).
+> **Founder tooling slot:** iOS-dev MCPs/skills (founder researching — integrate when provided). Figma Dev-Mode MCP for founder-flagged screens. Art assets are founder-supplied final files dropped into registry slots (§14) — no image-generation step in the build.
 
 ---
 
@@ -378,17 +378,18 @@ Short, friendly, on-brand copy.
 
 ## 14. Assets — Style Bible & Manifest
 
-### 14.1 Strategy (LOCKED)
-- **No human artists v1.** All hero art generated via image API (nano banana / Gemini) at **medium-high effort, one consistent aesthetic** per `SEEK_ART_AND_AESTHETIC_DIRECTION.md`.
-- **Character/avatar/mascot generation MUST follow `SEEK_CHARACTER_RIG_BIBLE.md`** — the frozen-base + reference-conditioned + fixed-canvas/anchor/z-order pipeline that keeps the beaver identical across appearances and makes every avatar cosmetic align in any combination. Naive per-asset generation is prohibited; it produces misaligned, inconsistent output.
-- Generation is **build/admin-time only** (Edge Function or build script); **API key server-side, never shipped**. The app only loads registry files.
+### 14.1 Strategy (LOCKED — revised 2026-07-10)
+- **All art is founder-supplied.** The founders generate and curate every asset themselves — with whatever tools they choose (manual nano banana / Gemini use outside the app, another generator, a commissioned artist, hand work) — and hand the agent **final files** to drop into named registry slots. **One consistent aesthetic** per `SEEK_ART_AND_AESTHETIC_DIRECTION.md`.
+- **Character/avatar/mascot art MUST follow `SEEK_CHARACTER_RIG_BIBLE.md`** — the frozen-base + fixed-canvas/anchor/z-order registration rules that keep the beaver identical across appearances and make every avatar cosmetic align in any combination. These are constraints on **whoever/whatever produces the assets**; naive per-asset production is prohibited — it yields misaligned, inconsistent output.
+- **There is no in-app or build-time generation step and no image-API key anywhere in the project's runtime or build.** The app only loads registry files. *(Obsolete: the prior "generation via image API at build/admin time, key server-side" pipeline — superseded 2026-07-10 by founder-supplied assets.)*
 - Every asset fills a named registry slot → swappable zero-code (Figma replacements welcome later).
 
 ### 14.2 Style bible workflow
-> **Authoritative aesthetic source: `SEEK_ART_AND_AESTHETIC_DIRECTION.md`.** That document defines the locked palette (exact hex), fonts (Alfa Slab One / Nunito / Inter / Archivo), UI component feel (3D-press buttons, 16px corners, tactile depth, earth-tinted surfaces), illustration fidelity (stylized game-asset craft — bold outline, cel-shading, texture, 3/4 forms; detail-tier rule), the beaver mascot concept, and crate/reward style. Design tokens (§4) and all asset generation read from it. The starter descriptor below is superseded by that document.
-1. Generate **3–4 anchor candidates** (hiker base, mountain, one crate) at high effort → **founder picks winners** → locked references for all subsequent generations.
-2. **Style descriptor:** use the illustration spec in `SEEK_ART_AND_AESTHETIC_DIRECTION.md` §5 (stylized game-asset art in the warm earthy palette; not pastel, not flat-minimal, not realistic).
-3. Every call = anchors + descriptor + color tokens + per-asset prompt. Founder reviews batches; regenerate drift.
+> **Authoritative aesthetic source: `SEEK_ART_AND_AESTHETIC_DIRECTION.md`.** That document defines the locked palette (exact hex), fonts (Alfa Slab One / Nunito / Inter / Archivo), UI component feel (3D-press buttons, 16px corners, tactile depth, earth-tinted surfaces), illustration fidelity (stylized game-asset craft — bold outline, cel-shading, texture, 3/4 forms; detail-tier rule), the beaver mascot concept, and crate/reward style. Design tokens (§4) and all asset production read from it.
+
+**Intake workflow (current):** founders deliver final files → agent verifies each against the aesthetic doc + Rig Bible acceptance checks (character art) → file lands in `assets/art/` → registry slot flips to it. Zero code per swap.
+
+*(Obsolete — superseded 2026-07-10, kept for history: the anchor-generation workflow — generate 3–4 anchor candidates → founder picks winners → locked references conditioning all subsequent API generations. The **frozen canonical references** it produced (`assets/art/canonical/`) remain the alignment standard that founder-supplied character art must still match.)*
 
 ### 14.3 Slot list
 - `appLogo`, `loadingScreen`
@@ -419,7 +420,7 @@ Each milestone ends with a runnable increment + test guide + **STOP** for founde
 - **M9 — Leaderboard & weekly payout:** egocentric weekly points board, **≥3-friend qualification**, tier payouts + gold crate, **solo flat payout**, all via Edge Function. *Test: qualified vs. solo payouts; simulated week-end pays correctly.*
 - **M10 — Trust & compliance:** admin removal path, blocked-users settings screen, **account deletion cascade**, privacy policy + terms generated and linked. *Test: delete an account fully; removed post vanishes.*
 - **M11 — Push notifications:** all triggers (§13), local-day scheduling + EST vote countdown pushes. *Test: receive each type.*
-- **M12 — Real assets pass:** anchors → founder approval → full on-theme set → swap into slots. *Test: cohesive look.*
+- **M12 — Real assets pass:** founder-supplied final assets, dropped into named registry slots (character art per the Rig Bible's registration rules) — no in-app or build-time generation step. *Test: cohesive look.* *(Revised 2026-07-10: was "anchors → founder approval → full on-theme set" via the image-API pipeline.)*
 - **M13 — Polish & animation:** climb animation, crate-open reveal, win confetti, transitions (MCP + skills), reduced-motion, empty/error states, final QA. *Test: full 7-day loop feels great on device.*
 - **M14 — TestFlight beta build:** final EAS build, TestFlight submission, on-device smoke of the entire loop. *Deliverable: installable beta.*
 
