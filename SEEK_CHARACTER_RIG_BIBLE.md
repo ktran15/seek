@@ -1,8 +1,8 @@
-# Seek — Character Rig Bible (Consistent Generation Spec)
+# Seek — Character Rig Bible (Consistent Character-Art Spec)
 
-> **Purpose:** guarantee that (a) the beaver mascot looks like the *same character* every time it appears, and (b) every customizable-avatar cosmetic (hats, pants, jackets, etc.) **aligns perfectly** on the shared body when equipped in any combination. This is the hard part of the art pipeline; naive per-asset generation will produce misaligned, inconsistent output. Follow this exactly.
-> **Companion to:** `SEEK_ART_AND_AESTHETIC_DIRECTION.md` (the look) and `SEEK_MVP_BUILD_SPEC_V2.md` (the build). This document is a **hard constraint on the asset-generation pass (spec §14 / milestone M12)**.
-> **Generation tool:** nano banana (Gemini image model), used **build/admin-time only, key server-side** (never in the shipped app).
+> **Purpose (character pivot, spec §10):** the player's avatar IS a **beaver**. This document guarantees that (a) the player's beaver looks like the *same character* across all **6 body-color variants** and all **5 Happiness states**, (b) every cosmetic (**hats, tails, gloves, eyes**) **aligns perfectly** on the shared beaver body in any combination and on any state, and (c) the **rival** beaver (the H2H NPC opponent, §7.9) holds one consistent identity, visually distinct from the player's beaver, across its expression states. This is the hard part of the art pipeline; naive per-asset production will produce misaligned, inconsistent output. Follow this exactly.
+> **Companion to:** `SEEK_ART_AND_AESTHETIC_DIRECTION.md` (the look) and `SEEK_MVP_BUILD_SPEC_V2.md` (the build). This document is a **hard constraint on the asset pass (spec §14 / milestone M12)**.
+> **Who this binds (revised 2026-07-10):** these rig/anchor/layering/z-order rules constrain **whatever tool or artist produces the character assets** — the founders using nano banana / Gemini manually outside the app, any other generator, or a human artist. Assets arrive as founder-supplied final files; there is **no automated in-app or build-time generation pipeline and no server-side API call**. Where this document says "generate against the frozen base," read it as an instruction to the asset producer, whoever that is — the frozen base, fixed canvas, anchor zones, jacket-closed rule, and consistent registration apply identically to generated and hand-made art.
 
 ---
 
@@ -14,7 +14,7 @@ Image generators are **stochastic** — the same prompt yields a slightly differ
 
 Consistency does **not** come from clever prompt wording. It comes from:
 1. **A frozen base image** that never changes.
-2. **Reference-conditioned generation** (image-to-image): every cosmetic and every mascot pose is produced by feeding the frozen base *in* as the reference, so the model draws onto *this exact character*.
+2. **Reference-conditioned production** (against the base): every cosmetic, every Happiness-state pose, and every rival state is produced by working *from* the frozen base, so the art stays *this exact character*.
 3. **A fixed canvas + registration** so all layers share one coordinate grid and stack in alignment by construction.
 4. **Defined anchor zones + locked z-order** so swaps never shift anything.
 
@@ -24,13 +24,14 @@ Everything below implements those four ideas.
 
 ## 1. Canvas & Registration Spec (applies to EVERY asset)
 
-Every asset — base, skin variants, eyes, hair, all 8 cosmetic slots, mascot, mascot expressions — is produced on an **identical canvas**:
+Every asset — beaver base, body-color variants, the 5 Happiness-state poses, all 4 cosmetic slots, the rival beaver, rival expressions — is produced on an **identical canvas**:
 
 - **Dimensions:** `1024 × 1024 px`, square, **transparent background** (PNG with alpha). (Export to app at @1x/@2x/@3x as needed; the master is 1024².)
 - **Character placement (registration) — identical every time:**
-  - Character is **centered horizontally**, occupying roughly the central column `x: 256–768`.
-  - **Standing, front-facing (or a fixed 3/4), neutral stance**, arms slightly away from the body so torso cosmetics have clean edges.
-  - **Head top ≈ y:100**, **feet bottom ≈ y:980**. Same scale, same pose, same position in every single generation.
+  - Beaver is **centered horizontally**, occupying roughly the central column `x: 256–768`.
+  - **Standing, front-facing (or a fixed 3/4), neutral stance**, **paws/arms slightly away from the body** so glove and torso cosmetics have clean edges; **tail visible** (peeking at the lower/side silhouette) so a tail cosmetic has a defined footprint.
+  - **Head top ≈ y:120**, **feet bottom ≈ y:960**. Same scale, same pose, same position in every single generation. *(Trace exact values from the frozen beaver base and mark `LOCKED-ON-BASE`.)*
+  - **Happiness-state registration envelope:** the 5 emotional states (§4) are expression + subtle posture shifts that **must keep head, eye, paw, and tail anchors within tolerance** of the neutral base, so one cosmetic layer set composites acceptably across all five. A state that moves an anchor out of tolerance needs per-state cosmetic handling — avoid it; keep the mood in the face/ears/shoulders, not in relocating the whole body.
 - **Lighting:** one fixed light direction (recommend top-left) and the cel-shading style from aesthetic §5 — **identical across all assets** so nothing looks lit differently when composited.
 - **Margins:** keep all art inside `x:120–904, y:80–1000` so nothing clips the canvas edge.
 
@@ -42,124 +43,113 @@ Every asset — base, skin variants, eyes, hair, all 8 cosmetic slots, mascot, m
 
 ## 2. The Two Characters
 
-Seek has **two distinct characters**, handled differently:
+Seek has **two distinct beaver characters**, handled differently:
 
 | Character | Who | Customizable? | Treatment |
 |---|---|---|---|
-| **Player Hiker Avatar** | the human hiker the user builds and dresses | **Yes** — base (skin/eyes/hair) + 8 gacha cosmetic slots | Full layered rig (§3–§6) |
-| **Beaver Mascot** | Seek's brand character / default H2H opponent | **No** — one fixed identity + fixed hiking outfit | Frozen base + expression states (§7) |
+| **Player Beaver** | the user's own avatar — named, dressed, kept happy | **Yes** — base body color (6 recolors) + 4 gacha cosmetic slots; **5 Happiness-state poses** | Full layered rig (§3–§6) + state poses (§4) |
+| **Rival Beaver** | the H2H NPC opponent when no friend can be paired (§7.9) | **No** — one fixed identity, **visually distinct** from the player beaver | Frozen base + expression states (§7) |
 
-The layered-cosmetic system is for the **hiker**. The **beaver** is one fixed design that only needs pose/expression variants.
+The layered-cosmetic system is for the **player beaver**. The **rival** is one fixed design (a different-looking beaver) that only needs win/lose/idle expression variants — the same treatment the old mascot used, now reframed as the opponent NPC.
 
 ---
 
-## 3. Player Avatar — Layer Stack & Z-Order (LOCKED)
+## 3. Player Beaver — Layer Stack & Z-Order (LOCKED)
 
-The avatar renders as independent transparent layers composited **back-to-front** in this exact order:
+The beaver renders as independent transparent layers composited **back-to-front** in this exact order:
 
 ```
-z0  backpack        (worn on back — sits BEHIND the body; pack/straps read around the torso)
-z1  body (skin)     (the canonical hiker body — see §4; skin-tone recolor variants)
-z2  eyes            (variant layer)
-z3  hair            (variant layer, behind hat)
-z4  pants           (lower body, over the body's legs)
-z5  shirt           (upper body, over the torso)
-z6  jacket          (over shirt — FULLY OCCLUDES the shirt: the jacket-closed rule)
-z7  boots           (over feet + pants cuffs)
-z8  hats            (over hair / head)
-z9  sunglasses      (over eyes / face — front-most on the face)
-z10 pet             (companion beside the hiker — own side anchor, minimal body overlap)
+z0  tail            (worn low/rear — sits BEHIND the body; the tail cosmetic reads around the lower silhouette)
+z1  body (state)    (the canonical beaver body at its current Happiness state — see §4; 6 body-color recolor variants)
+z2  gloves          (on the paws/hands — over the body's forepaws)
+z3  eyes cosmetic   (over the face/eye line — front-most on the face: sunglasses / eyepatch / goggles / monocle / eye-shadow)
+z4  hats            (over the head — top-most)
 ```
 
 **Rules baked into the order:**
-- **Jacket-closed rule (LOCKED):** when a jacket is equipped it draws over and *hides* the shirt — so **no shirt×jacket combination art is ever needed**. Each is a standalone layer.
-- **Hat over hair, sunglasses over eyes:** swapping a hat never disturbs the face; swapping hair never disturbs a hat's position.
-- **Backpack behind body:** the body occludes the pack's center; only the silhouette/straps show — so the pack fits any body without clipping the torso.
-- **Pet is positioned to the side** with little/no overlap, so it never interferes with the body stack.
+- **Tail behind body:** the body occludes the tail's inner edge; only the outer shape/tip reads — so a tail cosmetic fits any body color and any state without clipping the torso (same principle the old backpack used).
+- **Gloves on the paws:** anchored to the forepaws, which sit slightly away from the body (§1), so a glove swap never disturbs the torso.
+- **Eyes cosmetic over the face, hat over the head:** swapping a hat never disturbs the eyes; swapping an eyes item never disturbs the hat.
+- **The `eyes` slot is a face accessory** (sunglasses/eyepatch/goggles/monocle/eye-shadow) worn over the beaver's own eyes — it is a cosmetic layer, not a "base eyes" variant (the beaver's eyes belong to the body/state pose).
 
-Base always present (body + a default eyes/hair). Every cosmetic slot is optional; empty slot = that layer omitted.
-
----
-
-## 4. Player Avatar — The Canonical Body (freeze this FIRST)
-
-Everything depends on one frozen body. Produce it before any cosmetic exists.
-
-1. **Generate 3–4 candidates** (text-to-image) of the hiker body in the locked pose/canvas/style (aesthetic §5): neutral hiker, no gear beyond a minimal base outfit, arms slightly out, front-facing, on transparent 1024². Founder **picks one winner.**
-2. **Freeze it** as `avatar_body_canonical.png`. This silhouette/pose is now **immutable** — it is the fit reference for every cosmetic.
-3. **Skin-tone variants = shape-identical recolors.** Produce ~5 skin tones (`TUNE` count) as **pure recolors of the frozen body — same exact silhouette, pose, and shading, only hue changes** (same discipline as "one crate recolored 5 ways"). Because the silhouette is identical across all skin variants, **any cosmetic fits all of them.** Do NOT regenerate the body shape per skin tone — recolor only.
-4. **Eyes** = a small set of variant layers (`TUNE`, e.g. 3–5), each generated against the frozen base, isolated to the eye anchor zone.
-5. **Hair** = hairstyle layers (`TUNE`, e.g. 5–6 styles), each generated against the frozen base, isolated to the hair anchor zone; **hair color = recolor** of each style (e.g. 5 colors) so styles × colors stays a recolor operation, not fresh generation.
-
-> Player "base customization" (skin/eyes/hair/hair-color) is therefore: pick a skin recolor + an eyes variant + a hair style + a hair-color recolor. All share the one frozen silhouette.
+Base always present (the body at its current state). Every cosmetic slot is optional; empty slot = that layer omitted. **Cosmetics composite identically on all 5 Happiness states** (§4).
 
 ---
 
-## 5. Player Avatar — Anchor Zones per Slot (template; lock on base)
+## 4. Player Beaver — The Canonical Body + Body Colors + Happiness States (freeze FIRST)
 
-Each cosmetic must be **isolated to a transparent layer and confined to its anchor zone** on the 1024² canvas. Starting template (trace exact zones from the frozen base and mark `LOCKED-ON-BASE`):
+Everything depends on one frozen beaver body. Produce it before any cosmetic exists.
+
+1. **Produce 3–4 candidates** of the beaver body in the locked pose/canvas/style (aesthetic §5, §6): friendly beaver, buck teeth, neutral **Content** stance, paws slightly out, tail visible, front-facing, on transparent 1024², no cosmetics. Founder **picks one winner.**
+2. **Freeze it** as `beaver_body_canonical.png` (the Content/default state). This silhouette/pose is now **immutable** — the fit reference for every cosmetic and every other state.
+3. **Body-color variants = shape-identical recolors.** Produce the **6 base bodies** — Brown, White, Black, Brown Girl, White Girl, Black Girl (spec §10.1) — as **pure recolors of the frozen body: same exact silhouette, pose, and shading, only color changes** (same discipline as "one crate recolored 5 ways"). Because the silhouette is identical, **any cosmetic fits all six.** Girl variants may carry minor distinguishing cues (e.g. lashes) **only if they stay inside the registration envelope**; do NOT regenerate the body shape per color.
+4. **Happiness-state poses (5).** For each state — **Thriving, Content, Okay, Unhappy, Neglected** (spec §10.3) — produce a pose/expression variant **against the frozen base**, holding the §1 registration envelope (mood lives in face/ears/shoulders/tail-height, not in relocating anchors). Content = the frozen base itself. Each state is then recolored across the 6 body colors → the state × color set. Neglected uses **dull/desaturated** coloring but stays sympathetic (§6), never distressing.
+5. **The beaver's own eyes belong to the body/state** (they carry the emotion), NOT to a cosmetic slot. The `eyes` **cosmetic** slot (§5) is a face accessory worn over them.
+
+> Player "base customization" is therefore just: **pick one of the 6 body colors.** Everything else on the beaver is a gacha cosmetic (§5). The 5 states are driven by Happiness at runtime, not chosen by the user.
+
+---
+
+## 5. Player Beaver — Anchor Zones per Slot (template; lock on base)
+
+Four gacha slots (spec §10.2). Each cosmetic must be **isolated to a transparent layer and confined to its anchor zone** on the 1024² canvas. Starting template (trace exact zones from the frozen beaver base and mark `LOCKED-ON-BASE`; the beaver's proportions — big head, low tail — will shift these from the numbers below):
 
 | Slot | Anchor zone (approx, 1024²) | Notes |
 |---|---|---|
-| hair | x 300–724, y 100–300 | behind hat; crown + sides |
-| hats | x 290–734, y 80–290 | over hair; must sit on the head, not float |
-| sunglasses | x 360–664, y 190–280 | over the eye line |
-| eyes | x 380–644, y 200–270 | base layer variant |
-| shirt | x 300–724, y 330–580 | torso |
-| jacket | x 290–734, y 320–630 | torso + upper arms; occludes shirt |
-| backpack | x 280–744, y 320–620 | behind body; pack + straps |
-| pants | x 320–704, y 560–860 | hips → ankles |
-| boots | x 330–694, y 820–980 | feet + lower pant cuff overlap |
-| pet | x 700–920, y 720–970 | side companion; minimal body overlap |
+| hats | x 300–724, y 90–320 | over the head/crown; must sit on the head, not float; clears the ears |
+| eyes | x 360–664, y 260–380 | face accessory over the eye line (sunglasses/eyepatch/goggles/monocle/eye-shadow) |
+| gloves | x 250–774, y 520–760 | both forepaws/hands; paws sit slightly out from the body |
+| tails | x 300–724, y 640–940 | low/rear; behind the body (z0); outer shape + tip read around the lower silhouette |
 
-**Anchor rule:** an item may only occupy its zone; it must align to the same reference points on the frozen body every time. A hat generated for slot `hats` must rest on the head at the same crown line as every other hat — so any hat swaps cleanly.
+**Anchor rule:** an item may only occupy its zone; it must align to the same reference points on the frozen body every time, **and hold across all 5 Happiness states** (the states keep anchors within tolerance, §1). A hat for slot `hats` must rest on the head at the same crown line on Thriving and on Neglected — so any hat swaps cleanly on any mood.
 
 ---
 
-## 6. Player Avatar — The nano banana Generation Recipe
+## 6. Player Beaver — The Generation/Production Recipe
 
-For **each cosmetic** (repeat per item, one item per generation — **never generate a combination**):
+For **each cosmetic** (repeat per item, one item per production — **never combine items**):
 
-1. **Input the frozen base as the reference image** (`avatar_body_canonical.png`). This is the step that buys consistency — it's image-to-image (edit the base), not fresh text-to-image.
-2. **Prompt pattern (keep phrasing consistent across all items):**
-   > "Using the provided reference character exactly — identical body, pose, proportions, framing, scale, and art style — dress it in [ITEM DESCRIPTION]. [Aesthetic §5 style descriptor: stylized game-asset art, bold outline, cel-shading, warm earthy palette, top-left light.] Output on a transparent background at 1024×1024, the character in the exact same position as the reference."
-3. **Isolate the item to its own transparent layer** confined to its anchor zone: either (a) prompt for the garment alone on transparent bg fitted to the reference, or (b) generate it worn on the base then mask/cut just the item (background/base removal pass). Isolation QA is the fiddly step — budget for it.
-4. **Verify** the isolated layer composites correctly over the base in z-order and aligns to its anchor (§8 checklist). **Regenerate any drift** — don't accept a near-miss; misalignment compounds across the catalog.
-5. **Lock the seed** if the API exposes it, for repeatable regenerations.
-6. **Work in batches per slot** (all hats together, all jackets together) and **review each slot as a set** so the style stays uniform within and across slots.
+1. **Use the frozen beaver base as the reference** (`beaver_body_canonical.png`). This is the step that buys consistency — everything is produced *against the base*, not from a blank prompt. (Whoever/whatever makes the art, per the founder-curated model.)
+2. **Spec pattern (keep phrasing consistent across all items):**
+   > "Using the provided reference beaver exactly — identical body, pose, proportions, framing, scale, and art style — fit it with [ITEM DESCRIPTION]. [Aesthetic §5 style descriptor: stylized game-asset art, bold outline, cel-shading, warm earthy palette, top-left light.] Output on a transparent background at 1024×1024, the beaver in the exact same position as the reference."
+3. **Isolate the item to its own transparent layer** confined to its anchor zone (§5): either (a) produce the item alone on transparent bg fitted to the reference, or (b) produce it worn on the base then mask/cut just the item. Isolation QA is the fiddly step — budget for it.
+4. **Verify** the isolated layer composites correctly over the base in z-order (§3) and aligns to its anchor **on all 5 Happiness states** (§9 checklist). **Correct any drift** — misalignment compounds across the catalog.
+5. **Keep it repeatable** (lock seeds / keep source files) so a single item can be re-made without disturbing the rest.
+6. **Work in batches per slot** (all hats together, all tails together) and **review each slot as a set** so the style stays uniform within and across the 4 slots.
 
 **Detail tier (from aesthetic §5):** cosmetics are *functional/repeated* UI shown at inventory scale — keep them **cleaner/simpler** than hero objects, still in-style, so they read at a glance and don't get noisy when many are shown.
 
 ---
 
-## 7. Beaver Mascot — Frozen Base + Expression States
+## 7. Rival Beaver (H2H NPC) — Frozen Base + Expression States
 
-The beaver is **one fixed character** (buck teeth, hiking gear — bandana and/or small pack/hat per aesthetic §6). It does **not** use the cosmetic-layer system. It needs the same *consistency* treatment via a frozen base + pose/expression variants.
+The rival is **one fixed character** — a beaver that is **deliberately distinct from the player's beaver** (different build/palette/attitude) so "my beaver" and "the opponent" never read as the same. It does **not** use the cosmetic-layer system. It needs the same *consistency* treatment via a frozen base + expression variants (this is exactly the treatment the old singular mascot used — now the opponent NPC).
 
-1. **Generate 3–4 mascot candidates** (text-to-image) in the locked canvas/style; founder picks; **freeze** as `mascot_beaver_canonical.png`. Identity is now fixed.
-2. **All other mascot images are generated against that frozen base as reference** — the expression/pose is the *only* variable, so it's unmistakably the same beaver each time.
+1. **Produce 3–4 rival candidates** in the locked canvas/style, distinct from the player beaver; founder picks; **freeze** as `rival_beaver_canonical.png`. Identity is now fixed.
+2. **All other rival images are produced against that frozen base** — the expression/pose is the *only* variable, so it's unmistakably the same rival each time.
 3. **Required states** (spec §7.9, §13 — H2H opponent needs them):
    - `neutral` / idle (default)
    - `cheer` / win (beats the player)
    - `defeat` / lose (player beats it)
    - optional: `taunt` / ready (pre-match)
-4. **Recipe** identical in spirit to §6: input frozen mascot base, prompt "the exact same beaver character, identical design/outfit/proportions/style, now [expression/pose]," transparent 1024², same framing. Batch all states together and review as a set for identity consistency.
-5. The mascot's outfit is **fixed** — it is not swappable. (If the founder later wants seasonal mascot skins, that's a recolor/variant task, not the player cosmetic system.)
+4. **Recipe** identical in spirit to §6: input frozen rival base, spec "the exact same beaver character, identical design/proportions/style, now [expression/pose]," transparent 1024², same framing. Batch all states together and review as a set for identity consistency.
+5. The rival is **not** customizable — no cosmetic slots, no Happiness states. **Open (founder, §7.9/§18):** whether it's one recurring rival or a small set, and its name (if any). Do not invent a name pre-decision.
 
 ---
 
 ## 8. Hard Constraints Checklist (the "restrictions")
 
-Every generated character asset MUST satisfy all of these. This is what keeps the beaver looking identical and cosmetics aligning:
+Every character asset MUST satisfy all of these. This is what keeps the beaver looking identical and cosmetics aligning:
 
 - [ ] **Identical canvas:** 1024×1024, transparent, every asset.
-- [ ] **Identical registration:** character in the same position, scale, and pose in every asset (§1).
-- [ ] **One canonical silhouette per character:** all player skin tones are shape-identical recolors of the one frozen body; the mascot has one frozen design.
-- [ ] **Reference-conditioned:** every cosmetic and every mascot state generated **against the frozen base** (image-to-image), never fresh text-to-image.
+- [ ] **Identical registration:** the beaver in the same position, scale, and pose in every asset (§1); Happiness states hold the anchor envelope.
+- [ ] **One canonical silhouette per character:** all 6 player body colors are shape-identical recolors of the one frozen body; the rival has one frozen design, distinct from the player beaver.
+- [ ] **Reference-conditioned:** every cosmetic, every Happiness state, and every rival state produced **against the frozen base**, never from scratch.
 - [ ] **Isolated layers:** each cosmetic is a standalone transparent asset, **confined to its anchor zone** (§5), nothing else in the frame.
-- [ ] **Fixed z-order** respected (§3); **jacket occludes shirt**.
-- [ ] **Consistent lighting + style:** same light direction, outline, cel-shading, and earthy palette across all (aesthetic §5) — nothing looks lit or styled differently.
-- [ ] **One item per generation** — never a combination.
+- [ ] **Fixed z-order** respected (§3): tail behind body; gloves on paws; eyes accessory over the face; hat top-most.
+- [ ] **Cosmetics valid on every state:** each cosmetic composites cleanly on all 5 Happiness poses.
+- [ ] **Consistent lighting + style:** same light direction, outline, cel-shading, and earthy palette across all (aesthetic §5).
+- [ ] **One item per production** — never a combination.
 - [ ] **Transparent background** always; no baked-in shadow onto other layers (a soft contact shadow, if any, is its own optional layer).
 - [ ] **Anchor alignment verified** against the frozen base before an asset is accepted.
 
@@ -168,24 +158,25 @@ Every generated character asset MUST satisfy all of these. This is what keeps th
 ## 9. QA / Consistency Validation (run before accepting a batch)
 
 - **Overlay test:** stack base + one item from every slot; confirm everything aligns, nothing floats or clips.
-- **Swap test:** swap each slot through several options; confirm **nothing else shifts** (hat swap doesn't move the face; pants swap doesn't move boots).
-- **Silhouette test:** overlay all skin-tone variants; confirm the outline is **pixel-identical** (only color differs).
-- **Z-order test:** equip jacket → shirt is hidden; equip hat → sits over hair; sunglasses → over eyes.
-- **Style test:** view each slot's items as a grid; confirm uniform outline weight, shading, and palette. Regenerate outliers.
-- **Mascot identity test:** view all mascot states side by side; confirm it's obviously the same beaver (same teeth, proportions, outfit), only expression changes.
+- **Swap test:** swap each slot through several options; confirm **nothing else shifts** (hat swap doesn't move the eyes; glove swap doesn't move the tail).
+- **State test:** composite a full cosmetic set on **all 5 Happiness states**; confirm every item still lands on its anchor on every mood.
+- **Silhouette test:** overlay all 6 body-color variants; confirm the outline is **pixel-identical** (only color differs).
+- **Z-order test:** tail sits behind the body; gloves over the paws; eyes accessory over the face; hat over everything on the head.
+- **Style test:** view each slot's items as a grid; confirm uniform outline weight, shading, and palette. Fix outliers.
+- **Rival identity test:** view all rival states side by side; confirm it's obviously the same rival beaver (only expression changes) **and** obviously not the player beaver.
 - **Edge test:** no art outside its anchor zone or past the canvas margins.
 
-Fail any test → regenerate, don't patch. Misalignment and identity drift are cheap to fix at generation time and expensive later.
+Fail any test → remake, don't patch. Misalignment and identity drift are cheap to fix at production time and expensive later.
 
 ---
 
 ## 10. How This Feeds the Build
 
-- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot (`hair/*`, `hats/*`, `jacket/*`, `mascotAvatar`, `mascot_cheer`, etc.). Swappable zero-code.
-- **App compositing:** the client renders the avatar by stacking equipped layers in the z-order of §3 on the shared 1024² grid — a plain layer stack, no per-asset positioning, because registration guarantees alignment.
-- **`avatar_config`** (spec §6, §10): stores the chosen skin recolor + eyes + hair style + hair color + equipped cosmetic id per slot; the renderer maps each to its registry file.
-- **Milestone fit:** freeze the canonical **base + mascot first** in M12 (anchors chosen, §1/§5 locked on the real art), then batch-generate cosmetics and mascot states against them. Avatar compositing lands in M8 but can run on placeholders until M12 art is ready.
+- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot (`beaverBase/*` per body color, the 5 state poses, `hats/*`, `tails/*`, `gloves/*`, `eyes/*`, `rivalBeaver`, `rival_cheer`, etc.). Swappable zero-code.
+- **App compositing:** the client renders the beaver by stacking equipped layers in the z-order of §3 on the shared 1024² grid — a plain layer stack, no per-asset positioning, because registration guarantees alignment. The **body layer is selected by (body color × current Happiness state)**; cosmetics sit on top unchanged.
+- **`avatar_config`** (spec §6, §10): stores the chosen **body color** + equipped cosmetic id per gacha slot; the renderer maps each to its registry file. The Happiness **state** is derived from `profiles.happiness` at render time (not stored in `avatar_config`).
+- **Milestone fit:** freeze the canonical **beaver base + the 5 state poses + the rival** first (anchors §1/§5 locked on the real art), then produce cosmetics against them. Beaver compositing + the state-selection logic are the M8 rework (spec §10); they run on placeholders until real art is supplied.
 
 ---
 
-*Consistency is engineered, not hoped for: freeze the base, generate against it, register everything to one grid, lock the anchors and z-order. Follow this and the beaver is always the beaver, and every hat fits every head.*
+*Consistency is engineered, not hoped for: freeze the beaver base, produce against it, register everything to one grid, lock the anchors and z-order. Follow this and your beaver is always your beaver — on every mood, in every hat.*

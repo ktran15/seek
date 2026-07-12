@@ -5,7 +5,7 @@ import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
 import { useBuyCrate } from '@/features/economy/useEconomy';
-import { useProfile } from '@/features/profile/useProfile';
+import { useMyCoins } from '@/features/profile/useProfile';
 import { colors, elevation, radii, spacing, textStyles } from '@/theme';
 
 type BuyableTier = 'wood' | 'blue' | 'red' | 'yellow';
@@ -29,9 +29,9 @@ const CRATES: ShopCrate[] = [
 export function ShopView() {
   const { session } = useSession();
   const userId = session?.user.id;
-  const { data: profile } = useProfile(userId);
+  const { data: coins } = useMyCoins(userId);
   const buyCrate = useBuyCrate(userId);
-  const balance = profile?.coins ?? 0;
+  const balance = coins ?? 0;
 
   const buy = (crate: ShopCrate) => {
     Alert.alert(crate.name, `Buy for ${crate.price} coins?`, [

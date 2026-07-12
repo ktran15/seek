@@ -79,15 +79,11 @@ export function useBuyCrate(userId: string | undefined) {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: economyKeys.crates(userId ?? 'anonymous'),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: profileKeys.own(userId ?? 'anonymous'),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: economyKeys.ledger(userId ?? 'anonymous'),
-      });
+      const uid = userId ?? 'anonymous';
+      void queryClient.invalidateQueries({ queryKey: economyKeys.crates(uid) });
+      void queryClient.invalidateQueries({ queryKey: profileKeys.own(uid) });
+      void queryClient.invalidateQueries({ queryKey: profileKeys.coins(uid) });
+      void queryClient.invalidateQueries({ queryKey: economyKeys.ledger(uid) });
     },
   });
 }
@@ -116,6 +112,7 @@ export function useOpenCrate(userId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: economyKeys.crates(uid) });
       void queryClient.invalidateQueries({ queryKey: economyKeys.cosmetics(uid) });
       void queryClient.invalidateQueries({ queryKey: profileKeys.own(uid) });
+      void queryClient.invalidateQueries({ queryKey: profileKeys.coins(uid) });
       void queryClient.invalidateQueries({ queryKey: economyKeys.ledger(uid) });
     },
   });

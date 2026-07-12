@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressButton } from '@/components/ui/PressButton';
 import { colors, spacing, textStyles } from '@/theme';
@@ -30,9 +31,17 @@ export function OnboardingScreen({
   skipLabel = 'Skip for now',
 }: OnboardingScreenProps) {
   const current = stepIndex(step);
+  // Headerless flow: pad past the notch/Dynamic Island (insets.top is 59 on
+  // island phones — more than the design's 48) and the home indicator, while
+  // keeping the original paddings as floors on inset-less devices (SE).
+  const insets = useSafeAreaInsets();
+  const safePadding = {
+    paddingTop: Math.max(insets.top + spacing.xs, spacing.xxl),
+    paddingBottom: Math.max(insets.bottom + spacing.xs, spacing.xl),
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, safePadding]}>
       <View style={styles.dots} accessibilityLabel={`Step ${current + 1} of ${ONBOARDING_STEPS.length}`}>
         {ONBOARDING_STEPS.map((s, i) => (
           <View
@@ -68,8 +77,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
   },
   dots: {

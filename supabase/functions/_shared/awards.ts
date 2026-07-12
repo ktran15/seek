@@ -25,21 +25,23 @@ async function getEconomy(db: Db): Promise<EconomySettings> {
   return data.value as EconomySettings;
 }
 
-/** True when this ref already paid coins for this reason (idempotence). */
-async function alreadyPaid(db: Db, refId: string, reason: string): Promise<boolean> {
-  const { data, error } = await db
-    .from('coins_ledger')
-    .select('id')
-    .eq('ref_id', refId)
-    .eq('reason', reason)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return !!data;
-}
-
 async function insertOrThrow(db: Db, table: string, row: Record<string, unknown>) {
   const { error } = await db.from(table).insert(row);
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Insert the coins-ledger row that gates an award and return whether THIS call
+ * won it. The coins_ledger(ref_id, reason) unique index (M13 hardening) makes
+ * this the idempotence boundary: a concurrent duplicate hits 23505 (unique
+ * violation) and returns false, so points/crate never double-award — replacing
+ * the old read-then-insert check that could race between the read and write.
+ */
+async function claimCoins(db: Db, row: Record<string, unknown>): Promise<boolean> {
+  const { error } = await db.from('coins_ledger').insert(row);
+  if (!error) return true;
+  if ((error as { code?: string }).code === '23505') return false;
+  throw new Error(error.message);
 }
 
 /** H2H win: +coins, +points, blue crate (spec §9.1–9.3). */
@@ -48,14 +50,14 @@ export async function awardH2HWin(
   winnerUserId: string,
   matchId: string,
 ): Promise<void> {
-  if (await alreadyPaid(db, matchId, 'h2h_win')) return;
   const eco = await getEconomy(db);
-  await insertOrThrow(db, 'coins_ledger', {
+  const claimed = await claimCoins(db, {
     user_id: winnerUserId,
     delta: eco.coins.h2hWin,
     reason: 'h2h_win',
     ref_id: matchId,
   });
+  if (!claimed) return; // another run already paid this match
   await insertOrThrow(db, 'points_ledger', {
     user_id: winnerUserId,
     beta_week: 1,
@@ -81,19 +83,19 @@ export async function awardVotePlacement(
   placement: 1 | 2 | 3,
   submissionId: string,
 ): Promise<void> {
-  if (await alreadyPaid(db, submissionId, 'vote_placement')) return;
   const eco = await getEconomy(db);
   const reward = votePlacementReward(
     placement,
     eco.coins.votePlacement,
     eco.points.votePlacement,
   );
-  await insertOrThrow(db, 'coins_ledger', {
+  const claimed = await claimCoins(db, {
     user_id: posterId,
     delta: reward.coins,
     reason: 'vote_placement',
     ref_id: submissionId,
   });
+  if (!claimed) return; // another run already paid this placement
   await insertOrThrow(db, 'points_ledger', {
     user_id: posterId,
     beta_week: 1,

@@ -24,7 +24,7 @@ If anything in this file conflicts with the build spec, the build spec wins. If 
 ## Engineering standards (non-negotiable — spec §2.1)
 - **TypeScript strict.** No `any` without a justifying comment. Share types client/server where possible.
 - **RLS enabled on EVERY Supabase table**, with explicit policies. No table ships without them.
-- **All secrets server-side only** (Edge Functions / build env). Never in the client bundle. This includes the image-generation API key.
+- **All secrets server-side only** (Edge Functions / build env). Never in the client bundle.
 - **Server-authoritative writes** for: coins ledger, points ledger, crate awards/rolls, H2H pairing/resolution, vote tallying, weekly payout. The client never writes these directly.
 - Server-side validation of all input. Signed URLs for media; buckets not world-open.
 - Explicit error handling on every async path; React error boundaries per major screen.
@@ -41,7 +41,8 @@ If anything in this file conflicts with the build spec, the build spec wins. If 
 
 ## Assets
 - Every non-token asset loads from a **central named registry** (`assets/registry.ts`), referenced by slot name, never inline path. Swappable zero-code.
-- Build all screens on placeholder assets first; the app must be fully usable before final art exists. Real art generation is the M12 pass (follows the Rig Bible).
+- Build all screens on placeholder assets first; the app must be fully usable before final art exists.
+- **Final art is founder-provided:** the founders generate and curate all assets themselves and hand over finished files; the agent drops them into the named registry slots (character art must satisfy the Rig Bible's registration rules). There is no in-app or build-time generation step and no image-API key in the project.
 
 ## Reference correctness
 - When writing against fast-moving libraries (Reanimated, Expo SDK, Supabase, React Query), use Context7 for current docs ("use context7") rather than relying on possibly-outdated memory.

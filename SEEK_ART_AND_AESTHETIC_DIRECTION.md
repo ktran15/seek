@@ -1,7 +1,8 @@
 # Seek — Art & Aesthetic Direction
 
-> **Purpose:** the single source of truth for Seek's *entire* visual identity. Both consumers read from this document: (1) the **design tokens / coded UI** (colors, type, component feel) and (2) the **generated art** (nano banana / Gemini, at build-time). One aesthetic, two output methods — so the coded UI and the illustrated art always feel like one product.
-> **Status:** Sections 1–4 (vibe, color, type, UI feel) are **locked** and govern the app from M0. Sections 5–8 (illustration, mascot, crate/reward, motion) are art-direction for the asset-generation pass (M12) and polish (M13); locked in direction, refined against real output.
+> **Purpose:** the single source of truth for Seek's *entire* visual identity. Both consumers read from this document: (1) the **design tokens / coded UI** (colors, type, component feel) and (2) the **art assets**. One aesthetic, two output methods — so the coded UI and the illustrated art always feel like one product.
+> **Asset production (revised 2026-07-10):** assets are **founder-curated** — the founders generate/select final art themselves with tools of their choice and hand over finished files for the registry slots. This document's direction is tool-agnostic and unchanged; it now guides the founders' curation (and any artist they engage) rather than an automated generation pipeline.
+> **Status:** Sections 1–4 (vibe, color, type, UI feel) are **locked** and govern the app from M0. Sections 5–8 (illustration, the beaver character, crate/reward, motion) are art-direction for the founder-curated asset set and polish (M13); locked in direction, refined against real output.
 > **Companion:** pairs with `SEEK_MVP_BUILD_SPEC_V2.md` (the build spec). Where the spec says "style bible," it means this document. Referenced fonts/colors here override the placeholder defaults in the spec.
 
 ---
@@ -80,23 +81,33 @@
 - **Warm earthy palette** (§2) — explicitly **pull everything off pastel/washed-out tones** into rich, grounded color. (The reference crate's craft = yes; its pastel blue background = no.)
 
 **Detail-tier rule (LOCKED — keeps the app coherent, not noisy):** detail scales with importance.
-- **Hero / reward objects** (crates, mascot, badges, mountain, backgrounds): the **full** rich treatment — texture, shading, outline, dimension.
+- **Hero / reward objects** (crates, the beaver + rival, badges, mountain, backgrounds): the **full** rich treatment — texture, shading, outline, dimension.
 - **Functional / repeated UI** (small icons, avatar cosmetic pieces at inventory scale): **cleaner and simpler** so they read at a glance and don't clutter. Same style family, dialed down.
 - Rich where it rewards, clean where it functions.
 
-**Consumes:** this section is the descriptor fed to nano banana alongside the locked **anchor references** (chosen in M12: hiker base, mountain, one crate) + the color tokens. Every asset = anchors + this descriptor + palette + per-asset prompt.
+**Consumes:** this section is the descriptor for producing every asset, alongside the locked **anchor references** (the canonical **beaver base**, mountain, one crate) + the color tokens. Every asset = anchors + this descriptor + palette + per-asset spec.
 
 ---
 
-## 6. Mascot (concept LOCKED; identity details open)
+## 6. The Beaver — player character + rival (concept LOCKED; identity details open)
 
-**Seek's mascot is a beaver** — chosen deliberately: beavers are *builders and doers* (they achieve through effort — dead-on for a "do hard things" app), they're outdoor/wilderness-native (fits the mountain world), and they give instant character.
+**The player's avatar IS a beaver** (character pivot, spec §10 — there is no separate hiker). Beaver chosen deliberately: beavers are *builders and doers* (they achieve through effort — dead-on for a "do hard things" app), outdoor/wilderness-native (fits the mountain world), and instantly characterful. **The beaver is customizable** (base body color + gacha cosmetics) **and emotive** (a Tamagotchi care loop with five Happiness states).
 
-- **Design:** friendly beaver with **prominent buck teeth**, outfitted in **hiking gear** — a bandana around the neck and/or a hiking element (small backpack, hat) — final combo TBD when drawn. Parallels the player's own hiker avatar.
-- **Style:** hero-tier illustration (§5) — rich, outlined, cel-shaded, earthy palette.
-- **Role:** brand character **and** the default H2H opponent when a user has no eligible friend (spec §7.9). Needs **expression / win / lose states** for H2H moments.
-- **Open (founder):** name, exact outfit combination, personality specifics. Build against config + registry slot (`mascotAvatar` + expression states); labeled placeholder until final art.
-- **Tone:** friendly rival / cheerleader — never punishing.
+- **Design:** friendly beaver with **prominent buck teeth**, hero-tier illustration (§5) — rich, outlined, cel-shaded, earthy palette. The base body is a clean, neutral, dress-able beaver so cosmetics read clearly on it.
+- **Base body — 6 variants:** Brown / White / Black + girl variants (spec §10.1), each a **shape-identical recolor** of one canonical body (rig bible), so every cosmetic fits all six.
+- **Cosmetics (gacha):** worn on the beaver across 4 slots — **hats, tails, gloves, eyes** (spec §10.2). *Functional/repeated* detail tier (§5): cleaner/simpler than hero objects, still in-style, so many read at a glance in inventory.
+
+**Happiness states (5 — emotional, purely cosmetic).** The beaver's mood is expressed through its base pose/expression, driven by the Happiness stat (spec §10.3). Direction:
+- **Thriving (81–100):** bright eyes, tail up, subtle shine/sparkle, a little idle bounce (motion §8).
+- **Content (61–80):** neutral-happy baseline — the default pose.
+- **Okay (41–60):** slightly lower energy, ears/tail a touch drooped.
+- **Unhappy (21–40):** visibly drooping posture, sadder eyes, looking down/away.
+- **Neglected (0–20):** hunched, dull/desaturated coloring — **still sympathetic and cute, never distressing or guilt-inducing.** We want the user to *want* to cheer it up, not feel punished.
+- **Cosmetics render on top of every state** — a Neglected beaver still wears its hat/tail/gloves/eyes on the sadder pose. Keep the states within one registration envelope so a single cosmetic layer set composites across all five (rig bible).
+
+**The rival (H2H opponent NPC).** When no friend can be paired, the opponent is a **different, distinct beaver** (spec §7.9) — recognizable as "the opponent," **visually separated** from the player's own beaver (different palette/build/attitude) so the two are never confused. Same hero-tier craft. Needs **win / lose / idle expression states** for H2H moments. It is a stand-in opponent, **not** the game's singular mascot.
+- **Open (founder):** the beaver's exact base design; whether the rival is one recurring character or a set, its look and name (if any); personality specifics. Build against config + registry slots (`beaverBase`, `rivalBeaver` + states); labeled placeholder until final art. **Do not invent a rival name pre-decision.**
+- **Tone:** friendly, warm, motivating — never punishing, even at low Happiness or on a loss.
 
 ---
 
@@ -105,8 +116,9 @@
 - **Crates render as tactile, chunky physical objects** — the reference crate's craft (bold outline, wood grain, cel-shaded, 3/4 view, soft shadow so it feels liftable), in the earthy palette (not pastel).
 - **One crate design, recolored 5 ways** (wood / blue / red / yellow / gold), per spec §9.3. Wood = the reference's natural tone; the rest are palette-driven recolors echoing the rarity ladder (§2).
 - **Reward moments are the energetic peaks** (§1): crate-open reveals and win screens concentrate the **indian yellow / cadmium orange punch** and the celebratory motion (§8). This is where the app is loudest — earn it, then explode.
-- **Rarity color-coding** on cosmetic reveals follows the ladder: common green → rare blue → epic vermillon/chestnut → legendary gold.
+- **Rarity color-coding** on cosmetic reveals follows the ladder: common green → rare blue → epic vermillon/chestnut → legendary gold. (Cosmetics are the beaver's hats/tails/gloves/eyes, spec §10.2.)
 - **Badges:** same hero-tier craft; a small cohesive set (Summit Reached, First Win, Vote Winner, Perfect Week).
+- **Vending-machine snack (spec §9.5):** a small, appetizing hero-ish treat object in the earthy palette; reads as "restores your beaver."
 
 ---
 
@@ -124,11 +136,11 @@ Light spec — refined against the built app.
 ## 9. How This Drives Production
 
 - **Coded UI (design tokens):** consumes §2 (color roles), §3 (fonts), §4 (component feel: 3D buttons, 16px, tinted surfaces, tactile depth). On-brand from M0.
-- **Generated art (nano banana, M12):** consumes §5 (illustration spec + detail tiers), §6 (mascot), §7 (crates/badges), against locked anchor references + palette.
+- **Art assets (founder-supplied, per the earlier pipeline change):** consume §5 (illustration spec + detail tiers), §6 (the beaver: base body, cosmetics, Happiness states, rival), §7 (crates/badges/snack), against the locked anchor references + palette.
 - **Motion (M13):** consumes §8.
 - **Figma escalation:** only for founder-flagged screens; those inherit all of the above.
 
-**Anchor-first workflow (M12):** generate 3–4 candidates for the defining assets (hiker base, mountain, one crate) → founder picks winners → those become the locked references feeding every subsequent generation → batch-generate the rest → founder reviews, regenerates drift.
+**Anchor-first workflow:** freeze the defining assets (the canonical **beaver base**, mountain, one crate) as locked references, then produce everything else against them (rig bible) → founder reviews, corrects drift. Applies whoever/whatever makes the art.
 
 ---
 

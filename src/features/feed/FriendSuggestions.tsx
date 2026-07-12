@@ -71,6 +71,7 @@ export function FriendSuggestions() {
                   style={[styles.addButton, requested && styles.addButtonDone]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={[
                       textStyles.caption,
                       requested ? styles.addLabelDone : styles.addLabel,
@@ -103,7 +104,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tile: {
-    width: 108,
+    // Wide enough that the button's longest label ("REQUESTED", ~72px in
+    // caption type) fits on one line after tile + button padding.
+    width: 120,
     alignItems: 'center',
     gap: spacing.xxs,
     backgroundColor: colors.background,
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.textPrimary,
-    maxWidth: 92,
+    maxWidth: 96,
   },
   addButton: {
     minHeight: 44,

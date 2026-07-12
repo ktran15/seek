@@ -100,20 +100,30 @@ export function PostCard({ post }: { post: FeedPost }) {
   return (
     <View style={[styles.card, elevation.card]}>
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={[textStyles.headerS, styles.avatarInitial]}>
-            {(name || '?').slice(0, 1).toUpperCase()}
-          </Text>
-        </View>
-        <View style={styles.nameBlock}>
-          <Text style={[textStyles.bodyEmphasis, styles.name]} numberOfLines={1}>
-            {name}
-          </Text>
-          <Text style={[textStyles.caption, styles.muted]} numberOfLines={1}>
-            Day {post.beta_day} · {post.challenge.title}
-            {caption ? ` · ${caption}` : ''}
-          </Text>
-        </View>
+        {/* Poster identity opens their profile (founder-directed); own posts
+            stay inert — the Profile tab is the self surface. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View ${name}’s profile`}
+          disabled={post.is_own}
+          onPress={() => router.push(`/user/${post.author.id}`)}
+          style={styles.poster}
+        >
+          <View style={styles.avatar}>
+            <Text style={[textStyles.headerS, styles.avatarInitial]}>
+              {(name || '?').slice(0, 1).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.nameBlock}>
+            <Text style={[textStyles.bodyEmphasis, styles.name]} numberOfLines={1}>
+              {name}
+            </Text>
+            <Text style={[textStyles.caption, styles.muted]} numberOfLines={1}>
+              Day {post.beta_day} · {post.challenge.title}
+              {caption ? ` · ${caption}` : ''}
+            </Text>
+          </View>
+        </Pressable>
         {!post.is_own && (
           <Pressable
             accessibilityRole="button"
@@ -198,6 +208,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  poster: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,

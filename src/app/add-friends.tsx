@@ -41,7 +41,7 @@ export default function AddFriendsScreen() {
   const invite = async () => {
     if (!myId) return;
     try {
-      await sendInvite(myId);
+      await sendInvite();
     } catch (e) {
       Alert.alert('Could not share', e instanceof Error ? e.message : 'Try again.');
     }

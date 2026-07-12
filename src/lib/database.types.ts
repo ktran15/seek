@@ -474,6 +474,14 @@ export interface Database {
         Args: { p_token: string; p_platform: 'ios' | 'android' };
         Returns: undefined;
       };
+      send_invite: {
+        Args: { channel_in?: string };
+        Returns: string;
+      };
+      my_coins: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       can_view_post: {
         Args: { pid: string };
         Returns: boolean;
@@ -494,6 +502,17 @@ export interface Database {
           display_name: string | null;
           avatar_config: AvatarConfig;
           points: number;
+        }[];
+      };
+      get_public_profile_stats: {
+        Args: { target: string };
+        Returns: {
+          submitted_days: number[];
+          h2h_wins: number;
+          h2h_losses: number;
+          votes_won: number;
+          coins_earned: number;
+          vote_firsts: number;
         }[];
       };
     };
