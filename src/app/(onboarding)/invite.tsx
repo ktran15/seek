@@ -20,7 +20,7 @@ export default function InviteStep() {
     if (!session) return;
     setBusy(true);
     try {
-      const didShare = await sendInvite(session.user.id);
+      const didShare = await sendInvite();
       if (didShare) {
         setShared(true);
       }

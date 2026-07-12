@@ -177,7 +177,11 @@ export async function attemptPair(
     toEntry(oppSub),
   );
 
-  const { error: updateError } = await db
+  // Claim the pending → resolved transition. Returning the row tells us
+  // whether THIS call won it: a concurrent run (client h2h-pair racing the
+  // day-close sweep) that lost claims zero rows, so it must NOT re-insert
+  // history, re-award, or re-notify — it just reports the resolved outcome.
+  const { data: claimedRows, error: updateError } = await db
     .from('h2h_matches')
     .update({
       opponent_id: opponentId,
@@ -187,8 +191,12 @@ export async function attemptPair(
       resolved_at: new Date().toISOString(),
     })
     .eq('id', match.id)
-    .eq('status', 'pending'); // idempotence: never re-resolve
+    .eq('status', 'pending') // idempotence: never re-resolve
+    .select('id');
   if (updateError) throw new Error(updateError.message);
+  if (!claimedRows || claimedRows.length === 0) {
+    return { status: 'resolved', winnerUserId };
+  }
 
   const { error: historyError } = await db.from('h2h_history').insert({
     user_id: protagonistId,

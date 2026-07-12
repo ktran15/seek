@@ -122,7 +122,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const invite = async () => {
     if (!session) return;
     try {
-      await sendInvite(session.user.id);
+      await sendInvite();
     } catch (e) {
       Alert.alert('Could not share', e instanceof Error ? e.message : 'Try again.');
     }

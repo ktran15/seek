@@ -62,7 +62,7 @@ export default function FriendsScreen() {
     if (!myId) return;
     setInviting(true);
     try {
-      await sendInvite(myId);
+      await sendInvite();
     } catch (e) {
       Alert.alert('Could not share', e instanceof Error ? e.message : 'Try again.');
     } finally {

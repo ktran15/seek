@@ -144,7 +144,9 @@ async function closeH2H(
       target,
     );
 
-    const { error } = await admin
+    // Claim the transition so a concurrent/re-run day-close that loses the
+    // race skips the award + notify for this match (the update affects 0 rows).
+    const { data: claimed, error } = await admin
       .from('h2h_matches')
       .update({
         vs_mascot: true,
@@ -154,8 +156,10 @@ async function closeH2H(
         resolved_at: new Date().toISOString(),
       })
       .eq('id', match.id as string)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .select('id');
     if (error) throw new Error(error.message);
+    if (!claimed || claimed.length === 0) continue;
 
     // Beating the mascot pays like any H2H win (M7; ref-deduped inside).
     if (userWon) {

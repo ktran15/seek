@@ -474,6 +474,10 @@ export interface Database {
         Args: { p_token: string; p_platform: 'ios' | 'android' };
         Returns: undefined;
       };
+      send_invite: {
+        Args: { channel_in?: string };
+        Returns: string;
+      };
       can_view_post: {
         Args: { pid: string };
         Returns: boolean;
