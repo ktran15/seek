@@ -1,6 +1,17 @@
 # Seek — Character Art Commission Brief
 
-> **What this is:** the complete brief for drawing Seek's player-avatar
+> ⚠️ **SUPERSEDED (2026-07-12 character pivot).** This brief describes the
+> retired **hiker** avatar (skin/eyes/hair + 8 clothing slots + a separate fixed
+> beaver mascot). That system no longer exists. The player avatar is now a
+> **customizable beaver** (6 body colors + 4 gacha slots: hats/tails/gloves/eyes
+> + 5 Happiness-state poses) and the H2H opponent is a distinct **rival beaver**.
+> See `SEEK_MVP_BUILD_SPEC_V2.md` §10, `SEEK_ART_AND_AESTHETIC_DIRECTION.md` §6,
+> and `SEEK_CHARACTER_RIG_BIBLE.md` for the current design. **Do not commission
+> from this document as-is** — it is kept only for history until a new
+> beaver-kit brief is written. The rig/registration principles below still hold;
+> the specific slot list, skin tones, hairstyles, and outfit do not.
+
+> **What this is (historical):** the complete brief for drawing Seek's player-avatar
 > character kit (and optionally the beaver mascot). Everything the artist
 > needs is in this one document. It condenses `SEEK_CHARACTER_RIG_BIBLE.md`
 > (rig/registration rules) and `SEEK_ART_AND_AESTHETIC_DIRECTION.md` (look)
