@@ -478,6 +478,10 @@ export interface Database {
         Args: { channel_in?: string };
         Returns: string;
       };
+      my_coins: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       can_view_post: {
         Args: { pid: string };
         Returns: boolean;
