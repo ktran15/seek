@@ -78,10 +78,30 @@ export const config = {
     multiPhotoMax: 25,
   },
 
-  mascot: {
-    /** FOUNDER-SET: identity TBD (spec §7.9) — placeholder until supplied. */
-    name: 'Beaver (placeholder)',
-    /** Asset registry slot the mascot renders from. */
+  /**
+   * The beaver care loop (spec §10). All TUNE. Happiness is server-authoritative;
+   * these values are the shared source of truth for client copy and the
+   * server-side settlement (keep in sync with app_settings).
+   */
+  beaver: {
+    /** LOCKED default (spec §10.4): a new beaver starts Content. */
+    startingHappiness: 70,
+    /** TUNE: Happiness lost when a day is missed. */
+    dailyDecay: 10,
+    /** TUNE: Happiness restored by completing the day (additive, cap 100). */
+    completionRestore: 20,
+    /** TUNE: vending-machine snack (spec §9.5). */
+    snackCost: 25,
+    snackRestore: 15,
+    /** Max length of the player-chosen beaver name. */
+    maxNameLength: 20,
+  },
+
+  /** The H2H fallback opponent (spec §7.9) — one fixed rival NPC. */
+  rival: {
+    /** LOCKED 2026-07-13: the rival beaver is named Bucky. */
+    name: 'Bucky',
+    /** Asset registry slot the rival renders from (placeholder until art). */
     assetSlot: 'mascotAvatar',
     /**
      * TUNE (FOUNDER-SET): fixed beatable-but-not-trivial target scores for

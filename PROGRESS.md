@@ -18,6 +18,26 @@
 
 **Next step:** sub-step 2 (climb animation). Asset note (2026-07-10): founders now generate/curate all remaining art themselves and hand over final files for the registry slots (see the M12 decision entry below) — deliveries drop in whenever they land.
 
+## 🦫 CHARACTER PIVOT — beaver avatar + care loop (founder-directed, 2026-07-12/13)
+
+The hiker avatar is retired. The player's avatar IS a customizable beaver with a Tamagotchi care loop (Happiness) + a daily streak. **Specs are the source of truth and are fully updated** (spec §10 is the new Character & Care System; rig bible §4 now has TWO canonical bodies).
+
+**Founder decisions (all LOCKED 2026-07-13):** start plain (no starter cosmetics) · 5 customization points = base body + 4 gacha slots (hats/tails/gloves/eyes, 19 items) · rival NPC is **Bucky** (one fixed character) · body = **male/female × brown/white/black**, female is its own design *not* a recolor → two canonical bodies · starting Happiness **70** (Content).
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Specs updated for the pivot + the 5 resolved decisions (`d579f69`, `c39bc6c`) | ✅ done |
+| 2 | Beaver foundation (`99ca838`): migration (`beaver_name`, `happiness` 0–100 default 70, `streak_count`; happiness/streak have NO client write grant — server-authoritative; new columns added to the M13 column-scoped SELECT grant); pure `happinessState()` + 6 tests (exhaustive 0–100 band coverage); beaver catalog + `beaverBodySlot(sex,color,state)` (the 30 registry slots real art drops into); `BeaverPreview` with a **self-cleaning placeholder** (falls back to existing beaver art on a colored disc; vanishes the moment real slots resolve); `config.beaver` TUNE + `config.rival.name = 'Bucky'` | ✅ done |
+| 3 | Onboarding rework (`6837bc4`): new order (username → notifications → social-proof → **meet → name → customize → care-loop** → invite → begin); `about.tsx` + `avatar.tsx` deleted. Naming suggestions are Bucky-free; customize writes `{bodySex, bodyColor}` and no `equipped` (start plain); care-loop teaches moods by showing 3 real beavers at real Happiness values | ✅ done — **founder verifies on device** |
+| 4 | Server-side care loop: day-close Happiness settlement (+20 complete / −10 miss, clamp) + streak count/reset; `buy_snack` RPC + Shop vending machine | ⬜ next |
+| 5 | Cosmetics overhaul: reseed the `cosmetics` catalog to the 19 beaver items across 4 slots; retire the 8 hiker slots; rework Inventory/equip + the layered renderer (tail→body→gloves→eyes→hat) | ⬜ |
+| 6 | Profile surfaces: beaver at its Happiness state, Happiness meter, 🔥 streak beside the username; Settings → Edit beaver (replaces Edit avatar base) | ⬜ |
+| 7 | Bucky: rename the H2H fallback surfaces/copy; registry slots for his states | ⬜ |
+
+**⬜ FOUNDER ACTION:** `npx supabase db push` (applies the M13 hardening + profiles-privacy migrations **and** the new `20260713000001_m14_beaver_care_loop.sql`), then reload the app.
+
+**Art status:** ALL beaver art is placeholder. Real art = 30 body images (2 sexes × 3 colors × 5 states) + 19 cosmetics + Bucky's states, dropped into the named registry slots for a zero-code swap. **Rig watch-item:** the male and female bodies MUST share one anchor grid or the cosmetic catalog forks from 19 to 38 items (rig bible §4.3).
+
 ### Security audit remediation (2026-07-11..12) — founder-directed "fix everything" + M3 Option A
 Full audit ran first (no Criticals; RLS on all tables, server-authoritative writes, no client service key). **⬜ FOUNDER ACTION: `npx supabase db push`** applies BOTH migrations below (`20260711000001_m13_security_hardening.sql` + `20260712000001_m13_profiles_column_privacy.sql`), then **reload the app** (the client no longer `select('*')`s profiles). I could not apply them myself — the Supabase MCP is read-only. Pre-apply check already run 2026-07-12: **zero duplicate `(ref_id, reason)` ledger rows**, so the M1 unique indexes build cleanly.
 Fixes:
