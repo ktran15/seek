@@ -24,7 +24,8 @@ function describeNotification(n: AppNotification): string {
   if (n.type === 'h2h_result') {
     const won = n.payload.won === true;
     const vsMascot = n.payload.vs_mascot === true;
-    const rival = vsMascot ? config.mascot.name : 'your rival';
+    // vs_mascot is the pre-pivot column name; it now means "vs. Bucky" (§7.9).
+    const rival = vsMascot ? config.rival.name : 'your rival';
     return won
       ? `Day ${day} head-to-head: you beat ${rival}! 🎉`
       : `Day ${day} head-to-head: ${rival} took this one.`;

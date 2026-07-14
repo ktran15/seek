@@ -7,12 +7,17 @@
 
 /** Avatar base choices (onboarding step 4) + equipped cosmetic per slot. */
 export interface AvatarConfig {
+  /** Beaver base body (spec §10.1): sex × color = 6 distinct bodies. */
+  bodySex?: 'male' | 'female';
+  bodyColor?: 'brown' | 'white' | 'black';
+  /** slot → cosmetic id (hats/tails/gloves/eyes). Users start plain (§10.1b). */
+  equipped?: Record<string, string>;
+  /** @deprecated Retired hiker avatar (pre-2026-07-12 pivot). Rows may still
+   *  carry these; nothing reads them. Kept so old configs don't fail to parse. */
   skinTone?: string;
   eyes?: string;
   hair?: string;
   hairColor?: string;
-  /** slot → cosmetic id; base shirt/pants/backpack auto-equipped (spec §10). */
-  equipped?: Record<string, string>;
 }
 
 export interface Database {
@@ -33,8 +38,14 @@ export interface Database {
           id: string;
           username: string | null;
           display_name: string | null;
+          /** The player-chosen name for their beaver (spec §10.6). */
+          beaver_name: string | null;
           avatar_config: AvatarConfig;
           coins: number;
+          /** Care loop (spec §10.3) — server-authoritative, 0–100, starts 70. */
+          happiness: number;
+          /** Consecutive completed days (spec §10.7) — server-authoritative. */
+          streak_count: number;
           joined_beta_day: number | null;
           bio: string | null;
           onboarding_completed_at: string | null;
@@ -42,10 +53,12 @@ export interface Database {
         };
         /** Rows are created by the signup trigger — never by the client. */
         Insert: never;
-        /** Only the client-updatable columns (column-level grants). */
+        /** Only the client-updatable columns (column-level grants).
+         *  happiness + streak_count are deliberately absent — server-only. */
         Update: {
           username?: string;
           display_name?: string;
+          beaver_name?: string;
           avatar_config?: AvatarConfig;
           bio?: string;
           onboarding_completed_at?: string;
