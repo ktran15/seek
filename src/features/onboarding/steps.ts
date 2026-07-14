@@ -1,15 +1,21 @@
 import { router } from 'expo-router';
 
 /**
- * Ordered onboarding flow (spec §5, with a username/profile step prepended —
- * profiles need identity before anything social).
+ * Ordered onboarding flow (spec §5, post-pivot). Visual-first: the beaver
+ * beats (meet → name → customize → care loop) replace the old text-heavy
+ * "what Seek is" + hiker-avatar screens.
+ *
+ * `username` is prepended to the spec's list — profiles need an identity
+ * before anything social can work.
  */
 export const ONBOARDING_STEPS = [
   'username',
   'notifications',
   'social-proof',
-  'about',
-  'avatar',
+  'meet',
+  'name',
+  'customize',
+  'care-loop',
   'invite',
   'begin',
 ] as const;
