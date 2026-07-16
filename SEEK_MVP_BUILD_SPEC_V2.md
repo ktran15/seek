@@ -60,7 +60,7 @@ Build in milestone order (§15). After each milestone: deliver a runnable increm
 - **Backend:** Supabase — Postgres, Auth (Apple, Google, email), Storage, Edge Functions, Realtime.
 - **Client state:** React Query (server state) + Zustand (local/UI). Nothing else.
 - **Build:** EAS Build → TestFlight. Configure bundle ID, signing, and pipeline in M0.
-- **Config module (typed, central):** app name, beta start date, **beta timezone = America/New_York (EST/EDT)**, all `TUNE` values, feature flags (`enableRivalOpponent` — the H2H NPC toggle, formerly `enableMascotOpponent`; `inviteGate`), rival-opponent config (targets/asset), **Happiness + streak TUNE values (starting Happiness, daily decay, completion restore, snack cost/restore)**, media limits.
+- **Config module (typed, central):** app name, beta start date, **beta timezone = America/New_York (EST/EDT)**, all `TUNE` values, feature flags (`enableRivalOpponent` — the H2H NPC toggle, formerly `enableMascotOpponent`; `inviteGate`), rival-opponent config (`name = 'Bucky'`, targets/asset), **Happiness + streak TUNE values (starting Happiness = 70, daily decay, completion restore, snack cost/restore)**, media limits.
 
 > **Founder tooling slot:** iOS-dev MCPs/skills (founder researching — integrate when provided). Figma Dev-Mode MCP for founder-flagged screens. Art assets are founder-supplied final files dropped into registry slots (§14) — no image-generation step in the build.
 
@@ -96,8 +96,9 @@ Onboarding (in order) — visual-first, graphic/icon-driven, minimal text (see �
   3. MEET YOUR BEAVER — a visual intro beat introducing the beaver concept
      (replaces the old text "what Seek is" screen)
   4. NAME YOUR BEAVER
-  5. CUSTOMIZE YOUR BEAVER — pick base body color (Brown / White / Black + girl
-     variants, §10.1) with live preview. (Starter cosmetics = OPEN founder decision, §18.)
+  5. CUSTOMIZE YOUR BEAVER — pick sex (male / female) + body color (Brown /
+     White / Black), 6 distinct bodies (§10.1), with live preview. **Start plain
+     — no starter cosmetic granted** (§18, decided); all gear comes from crates.
   6. CARE-LOOP EXPLAINER — "complete challenges to keep your beaver happy," taught
      graphically (icons / simple animated beats), NOT a wall of text.
   7. INVITE A FRIEND (per inviteGate flag §7.8):
@@ -136,7 +137,7 @@ MAIN APP
 
 > Every table: **RLS enabled**, explicit policies. UUID PKs. UTC timestamps. Client never writes ledger/crates/matches/points directly — Edge Functions only.
 
-**`profiles`** — `id` (= auth uid), `username` (unique), `display_name`, `beaver_name` (the player-chosen name for their beaver, §10 — distinct from username), `avatar_config` (jsonb: **base body color** + equipped cosmetic id per gacha slot, §10.1–10.2), `coins` (int; starting balance **100** `TUNE`; maintained transactionally alongside ledger; owner-readable only per M13 audit), `happiness` (int **0–100**, server-authoritative — decay/restore in §10.3–10.5; starting value `TUNE`), `streak_count` (int, consecutive completed days, server-authoritative, §10.7), `joined_beta_day` (int), `bio`, `created_at`.
+**`profiles`** — `id` (= auth uid), `username` (unique), `display_name`, `beaver_name` (the player-chosen name for their beaver, §10 — distinct from username), `avatar_config` (jsonb: **base body color** + equipped cosmetic id per gacha slot, §10.1–10.2), `coins` (int; starting balance **100** `TUNE`; maintained transactionally alongside ledger; owner-readable only per M13 audit), `happiness` (int **0–100**, server-authoritative — decay/restore in §10.3–10.5; **starting value 70**), `streak_count` (int, consecutive completed days, server-authoritative, §10.7), `joined_beta_day` (int), `bio`, `created_at`.
 
 **`friendships`** — `id`, `requester_id`, `addressee_id`, `status` (`pending|accepted|declined`), `created_at`, `responded_at`. Mutual when accepted; FoF derived by query. Indexed both user columns.
 
@@ -173,7 +174,7 @@ MAIN APP
 - **tails:** Red Beaver Tail (common), Checkerboard Tail (rare), Beaver Tail w/ Bow (rare), Rainbow Tail (epic), Gold Tail (legendary)
 - **gloves:** Red Boxing Gloves (common), Blue Gloves (rare), Pink Mitts (epic), Golden Boxing Gloves (legendary)
 - **eyes:** Sunglasses (common), EyePatch (rare), Eye Shadow (rare), Ski Goggles (epic), Gold Monocle (legendary)
-> Base **body color** (Brown / White / Black + girl variants) is player-chosen at onboarding, NOT gacha — it lives in `avatar_config`, not this table.
+> Base **body** — sex (male/female) × color (Brown / White / Black) = 6 distinct bodies (§10.1) — is player-chosen at onboarding, NOT gacha; it lives in `avatar_config` (`{sex, bodyColor}`), not this table.
 
 **`user_cosmetics`** — ownership; unique `(user_id, cosmetic_id)` → dupe-to-coins.
 
@@ -258,12 +259,12 @@ unrevealed → revealed → in_progress → submitted
 - **Notification nudge:** an in-app/push invite prompt (§13) — e.g., day 2–3 if the user has <3 friends ("Your leaderboard needs rivals — invite a friend"), `TUNE` timing/threshold. One nudge max; don't nag.
 - Invite links deep-link to TestFlight/App Store; redemption records `redeemed_by` and may reward the inviter again (`TUNE`).
 
-### 7.9 Rival fallback opponent (NPC beaver)
-When no eligible friend can be paired, the H2H opponent is a **generic rival beaver** — an NPC — so solo/new users always get a full H2H. It is **visually distinct from the player's own beaver** (a different, recognizable "opponent" look) so "my beaver" and "the rival" are never confused. This is **not** a singular game mascot identity — it's a stand-in opponent character.
-- **Identity/design TBD (founder supplies) — OPEN decision (§18):** whether it's one recurring rival or a small set, its name (if any), and its look. Build against config (`rival.assetSlot` etc.) + a registry slot (e.g. `rivalBeaver` + optional win/lose expressions). Labeled placeholder until then. **Do not invent a name now.**
+### 7.9 Rival fallback opponent — "Bucky" (NPC beaver)
+When no eligible friend can be paired, the H2H opponent is **Bucky** — a single **fixed** recurring rival beaver NPC — so solo/new users always get a full H2H. Bucky is **visually distinct from the player's own beaver** (a different, recognizable "opponent" look) so "my beaver" and "Bucky" are never confused. This is **one fixed character** (decided 2026-07-16, §18), not a pool and not the player's own mascot.
+- **Identity: DECIDED — the rival is named "Bucky," one recurring character.** Design/art still founder-supplied. Build against config (`rival.name = 'Bucky'`, `rival.assetSlot`) + a registry slot (`rivalBeaver` + optional win/lose expressions). Labeled placeholder until real art lands.
 - **Scoring (LOCKED for beta): fixed tunable targets** — preset per challenge (and per difficulty on day 4) in config, beatable-but-not-trivial. Normal `victor_rule` resolves user vs. target.
-- Applies to H2H days only (1, 2, 4, 5). **The rival never appears on leaderboards.**
-- Win vs. the rival pays the standard H2H bonus + blue crate unless founder reduces it (§18).
+- Applies to H2H days only (1, 2, 4, 5). **Bucky never appears on leaderboards.**
+- Win vs. Bucky pays the **standard** H2H bonus + blue crate (§18, decided — not reduced).
 - Framing: friendly rival/cheerleader, never punishment.
 
 ### 7.10 Friend-graph model — egocentric (LOCKED)
@@ -350,9 +351,10 @@ Rolls draw from the **beaver cosmetic catalog** (§6 `cosmetics` / §10.2): the 
 The player's avatar is a **beaver** (there is no separate hiker). It is customizable (base body + gacha cosmetics), and it has a light **Tamagotchi-style care loop** (Happiness) plus a **daily streak**. The consistent-art rules for producing the beaver, its body-color variants, its emotional states, and its cosmetics live in `SEEK_CHARACTER_RIG_BIBLE.md`.
 
 ### 10.1 Base body (player-chosen, NOT gacha)
-Chosen at onboarding (step 5) and editable in Settings → Edit beaver. Six variants, each a **shape-identical recolor** of the one canonical beaver body (rig-bible recolor rule):
-**Brown · White · Black · Brown Girl · White Girl · Black Girl.**
-Stored in `avatar_config` (base body color). "Girl" variants may carry minor distinguishing cues — an art decision, but they must hold the same registration so cosmetics fit all six (§18).
+Chosen at onboarding (step "Customize your beaver") and editable in Settings → Edit beaver. Selection is **sex (male/female) × 3 colors (Brown/White/Black) = 6 distinct bodies** (decided 2026-07-16, §18):
+**Male Brown · Male White · Male Black · Female Brown · Female White · Female Black.**
+The **female body is a distinct design** (its own silhouette/canonical), NOT a hue-shifted recolor of the male one. The rig therefore has **two frozen canonical bodies** — male and female — and each is recolored into its 3 colors (Rig Bible §4). Both canonicals share the **same registration/anchors**, so a cosmetic drawn once fits all six bodies.
+Stored in `avatar_config` as `{ sex: 'male' | 'female', bodyColor: 'brown' | 'white' | 'black' }`. **Start plain** — no starter cosmetic is granted (§18); all gear comes from crates.
 
 ### 10.2 Cosmetic slots (gacha) — 4 slots, 19 items (LOCKED catalog)
 Everything below is worn ON the beaver, from crates only (§9). Each item has a **fixed rarity** (drives the §9.4 draw). Full seed catalog in §6 `cosmetics`:
@@ -385,7 +387,7 @@ Every user's beaver has a **Happiness** stat, `0–100`, server-authoritative. I
 - **Decay: −10 Happiness per day** (`TUNE`) when the user does **not** complete that day's challenge.
 - **Completion restore: +20 Happiness** (`TUNE`) when they complete the day. **Additive, capped at 100** — completing does not necessarily refill to 100.
 - Both are applied **server-side** (the day-close Edge Function settles each user's Happiness for the day it closes: completed → +20, not completed → −10; clamp 0–100). Never client-writable, consistent with the economy standard (§2.1).
-- Starting Happiness at onboarding: `TUNE` (a mid/high value, e.g. Content-range).
+- Starting Happiness at onboarding: **70** (decided 2026-07-16, §18 — Content-range). `profiles.happiness` defaults to 70 server-side; config `careLoop.startingHappiness`.
 
 ### 10.5 Vending-machine snack (§9.5)
 A **snack** in the Shop restores **+15 Happiness** (`TUNE`, capped at 100) for **25 coins** (`TUNE`), any time, repeatable. Server-authoritative `buy_snack` RPC: `coins_ledger` `snack_purchase` −25 + Happiness +15 in one transaction; the ledger trigger enforces the balance floor.
@@ -453,7 +455,7 @@ Short, friendly, on-brand copy.
 
 ### 14.3 Slot list
 - `appLogo`, `loadingScreen`
-- **Beaver (the player avatar) — `beaverBase`** in the 6 body-color variants (Brown/White/Black + girl), each a shape-identical recolor; **× 5 Happiness-state poses** (Thriving/Content/Okay/Unhappy/Neglected, §10.3), all on the shared rig. Cosmetics composite on top of every state.
+- **Beaver (the player avatar) — `beaverBody{Sex}{Color}`** across the 6 bodies = **two canonicals (male/female, distinct silhouettes) × 3 colors** (Brown/White/Black), color being a recolor *within* each sex (§10.1, Rig Bible §4); **× 5 Happiness-state poses** (Thriving/Content/Okay/Unhappy/Neglected, §10.3), all on the shared registration envelope. Cosmetics composite on top of every state and fit both canonicals.
 - **`rivalBeaver`** (+ optional win/lose/expression states) — the H2H NPC opponent, **visually distinct** from the player beaver; identity/design TBD, placeholder until founder provides (§7.9).
 - **Beaver cosmetic art** per gacha slot (`hats/*`, `tails/*`, `gloves/*`, `eyes/*`) — independent transparent layers aligned to the shared beaver rig/anchors (rig bible). 19 items (§10.2).
 - `snack` — the vending-machine item art (§9.5).
@@ -508,14 +510,15 @@ Clans/groups; region/city/country/global leaderboards; Snap-Map geographic view;
 ## 18. Open Items for Founder
 
 1. **App name:** "Seek" front-runner (play on "Seek Discomfort"); "Seed" et al. in the running. Finalize; set config string; check App Store/trademark availability.
-2. **Rival NPC beaver (§7.9):** one recurring rival or a small set? name (if any)? design (must read as visually distinct from the player's beaver); whether rival wins pay full or reduced H2H bonus; per-challenge (and Hard-difficulty) target scores. *(Do not invent a name pre-decision.)*
+2. **Rival NPC beaver (§7.9): ✅ DECIDED (2026-07-16).** One **fixed** recurring rival character (not a pool), named **"Bucky."** Deliberately visually distinct from the player's beaver. Win vs. Bucky pays the **standard** H2H bonus + blue crate (unchanged). Per-challenge (and Hard-difficulty) target scores remain `TUNE` (config `rival.targets`). *Design/art still founder-supplied; the name and single-character decision are final.*
 3. **Mountain reveal timing:** local-midnight availability confirmed? (Vote window is global EST regardless.)
-4. **Final `TUNE` values** after first playtest: economy, points, prices, drop rates, payouts, solo payout, friend-qualification threshold, media caps, rival targets, reminder time, invite-nudge timing/threshold, **and the care loop: starting Happiness, daily decay (−10), completion restore (+20), snack cost (25) / restore (+15)**.
-5. **Character-pivot decisions (§10):**
-   - **Starter cosmetics:** do new users get any free starter cosmetic(s) at onboarding, or begin plain and rely on crates? *(Flagged — not assumed.)*
-   - **"5 slots" reading:** spec assumes 5 total customization slots = base body + 4 gacha (hats/tails/gloves/eyes). Confirm.
-   - **"Girl" body variants:** distinct feminine cues vs. pure recolors — and keeping the same registration so cosmetics fit all six.
-   - **Happiness-state art:** the 5 emotional-state beaver poses (per 6 body colors) are placeholder until supplied.
+4. **Final `TUNE` values** after first playtest: economy, points, prices, drop rates, payouts, solo payout, friend-qualification threshold, media caps, rival targets, reminder time, invite-nudge timing/threshold, **and the care loop: daily decay (−10), completion restore (+20), snack cost (25) / restore (+15)**. (Starting Happiness is now **fixed at 70**, see item 5.)
+5. **Character-pivot decisions (§10): ✅ ALL DECIDED (2026-07-16).**
+   - **Starter cosmetics — DECIDED: start plain.** New users choose only **sex (male/female) + body color** at onboarding (the base body). **No** free gacha cosmetic is granted; all hats/tails/gloves/eyes are earned via crates only.
+   - **"5 slots" reading — DECIDED: confirmed.** 5 total customization points = base body + 4 gacha (hats/tails/gloves/eyes).
+   - **"Girl" body variants — DECIDED: distinct design, not a recolor.** Body selection is **sex (male/female) × 3 colors (Brown/White/Black) = 6 distinct bodies**, each with its own real design difference. The female body is a **separate silhouette/canonical**, NOT a hue-shifted recolor of the male one — so the rig now has **two frozen canonical bodies** (male, female), each with its own 3 color recolors (see Rig Bible §4). Both canonicals share the same registration/anchors so every cosmetic fits all six.
+   - **Starting Happiness — DECIDED: 70** (Content-range). Config `careLoop.startingHappiness`; `profiles.happiness` default 70.
+   - **Happiness-state art:** the 5 emotional-state beaver poses (per 6 bodies) remain placeholder until supplied.
 6. **Exact color hex + fonts** via style bible anchors.
 7. **Privacy policy/terms review** + hosting URLs before App Store submission.
 8. **"Wordle" naming:** keep the trademark name for beta (accepted risk) vs. genericize to "today's word puzzle" before wider release.

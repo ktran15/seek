@@ -47,10 +47,10 @@ Seek has **two distinct beaver characters**, handled differently:
 
 | Character | Who | Customizable? | Treatment |
 |---|---|---|---|
-| **Player Beaver** | the user's own avatar — named, dressed, kept happy | **Yes** — base body color (6 recolors) + 4 gacha cosmetic slots; **5 Happiness-state poses** | Full layered rig (§3–§6) + state poses (§4) |
-| **Rival Beaver** | the H2H NPC opponent when no friend can be paired (§7.9) | **No** — one fixed identity, **visually distinct** from the player beaver | Frozen base + expression states (§7) |
+| **Player Beaver** | the user's own avatar — named, dressed, kept happy | **Yes** — **6 bodies (2 canonical silhouettes: male + female, × 3 colors)** + 4 gacha cosmetic slots; **5 Happiness-state poses** | Full layered rig (§3–§6) + state poses (§4) |
+| **Rival Beaver — "Bucky"** | the H2H NPC opponent when no friend can be paired (§7.9) | **No** — one fixed identity, **visually distinct** from the player beaver | Frozen base + expression states (§7) |
 
-The layered-cosmetic system is for the **player beaver**. The **rival** is one fixed design (a different-looking beaver) that only needs win/lose/idle expression variants — the same treatment the old mascot used, now reframed as the opponent NPC.
+The layered-cosmetic system is for the **player beaver**. The **rival is "Bucky"** — one fixed design (a different-looking beaver, decided 2026-07-16) that only needs win/lose/idle expression variants — the same treatment the old mascot used, now reframed as the opponent NPC.
 
 ---
 
@@ -60,7 +60,7 @@ The beaver renders as independent transparent layers composited **back-to-front*
 
 ```
 z0  tail            (worn low/rear — sits BEHIND the body; the tail cosmetic reads around the lower silhouette)
-z1  body (state)    (the canonical beaver body at its current Happiness state — see §4; 6 body-color recolor variants)
+z1  body (state)    (the canonical beaver body at its current Happiness state — see §4; 6 bodies = 2 canonicals (male/female) × 3 colors)
 z2  gloves          (on the paws/hands — over the body's forepaws)
 z3  eyes cosmetic   (over the face/eye line — front-most on the face: sunglasses / eyepatch / goggles / monocle / eye-shadow)
 z4  hats            (over the head — top-most)
@@ -76,17 +76,19 @@ Base always present (the body at its current state). Every cosmetic slot is opti
 
 ---
 
-## 4. Player Beaver — The Canonical Body + Body Colors + Happiness States (freeze FIRST)
+## 4. Player Beaver — The Two Canonical Bodies + Body Colors + Happiness States (freeze FIRST)
 
-Everything depends on one frozen beaver body. Produce it before any cosmetic exists.
+> **Updated 2026-07-16 (§18 decision):** the female body is a **distinct design**, not a recolor of the male. There are now **two frozen canonical bodies** — `beaver_body_male_canonical.png` and `beaver_body_female_canonical.png` — each with its own silhouette/pose but the **same registration envelope + anchor zones** (§5), so one cosmetic drawn once fits **all six** bodies. Everything below applies **per canonical**.
 
-1. **Produce 3–4 candidates** of the beaver body in the locked pose/canvas/style (aesthetic §5, §6): friendly beaver, buck teeth, neutral **Content** stance, paws slightly out, tail visible, front-facing, on transparent 1024², no cosmetics. Founder **picks one winner.**
-2. **Freeze it** as `beaver_body_canonical.png` (the Content/default state). This silhouette/pose is now **immutable** — the fit reference for every cosmetic and every other state.
-3. **Body-color variants = shape-identical recolors.** Produce the **6 base bodies** — Brown, White, Black, Brown Girl, White Girl, Black Girl (spec §10.1) — as **pure recolors of the frozen body: same exact silhouette, pose, and shading, only color changes** (same discipline as "one crate recolored 5 ways"). Because the silhouette is identical, **any cosmetic fits all six.** Girl variants may carry minor distinguishing cues (e.g. lashes) **only if they stay inside the registration envelope**; do NOT regenerate the body shape per color.
-4. **Happiness-state poses (5).** For each state — **Thriving, Content, Okay, Unhappy, Neglected** (spec §10.3) — produce a pose/expression variant **against the frozen base**, holding the §1 registration envelope (mood lives in face/ears/shoulders/tail-height, not in relocating anchors). Content = the frozen base itself. Each state is then recolored across the 6 body colors → the state × color set. Neglected uses **dull/desaturated** coloring but stays sympathetic (§6), never distressing.
+Everything depends on the two frozen beaver bodies. Produce them before any cosmetic exists.
+
+1. **Produce 3–4 candidates each** for the **male** and the **female** beaver body in the locked pose/canvas/style (aesthetic §5, §6): friendly beaver, buck teeth, neutral **Content** stance, paws slightly out, tail visible, front-facing, on transparent 1024², no cosmetics. The female body has its **own silhouette/design cues** (a real design difference, not a hue shift) but must keep every anchor point (§5) within the shared registration envelope. Founder **picks one winner per sex.**
+2. **Freeze them** as `beaver_body_male_canonical.png` and `beaver_body_female_canonical.png` (each the Content/default state). Both silhouettes/poses are now **immutable** — the fit references for every cosmetic and every other state. **Anchor zones (§5) are traced once and MUST land identically on both** — verify a hat/eyes/gloves/tail item lands correctly on both canonicals before locking.
+3. **Body-color variants = shape-identical recolors *within each sex*.** From each frozen canonical produce its **3 colors** — Brown, White, Black — as **pure recolors: same exact silhouette, pose, and shading, only color changes** (same discipline as "one crate recolored 5 ways"). Two canonicals × 3 colors = the **6 base bodies** (spec §10.1): Male Brown/White/Black, Female Brown/White/Black. Do NOT regenerate the body shape per color — color is the only variable *inside* a sex; the *silhouette* is the only variable *between* sexes.
+4. **Happiness-state poses (5), per canonical.** For each state — **Thriving, Content, Okay, Unhappy, Neglected** (spec §10.3) — produce a pose/expression variant **against that sex's frozen base**, holding the §1 registration envelope (mood lives in face/ears/shoulders/tail-height, not in relocating anchors). Content = the frozen base itself. Each state is then recolored across its 3 colors → the state × color set per sex. Neglected uses **dull/desaturated** coloring but stays sympathetic (§6), never distressing.
 5. **The beaver's own eyes belong to the body/state** (they carry the emotion), NOT to a cosmetic slot. The `eyes` **cosmetic** slot (§5) is a face accessory worn over them.
 
-> Player "base customization" is therefore just: **pick one of the 6 body colors.** Everything else on the beaver is a gacha cosmetic (§5). The 5 states are driven by Happiness at runtime, not chosen by the user.
+> Player "base customization" is therefore just: **pick sex (male/female) + one of the 3 body colors** = one of 6 bodies. Everything else on the beaver is a gacha cosmetic (§5). The 5 states are driven by Happiness at runtime, not chosen by the user.
 
 ---
 
@@ -121,11 +123,11 @@ For **each cosmetic** (repeat per item, one item per production — **never comb
 
 ---
 
-## 7. Rival Beaver (H2H NPC) — Frozen Base + Expression States
+## 7. Rival Beaver "Bucky" (H2H NPC) — Frozen Base + Expression States
 
-The rival is **one fixed character** — a beaver that is **deliberately distinct from the player's beaver** (different build/palette/attitude) so "my beaver" and "the opponent" never read as the same. It does **not** use the cosmetic-layer system. It needs the same *consistency* treatment via a frozen base + expression variants (this is exactly the treatment the old singular mascot used — now the opponent NPC).
+The rival is **Bucky** — **one fixed character** (decided 2026-07-16, §18), a beaver **deliberately distinct from the player's beaver** (different build/palette/attitude) so "my beaver" and "Bucky" never read as the same. It does **not** use the cosmetic-layer system. It needs the same *consistency* treatment via a frozen base + expression variants (this is exactly the treatment the old singular mascot used — now the opponent NPC).
 
-1. **Produce 3–4 rival candidates** in the locked canvas/style, distinct from the player beaver; founder picks; **freeze** as `rival_beaver_canonical.png`. Identity is now fixed.
+1. **Produce 3–4 Bucky candidates** in the locked canvas/style, distinct from the player beaver; founder picks; **freeze** as `rival_beaver_canonical.png`. Identity is now fixed.
 2. **All other rival images are produced against that frozen base** — the expression/pose is the *only* variable, so it's unmistakably the same rival each time.
 3. **Required states** (spec §7.9, §13 — H2H opponent needs them):
    - `neutral` / idle (default)
@@ -133,7 +135,7 @@ The rival is **one fixed character** — a beaver that is **deliberately distinc
    - `defeat` / lose (player beats it)
    - optional: `taunt` / ready (pre-match)
 4. **Recipe** identical in spirit to §6: input frozen rival base, spec "the exact same beaver character, identical design/proportions/style, now [expression/pose]," transparent 1024², same framing. Batch all states together and review as a set for identity consistency.
-5. The rival is **not** customizable — no cosmetic slots, no Happiness states. **Open (founder, §7.9/§18):** whether it's one recurring rival or a small set, and its name (if any). Do not invent a name pre-decision.
+5. Bucky is **not** customizable — no cosmetic slots, no Happiness states. **Decided (2026-07-16, §7.9/§18):** one recurring rival named **Bucky** (not a set). Only its design/art remains founder-supplied.
 
 ---
 
@@ -143,7 +145,7 @@ Every character asset MUST satisfy all of these. This is what keeps the beaver l
 
 - [ ] **Identical canvas:** 1024×1024, transparent, every asset.
 - [ ] **Identical registration:** the beaver in the same position, scale, and pose in every asset (§1); Happiness states hold the anchor envelope.
-- [ ] **One canonical silhouette per character:** all 6 player body colors are shape-identical recolors of the one frozen body; the rival has one frozen design, distinct from the player beaver.
+- [ ] **Canonical silhouettes:** the player beaver has **two** frozen canonicals (male + female, distinct designs sharing one registration envelope); each is recolored into its 3 colors (shape-identical *within* a sex); Bucky has one frozen design, distinct from the player beaver.
 - [ ] **Reference-conditioned:** every cosmetic, every Happiness state, and every rival state produced **against the frozen base**, never from scratch.
 - [ ] **Isolated layers:** each cosmetic is a standalone transparent asset, **confined to its anchor zone** (§5), nothing else in the frame.
 - [ ] **Fixed z-order** respected (§3): tail behind body; gloves on paws; eyes accessory over the face; hat top-most.
@@ -160,7 +162,7 @@ Every character asset MUST satisfy all of these. This is what keeps the beaver l
 - **Overlay test:** stack base + one item from every slot; confirm everything aligns, nothing floats or clips.
 - **Swap test:** swap each slot through several options; confirm **nothing else shifts** (hat swap doesn't move the eyes; glove swap doesn't move the tail).
 - **State test:** composite a full cosmetic set on **all 5 Happiness states**; confirm every item still lands on its anchor on every mood.
-- **Silhouette test:** overlay all 6 body-color variants; confirm the outline is **pixel-identical** (only color differs).
+- **Silhouette test:** *within each sex,* overlay its 3 body-color variants; confirm the outline is **pixel-identical** (only color differs). Across sexes the silhouettes differ by design — but overlay male vs. female and confirm every **anchor zone** (§5) still lands in the same place (cosmetics must fit both).
 - **Z-order test:** tail sits behind the body; gloves over the paws; eyes accessory over the face; hat over everything on the head.
 - **Style test:** view each slot's items as a grid; confirm uniform outline weight, shading, and palette. Fix outliers.
 - **Rival identity test:** view all rival states side by side; confirm it's obviously the same rival beaver (only expression changes) **and** obviously not the player beaver.
@@ -172,9 +174,9 @@ Fail any test → remake, don't patch. Misalignment and identity drift are cheap
 
 ## 10. How This Feeds the Build
 
-- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot (`beaverBase/*` per body color, the 5 state poses, `hats/*`, `tails/*`, `gloves/*`, `eyes/*`, `rivalBeaver`, `rival_cheer`, etc.). Swappable zero-code.
-- **App compositing:** the client renders the beaver by stacking equipped layers in the z-order of §3 on the shared 1024² grid — a plain layer stack, no per-asset positioning, because registration guarantees alignment. The **body layer is selected by (body color × current Happiness state)**; cosmetics sit on top unchanged.
-- **`avatar_config`** (spec §6, §10): stores the chosen **body color** + equipped cosmetic id per gacha slot; the renderer maps each to its registry file. The Happiness **state** is derived from `profiles.happiness` at render time (not stored in `avatar_config`).
+- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot (`beaverBody{Sex}{Color}` per the 6 bodies, the 5 state poses per sex, `hats/*`, `tails/*`, `gloves/*`, `eyes/*`, `rivalBeaver` = Bucky, `rival_cheer`, etc.). Swappable zero-code.
+- **App compositing:** the client renders the beaver by stacking equipped layers in the z-order of §3 on the shared 1024² grid — a plain layer stack, no per-asset positioning, because registration guarantees alignment. The **body layer is selected by (sex × body color × current Happiness state)**; cosmetics sit on top unchanged (they fit both canonicals by the shared anchor envelope).
+- **`avatar_config`** (spec §6, §10): stores the chosen **sex + body color** + equipped cosmetic id per gacha slot; the renderer maps each to its registry file. The Happiness **state** is derived from `profiles.happiness` at render time (not stored in `avatar_config`).
 - **Milestone fit:** freeze the canonical **beaver base + the 5 state poses + the rival** first (anchors §1/§5 locked on the real art), then produce cosmetics against them. Beaver compositing + the state-selection logic are the M8 rework (spec §10); they run on placeholders until real art is supplied.
 
 ---

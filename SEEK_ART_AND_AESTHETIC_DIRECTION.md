@@ -94,7 +94,7 @@
 **The player's avatar IS a beaver** (character pivot, spec §10 — there is no separate hiker). Beaver chosen deliberately: beavers are *builders and doers* (they achieve through effort — dead-on for a "do hard things" app), outdoor/wilderness-native (fits the mountain world), and instantly characterful. **The beaver is customizable** (base body color + gacha cosmetics) **and emotive** (a Tamagotchi care loop with five Happiness states).
 
 - **Design:** friendly beaver with **prominent buck teeth**, hero-tier illustration (§5) — rich, outlined, cel-shaded, earthy palette. The base body is a clean, neutral, dress-able beaver so cosmetics read clearly on it.
-- **Base body — 6 variants:** Brown / White / Black + girl variants (spec §10.1), each a **shape-identical recolor** of one canonical body (rig bible), so every cosmetic fits all six.
+- **Base body — 6 distinct bodies:** sex (male/female) × color (Brown / White / Black), spec §10.1. The female body is a **distinct design** (its own silhouette), not a recolor of the male — **two frozen canonicals**, each recolored into its 3 colors, sharing one registration envelope so every cosmetic fits all six (rig bible §4).
 - **Cosmetics (gacha):** worn on the beaver across 4 slots — **hats, tails, gloves, eyes** (spec §10.2). *Functional/repeated* detail tier (§5): cleaner/simpler than hero objects, still in-style, so many read at a glance in inventory.
 
 **Happiness states (5 — emotional, purely cosmetic).** The beaver's mood is expressed through its base pose/expression, driven by the Happiness stat (spec §10.3). Direction:
