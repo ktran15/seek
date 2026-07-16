@@ -5,14 +5,29 @@
  * and must be kept in sync with every migration.
  */
 
-/** Avatar base choices (onboarding step 4) + equipped cosmetic per slot. */
+export type BeaverSex = 'male' | 'female';
+export type BeaverBodyColor = 'brown' | 'white' | 'black';
+
+/**
+ * The player beaver's base selection + equipped cosmetics (spec §10.1).
+ * Body = sex (male/female) × color (brown/white/black) = 6 distinct bodies
+ * chosen at onboarding "Customize your beaver". Cosmetics come from crates
+ * only (start plain, §18).
+ *
+ * The `skinTone/eyes/hair/hairColor` fields are the legacy hiker avatar
+ * (pre-pivot); kept optional for back-compat with rows written before the
+ * beaver rework and the not-yet-reworked Profile/Edit-avatar screens (M8).
+ */
 export interface AvatarConfig {
+  sex?: BeaverSex;
+  bodyColor?: BeaverBodyColor;
+  /** slot → cosmetic id (hats/tails/gloves/eyes); empty until earned (§10.2). */
+  equipped?: Record<string, string>;
+  // --- legacy hiker fields (pre-pivot; removed in the M8 beaver rework) ---
   skinTone?: string;
   eyes?: string;
   hair?: string;
   hairColor?: string;
-  /** slot → cosmetic id; base shirt/pants/backpack auto-equipped (spec §10). */
-  equipped?: Record<string, string>;
 }
 
 export interface Database {
@@ -33,8 +48,14 @@ export interface Database {
           id: string;
           username: string | null;
           display_name: string | null;
+          /** Player beaver's chosen name (spec §10; distinct from username). */
+          beaver_name: string | null;
           avatar_config: AvatarConfig;
           coins: number;
+          /** Care-loop stat 0-100, starts 70; server-authoritative (§10.3). */
+          happiness: number;
+          /** Consecutive completed days; server-authoritative (§10.7). */
+          streak_count: number;
           joined_beta_day: number | null;
           bio: string | null;
           onboarding_completed_at: string | null;
@@ -42,10 +63,12 @@ export interface Database {
         };
         /** Rows are created by the signup trigger — never by the client. */
         Insert: never;
-        /** Only the client-updatable columns (column-level grants). */
+        /** Only the client-updatable columns (column-level grants).
+         *  happiness/streak_count are server-authoritative — not listed here. */
         Update: {
           username?: string;
           display_name?: string;
+          beaver_name?: string;
           avatar_config?: AvatarConfig;
           bio?: string;
           onboarding_completed_at?: string;
