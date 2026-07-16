@@ -56,6 +56,8 @@ export interface Database {
           happiness: number;
           /** Consecutive completed days; server-authoritative (§10.7). */
           streak_count: number;
+          /** Last beta day whose care-loop was settled (idempotency, §10.4). */
+          happiness_settled_day: number;
           joined_beta_day: number | null;
           bio: string | null;
           onboarding_completed_at: string | null;
@@ -353,7 +355,8 @@ export interface Database {
             | 'solo_weekly_payout'
             | 'crate_purchase'
             | 'dupe_refund'
-            | 'invite_reward';
+            | 'invite_reward'
+            | 'snack_purchase';
           ref_id: string | null;
           created_at: string;
         };
@@ -401,15 +404,7 @@ export interface Database {
       cosmetics: {
         Row: {
           id: string;
-          slot:
-            | 'boots'
-            | 'pants'
-            | 'backpack'
-            | 'hats'
-            | 'sunglasses'
-            | 'shirts'
-            | 'jacket'
-            | 'pet';
+          slot: 'hats' | 'tails' | 'gloves' | 'eyes';
           name: string;
           rarity: 'common' | 'rare' | 'epic' | 'legendary';
           asset_slot_name: string;
@@ -516,6 +511,11 @@ export interface Database {
       buy_crate: {
         Args: { tier_in: string };
         Returns: string;
+      };
+      buy_snack: {
+        Args: Record<string, never>;
+        /** New Happiness value after the snack (§10.5). */
+        Returns: number;
       };
       get_weekly_leaderboard: {
         Args: { week_in?: number };

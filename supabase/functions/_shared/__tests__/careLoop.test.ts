@@ -1,10 +1,5 @@
 import { config } from '../../../../src/config';
-import {
-  applySnack,
-  clampHappiness,
-  settleHappiness,
-  settleStreak,
-} from '../careLoop';
+import { clampHappiness, settleHappiness, settleStreak } from '../careLoop';
 
 const { dailyDecay, completionRestore, snack, startingHappiness } =
   config.careLoop;
@@ -52,13 +47,6 @@ describe('settleStreak (§10.7)', () => {
   });
   it('resets to 0 on a missed day', () => {
     expect(settleStreak(6, false)).toBe(0);
-  });
-});
-
-describe('applySnack (§10.5)', () => {
-  it('adds the snack restore, capped at 100', () => {
-    expect(applySnack(70, snack.restore)).toBe(85);
-    expect(applySnack(95, snack.restore)).toBe(100);
   });
 });
 

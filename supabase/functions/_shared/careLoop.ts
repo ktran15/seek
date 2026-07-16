@@ -40,11 +40,6 @@ export function settleStreak(current: number, completed: boolean): number {
   return Math.max(0, Math.floor(current)) + 1;
 }
 
-/**
- * Apply a vending-machine snack (§10.5): +`restore` Happiness (default +15),
- * clamped at 100. The −coins side is enforced by the ledger; this is only the
- * Happiness half of the transaction.
- */
-export function applySnack(current: number, restore: number): number {
-  return clampHappiness(current + restore);
-}
+// The snack restore (§10.5) is applied atomically with the coin deduction in
+// the SQL `buy_snack` RPC (balance floor + Happiness in one transaction), not
+// here — see 20260716000002_beaver_cosmetics_reschema_care_loop.sql.

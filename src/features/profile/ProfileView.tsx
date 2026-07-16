@@ -20,6 +20,7 @@ import { useMySubmissions } from '@/features/challenge/useChallenge';
 import { InventorySection } from '@/features/economy/InventorySection';
 import {
   useCoinsEarned,
+  useCosmeticsCatalog,
   useH2HRecord,
   useMyCrates,
 } from '@/features/economy/useEconomy';
@@ -81,6 +82,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const { data: coinsEarned } = useCoinsEarned(selfId);
   const { data: h2hRecord } = useH2HRecord(selfId);
   const { data: crates } = useMyCrates(selfId);
+  const { data: catalog } = useCosmeticsCatalog();
   const ownBadges = useBadges(selfId);
   const {
     data: publicStats,
@@ -215,6 +217,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
         <BeaverPreview
           config={profile?.avatar_config}
           happiness={profile?.happiness ?? config.careLoop.startingHappiness}
+          cosmetics={catalog ?? []}
         />
         {isSelf && (
           <Pressable

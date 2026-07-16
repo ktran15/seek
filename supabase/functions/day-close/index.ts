@@ -18,6 +18,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import { awardH2HWin, awardVotePlacement } from '../_shared/awards.ts';
 import { betaDayInTimezone } from '../_shared/betaDay.ts';
+import { settleHappiness, settleStreak } from '../_shared/careLoop.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
 import { notifyAndPush } from '../_shared/notify.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
@@ -80,6 +81,10 @@ Deno.serve(async (req) => {
     if (challenge.mode === 'CV') {
       report.vote_results = await closeVote(admin, challenge);
     }
+
+    // Every day (all modes): settle each beaver's Happiness + streak for the
+    // day that just closed (spec §10.4/§10.7). Idempotent per profile.
+    report.care_settled = await settleCareLoop(admin, challenge);
 
     return json({ beta_day: betaDay, ...report });
   } catch (e) {
@@ -183,6 +188,66 @@ async function closeH2H(
     resolved++;
   }
   return resolved;
+}
+
+/**
+ * Settle the care loop for the closed day (spec §10.4/§10.7): each beaver
+ * whose challenge was completed gains `completionRestore`, everyone else loses
+ * `dailyDecay` (clamped 0–100); streak increments on completion, resets on a
+ * miss. Idempotent — `happiness_settled_day` gates each profile so re-runs
+ * (and the concurrent-close race) never double-apply. Runs for ALL profiles,
+ * not just submitters, because a missed day is exactly the decay case.
+ */
+async function settleCareLoop(
+  admin: ReturnType<typeof createClient>,
+  challenge: ChallengeRow,
+): Promise<number> {
+  const { data: careSetting } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'care_loop')
+    .single();
+  const care = (careSetting?.value ?? {}) as {
+    dailyDecay?: number;
+    completionRestore?: number;
+  };
+  const decay = care.dailyDecay ?? 10;
+  const restore = care.completionRestore ?? 20;
+
+  // Completed this day = a submitted proof (pass or fail, §10.4).
+  const { data: subs } = await admin
+    .from('submissions')
+    .select('user_id')
+    .eq('challenge_id', challenge.id)
+    .eq('state', 'submitted');
+  const completed = new Set((subs ?? []).map((s) => s.user_id as string));
+
+  const { data: profiles } = await admin
+    .from('profiles')
+    .select('id, happiness, streak_count')
+    .lt('happiness_settled_day', challenge.beta_day);
+
+  let settled = 0;
+  for (const p of profiles ?? []) {
+    const did = completed.has(p.id as string);
+    const happiness = settleHappiness(p.happiness as number, {
+      completed: did,
+      decay,
+      restore,
+    });
+    const streak_count = settleStreak(p.streak_count as number, did);
+
+    // Claim the settle so a concurrent/re-run day-close that loses the race
+    // updates 0 rows and doesn't re-apply.
+    const { data: claimed } = await admin
+      .from('profiles')
+      .update({ happiness, streak_count, happiness_settled_day: challenge.beta_day })
+      .eq('id', p.id as string)
+      .lt('happiness_settled_day', challenge.beta_day)
+      .select('id');
+    if (claimed && claimed.length > 0) settled++;
+  }
+  return settled;
 }
 
 /** Tally the day-3 community vote and notify every poster (spec §7.7). */

@@ -3,7 +3,8 @@ import { Alert, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-na
 
 import { getAsset, type AssetSlot } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
-import { AvatarPreview } from '@/features/avatar/AvatarPreview';
+import { config } from '@/config';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
 import type { AvatarConfig } from '@/lib/database.types';
 import { colors, elevation, radii, spacing, textStyles } from '@/theme';
@@ -80,7 +81,8 @@ function RevealModal({
  */
 function EquipPreviewModal({
   cosmetic,
-  config,
+  avatar,
+  happiness,
   catalog,
   saving,
   onEquip,
@@ -88,17 +90,18 @@ function EquipPreviewModal({
   onClose,
 }: {
   cosmetic: Cosmetic;
-  config: AvatarConfig;
+  avatar: AvatarConfig;
+  happiness: number;
   catalog: Cosmetic[];
   saving: boolean;
   onEquip: () => void;
   onUnequip: () => void;
   onClose: () => void;
 }) {
-  const isEquipped = config.equipped?.[cosmetic.slot] === cosmetic.id;
+  const isEquipped = avatar.equipped?.[cosmetic.slot] === cosmetic.id;
   const draft: AvatarConfig = {
-    ...config,
-    equipped: { ...(config.equipped ?? {}), [cosmetic.slot]: cosmetic.id },
+    ...avatar,
+    equipped: { ...(avatar.equipped ?? {}), [cosmetic.slot]: cosmetic.id },
   };
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -110,7 +113,7 @@ function EquipPreviewModal({
             </Text>
           </View>
           <Text style={[textStyles.headerL, styles.revealName]}>{cosmetic.name}</Text>
-          <AvatarPreview config={draft} cosmetics={catalog} />
+          <BeaverPreview config={draft} happiness={happiness} cosmetics={catalog} />
           <PressButton
             label={saving ? 'SAVING…' : isEquipped ? 'UNEQUIP' : 'EQUIP'}
             disabled={saving}
@@ -257,7 +260,8 @@ export function InventorySection({ userId }: { userId: string | undefined }) {
       {previewing && (
         <EquipPreviewModal
           cosmetic={previewing}
-          config={avatarConfig}
+          avatar={avatarConfig}
+          happiness={profile?.happiness ?? config.careLoop.startingHappiness}
           catalog={catalog ?? []}
           saving={saving}
           onEquip={() => void setEquipped(previewing.slot, previewing.id)}

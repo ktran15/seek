@@ -118,6 +118,29 @@ export function useOpenCrate(userId: string | undefined) {
   });
 }
 
+/**
+ * Buy a vending-machine snack (spec §9.5/§10.5) — server RPC deducts coins
+ * (balance floor enforced) and restores Happiness atomically; returns the new
+ * Happiness. Invalidates the balance + profile so the Shop pill and the
+ * beaver's meter update.
+ */
+export function useBuySnack(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<number> => {
+      const { data, error } = await supabase.rpc('buy_snack');
+      if (error) throw error;
+      return data ?? 0;
+    },
+    onSuccess: () => {
+      const uid = userId ?? 'anonymous';
+      void queryClient.invalidateQueries({ queryKey: profileKeys.own(uid) });
+      void queryClient.invalidateQueries({ queryKey: profileKeys.coins(uid) });
+      void queryClient.invalidateQueries({ queryKey: economyKeys.ledger(uid) });
+    },
+  });
+}
+
 /** Lifetime coins earned (positive ledger entries) — Profile stat (spec §11). */
 export function useCoinsEarned(userId: string | undefined) {
   return useQuery({
