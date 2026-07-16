@@ -45,7 +45,13 @@ Founder resolved the 5 open §18 character decisions as **final**, directed the 
 **Still founder-supplied (art, unblocked to land zero-code into registry slots):**
 - Beaver bodies `beaverBody{Sex}{Color}{State}` (2 canonicals × 3 colors × 5 states) + the 19 cosmetic layer slots (`cosHats*`/`cosTails*`/`cosGloves*`/`cosEyes*`) + Bucky (`rivalBeaver`). Until then: fur-colored placeholder disc + rarity-chip cosmetics.
 
-**Flagged for later (not dead-code-cleaned this session):** the legacy hiker avatar module (`src/features/avatar/*`) is now used ONLY by the dev `/dev/art-qa` screen; retire both once the beaver art QA screen exists.
+**Flagged for later (not dead-code-cleaned this session):** the legacy hiker avatar module (`src/features/avatar/*`) is now used ONLY by the dev `/dev/art-qa` screen; retire both once the beaver art QA screen exists. The hiker-era `cosHats{Common,Rare,Epic,Legendary}` registry slots + PNGs are orphaned with it.
+
+**Known issues / later (independent review 2026-07-16 — assessed low-severity, deliberately NOT fixed now):**
+1. day-close's `submissions` read is capped at PostgREST's 1000-row default — fine at beta scale; paginate before real scale. (The profile settle itself is one set-based SQL statement since M8-6 — no cap there.)
+2. `avatar_config.equipped` is client-written with no server-side ownership check: a modded client could "wear" cosmetics it never earned. Cosmetic-only, zero economy impact; consider an equip-validation trigger post-beta.
+3. The Shop sells a snack at 100 Happiness (per spec §10.5 "any time, repeatable" — but it burns 25 coins for zero gain); disable the button at a full meter in the M13 polish pass.
+4. A day whose day-close never ran is never back-settled — the `happiness_settled_day` gate jumps past it and one decay/restore is lost. Accepted idempotency tradeoff; revisit only if closes prove flaky.
 
 ---
 
