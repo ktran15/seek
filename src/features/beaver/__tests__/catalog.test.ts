@@ -8,28 +8,31 @@ import {
 } from '../catalog';
 
 describe('beaver base catalog', () => {
-  it('builds the registry slot name from sex × color', () => {
+  it('builds the registry slot name from sex × color × state (default content)', () => {
     expect(beaverBodySlotName({ sex: 'male', bodyColor: 'brown' })).toBe(
-      'beaverBodyMaleBrown',
+      'beaverBodyMaleBrownContent',
     );
     expect(beaverBodySlotName({ sex: 'female', bodyColor: 'black' })).toBe(
-      'beaverBodyFemaleBlack',
+      'beaverBodyFemaleBlackContent',
     );
-    expect(beaverBodySlotName({ sex: 'female', bodyColor: 'white' })).toBe(
-      'beaverBodyFemaleWhite',
-    );
+    expect(
+      beaverBodySlotName({ sex: 'female', bodyColor: 'white' }, 'thriving'),
+    ).toBe('beaverBodyFemaleWhiteThriving');
+    expect(
+      beaverBodySlotName({ sex: 'male', bodyColor: 'brown' }, 'neglected'),
+    ).toBe('beaverBodyMaleBrownNeglected');
   });
 
-  it('falls back to the default body (male/brown) for empty or partial config', () => {
+  it('falls back to the default body (male/brown/content) for empty or partial config', () => {
     expect(beaverSex(undefined)).toBe(DEFAULT_BEAVER.sex);
     expect(beaverBodyColor(undefined)).toBe(DEFAULT_BEAVER.bodyColor);
-    expect(beaverBodySlotName({})).toBe('beaverBodyMaleBrown');
+    expect(beaverBodySlotName({})).toBe('beaverBodyMaleBrownContent');
     // A legacy hiker config (no beaver fields) resolves to the default body.
     const legacy: AvatarConfig = { skinTone: 'skin2', hair: 'hair2' };
-    expect(beaverBodySlotName(legacy)).toBe('beaverBodyMaleBrown');
+    expect(beaverBodySlotName(legacy)).toBe('beaverBodyMaleBrownContent');
   });
 
-  it('covers all six distinct bodies with unique slot names', () => {
+  it('covers all six distinct bodies with unique slot names (per state)', () => {
     const sexes = ['male', 'female'] as const;
     const colors = ['brown', 'white', 'black'] as const;
     const slots = sexes.flatMap((sex) =>

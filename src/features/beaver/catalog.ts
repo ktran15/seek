@@ -13,6 +13,8 @@
  */
 import type { AvatarConfig, BeaverBodyColor, BeaverSex } from '@/lib/database.types';
 
+import type { HappinessState } from './happiness';
+
 export interface SexOption {
   id: BeaverSex;
   label: string;
@@ -61,11 +63,16 @@ export function bodyColorOption(id: BeaverBodyColor): BodyColorOption {
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
- * Registry slot name for the body layer: `beaverBody{Sex}{Color}` (Rig Bible
- * §10 naming), e.g. `beaverBodyFemaleBlack`. Resolved via getAssetOrNull —
- * null until the real art lands, at which point BeaverPreview renders it with
- * zero code change.
+ * Registry slot name for the body layer: `beaverBody{Sex}{Color}{State}` (Rig
+ * Bible §10 — the body is selected by sex × color × Happiness state), e.g.
+ * `beaverBodyFemaleBlackThriving`. Defaults to the `content` pose (the frozen
+ * base) when no state is given — that's what onboarding shows (a new beaver
+ * starts at 70 = Content). Resolved via getAssetOrNull, so it renders real art
+ * with zero code change once it lands, and a placeholder until then.
  */
-export function beaverBodySlotName(config: AvatarConfig | undefined): string {
-  return `beaverBody${cap(beaverSex(config))}${cap(beaverBodyColor(config))}`;
+export function beaverBodySlotName(
+  config: AvatarConfig | undefined,
+  state: HappinessState = 'content',
+): string {
+  return `beaverBody${cap(beaverSex(config))}${cap(beaverBodyColor(config))}${cap(state)}`;
 }
