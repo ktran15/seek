@@ -14,12 +14,12 @@ import {
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
-import { AvatarPreview } from '@/features/avatar/AvatarPreview';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
+import { HappinessMeter } from '@/features/beaver/HappinessMeter';
 import { useMySubmissions } from '@/features/challenge/useChallenge';
 import { InventorySection } from '@/features/economy/InventorySection';
 import {
   useCoinsEarned,
-  useCosmeticsCatalog,
   useH2HRecord,
   useMyCrates,
 } from '@/features/economy/useEconomy';
@@ -81,7 +81,6 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
   const { data: coinsEarned } = useCoinsEarned(selfId);
   const { data: h2hRecord } = useH2HRecord(selfId);
   const { data: crates } = useMyCrates(selfId);
-  const { data: catalog } = useCosmeticsCatalog();
   const ownBadges = useBadges(selfId);
   const {
     data: publicStats,
@@ -213,7 +212,10 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
             </Text>
           </Pressable>
         )}
-        <AvatarPreview config={profile?.avatar_config ?? {}} cosmetics={catalog ?? []} />
+        <BeaverPreview
+          config={profile?.avatar_config}
+          happiness={profile?.happiness ?? config.careLoop.startingHappiness}
+        />
         {isSelf && (
           <Pressable
             accessibilityRole="button"
@@ -238,12 +240,33 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
         )}
       </View>
 
+      {profile?.beaver_name ? (
+        <Text style={[textStyles.headerS, styles.beaverName]}>
+          🦫 {profile.beaver_name}
+        </Text>
+      ) : null}
+      <View style={styles.meterWrap}>
+        <HappinessMeter
+          happiness={profile?.happiness ?? config.careLoop.startingHappiness}
+        />
+      </View>
+
       <Text style={[textStyles.headerL, styles.displayName]}>
         {profile?.display_name ?? '—'}
       </Text>
-      <Text style={[textStyles.body, styles.username]}>
-        @{profile?.username ?? '—'}
-      </Text>
+      <View style={styles.usernameRow}>
+        <Text style={[textStyles.body, styles.username]}>
+          @{profile?.username ?? '—'}
+        </Text>
+        {profile && profile.streak_count > 0 ? (
+          <Text
+            style={[textStyles.bodyEmphasis, styles.streak]}
+            accessibilityLabel={`${profile.streak_count} day streak`}
+          >
+            🔥{profile.streak_count}
+          </Text>
+        ) : null}
+      </View>
 
       {isSelf ? (
         <Pressable
@@ -358,12 +381,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  displayName: {
+  beaverName: {
     color: colors.textPrimary,
     marginTop: spacing.xs,
   },
+  meterWrap: {
+    alignSelf: 'stretch',
+    maxWidth: 240,
+    marginTop: spacing.xs,
+  },
+  displayName: {
+    color: colors.textPrimary,
+    marginTop: spacing.sm,
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   username: {
     color: colors.textSecondary,
+  },
+  streak: {
+    color: colors.primary,
   },
   shareButton: {
     minHeight: 44,

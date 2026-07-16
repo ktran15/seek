@@ -3,87 +3,87 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { FormTextInput } from '@/components/ui/FormTextInput';
 import { PressButton } from '@/components/ui/PressButton';
+import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
-import { AvatarPreview } from '@/features/avatar/AvatarPreview';
-import {
-  DEFAULT_AVATAR,
-  EYES,
-  HAIR_COLORS,
-  HAIR_STYLES,
-  SKIN_TONES,
-} from '@/features/avatar/catalog';
-import { ChipPicker, SwatchPicker } from '@/features/avatar/OptionPickers';
-import { useCosmeticsCatalog } from '@/features/economy/useEconomy';
+import { BaseBodyPicker } from '@/features/beaver/BaseBodyPicker';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
+import { beaverBodyColor, beaverSex } from '@/features/beaver/catalog';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
+import type { BeaverBodyColor, BeaverSex } from '@/lib/database.types';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
- * Settings → Edit avatar base (spec §10): the same four base choices as
- * onboarding, with the FULL current look previewed (equipped cosmetics stay
- * on — only the base fields change on save).
+ * Settings → Edit beaver (spec §5, §10.1): change the base body (sex + color)
+ * and rename the beaver, with the FULL current look previewed (equipped gear
+ * stays on — only the base + name change on save). Happiness/streak are
+ * server-authoritative and unaffected here.
  */
-export default function EditAvatarScreen() {
+export default function EditBeaverScreen() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
   const updateProfile = useUpdateProfile(session?.user.id);
-  const { data: catalog } = useCosmeticsCatalog();
 
   const current = profile?.avatar_config ?? {};
-  const [skinTone, setSkinTone] = useState(current.skinTone ?? DEFAULT_AVATAR.skinTone);
-  const [eyes, setEyes] = useState(current.eyes ?? DEFAULT_AVATAR.eyes);
-  const [hair, setHair] = useState(current.hair ?? DEFAULT_AVATAR.hair);
-  const [hairColor, setHairColor] = useState(
-    current.hairColor ?? DEFAULT_AVATAR.hairColor,
+  const [sex, setSex] = useState<BeaverSex>(beaverSex(current));
+  const [bodyColor, setBodyColor] = useState<BeaverBodyColor>(
+    beaverBodyColor(current),
   );
+  const [beaverName, setBeaverName] = useState(profile?.beaver_name ?? '');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const draft = { ...current, skinTone, eyes, hair, hairColor };
+  const draft = { ...current, sex, bodyColor };
 
   const save = async () => {
+    const trimmed = beaverName.trim();
+    setError(null);
+    if (trimmed.length < 1 || trimmed.length > 20) {
+      setError('Pick a name of 1–20 characters.');
+      return;
+    }
     setBusy(true);
     try {
-      // Base fields only — the equipped cosmetics map rides along untouched.
-      await updateProfile({ avatar_config: draft });
+      // Base + name only — the equipped cosmetics map rides along untouched.
+      await updateProfile({ avatar_config: draft, beaver_name: trimmed });
       router.back();
     } catch (e) {
-      Alert.alert(
-        'Could not save avatar',
-        e instanceof Error ? e.message : 'Try again.',
-      );
+      Alert.alert('Could not save', e instanceof Error ? e.message : 'Try again.');
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <ErrorBoundary screen="Edit Avatar">
+    <ErrorBoundary screen="Edit Beaver">
       <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
         <View style={styles.previewCard}>
-          <AvatarPreview config={draft} cosmetics={catalog ?? []} />
+          <BeaverPreview
+            config={draft}
+            happiness={profile?.happiness ?? config.careLoop.startingHappiness}
+          />
           <Text style={[textStyles.caption, styles.previewNote]}>
             Your equipped gear stays on — change it in Profile → Inventory.
           </Text>
         </View>
 
-        <SwatchPicker
-          label="Skin tone"
-          options={SKIN_TONES}
-          selectedId={skinTone}
-          onSelect={setSkinTone}
+        <FormTextInput
+          label="Beaver name"
+          value={beaverName}
+          onChangeText={setBeaverName}
+          placeholder="Give your beaver a name"
+          autoCapitalize="words"
+          autoCorrect={false}
+          maxLength={20}
+          errorText={error}
         />
-        <ChipPicker label="Eyes" options={EYES} selectedId={eyes} onSelect={setEyes} />
-        <ChipPicker
-          label="Hair"
-          options={HAIR_STYLES}
-          selectedId={hair}
-          onSelect={setHair}
-        />
-        <SwatchPicker
-          label="Hair color"
-          options={HAIR_COLORS}
-          selectedId={hairColor}
-          onSelect={setHairColor}
+
+        <BaseBodyPicker
+          sex={sex}
+          bodyColor={bodyColor}
+          onSex={setSex}
+          onColor={setBodyColor}
         />
 
         <View style={styles.footer}>
