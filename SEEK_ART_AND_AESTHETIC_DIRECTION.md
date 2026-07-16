@@ -89,7 +89,7 @@
 
 ---
 
-## 6. The Beaver — player character + rival (concept LOCKED; identity details open)
+## 6. The Beaver — player character + rival (concept LOCKED; identities decided — final art founder-supplied)
 
 **The player's avatar IS a beaver** (character pivot, spec §10 — there is no separate hiker). Beaver chosen deliberately: beavers are *builders and doers* (they achieve through effort — dead-on for a "do hard things" app), outdoor/wilderness-native (fits the mountain world), and instantly characterful. **The beaver is customizable** (base body color + gacha cosmetics) **and emotive** (a Tamagotchi care loop with five Happiness states).
 
@@ -106,7 +106,7 @@
 - **Cosmetics render on top of every state** — a Neglected beaver still wears its hat/tail/gloves/eyes on the sadder pose. Keep the states within one registration envelope so a single cosmetic layer set composites across all five (rig bible).
 
 **The rival (H2H opponent NPC).** When no friend can be paired, the opponent is a **different, distinct beaver** (spec §7.9) — recognizable as "the opponent," **visually separated** from the player's own beaver (different palette/build/attitude) so the two are never confused. Same hero-tier craft. Needs **win / lose / idle expression states** for H2H moments. It is a stand-in opponent, **not** the game's singular mascot.
-- **Open (founder):** the beaver's exact base design; whether the rival is one recurring character or a set, its look and name (if any); personality specifics. Build against config + registry slots (`beaverBase`, `rivalBeaver` + states); labeled placeholder until final art. **Do not invent a rival name pre-decision.**
+- **Decided (2026-07-16, spec §18):** the rival is **one fixed recurring character named "Bucky"** (config `rival.name`; Rig Bible §7) — a beaver deliberately distinct from the player's. **Still open (founder):** both characters' exact final designs and Bucky's personality specifics. Build against config + registry slots (`beaverBody{Sex}{Color}{State}` for the player's 6 bodies × 5 Happiness states, `rivalBeaver` + expression states for Bucky); labeled placeholder until final art.
 - **Tone:** friendly, warm, motivating — never punishing, even at low Happiness or on a loss.
 
 ---
