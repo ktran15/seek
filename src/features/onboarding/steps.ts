@@ -1,15 +1,23 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 
 /**
- * Ordered onboarding flow (spec §5, with a username/profile step prepended —
- * profiles need identity before anything social).
+ * Ordered onboarding flow (spec §5 — the visual-first beaver rework).
+ *
+ * A `username`/display-name identity step is prepended (profiles need a handle
+ * before anything social — leaderboards, @-search, friend requests). The eight
+ * steps after it are the spec §5 order:
+ *   Enable Notifications → Why we're great → Meet your beaver →
+ *   Name your beaver → Customize your beaver → Care-loop explainer →
+ *   Invite → Hook/Begin.
  */
 export const ONBOARDING_STEPS = [
   'username',
   'notifications',
   'social-proof',
-  'about',
-  'avatar',
+  'meet-beaver',
+  'name-beaver',
+  'customize-beaver',
+  'care-loop',
   'invite',
   'begin',
 ] as const;
@@ -24,6 +32,8 @@ export function stepIndex(step: OnboardingStep): number {
 export function goToNextStep(current: OnboardingStep): void {
   const next = ONBOARDING_STEPS[stepIndex(current) + 1];
   if (next) {
-    router.push(`/(onboarding)/${next}`);
+    // Dynamically-built route (validated by ONBOARDING_STEPS); cast like the
+    // app's other dynamic pushes since typed-routes can't infer the template.
+    router.push(`/(onboarding)/${next}` as Href);
   }
 }

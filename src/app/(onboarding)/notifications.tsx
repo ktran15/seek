@@ -52,6 +52,9 @@ export default function NotificationsStep() {
         <Text style={[textStyles.body, styles.cardLine]}>
           ⚔️ Your head-to-head results
         </Text>
+        <Text style={[textStyles.body, styles.cardLine]}>
+          🦫 A nudge to keep your beaver happy
+        </Text>
       </View>
     </OnboardingScreen>
   );
