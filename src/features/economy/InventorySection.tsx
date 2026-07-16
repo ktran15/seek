@@ -74,10 +74,11 @@ function RevealModal({
 }
 
 /**
- * Equip preview (spec §10): tap a cosmetic → see it ON the avatar →
- * confirm = equip (persists to avatar_config.equipped); unequip reverts to
- * the base gear. The preview shows the full current look with this one
- * slot swapped, so layering (incl. jacket-closed) is what you'll get.
+ * Equip preview (spec §10): tap a cosmetic → see it ON the beaver →
+ * confirm = equip (persists to avatar_config.equipped); unequip empties the
+ * slot (the beaver starts plain, §18 — no base gear). The preview shows the
+ * full current look with this one slot swapped, so the layered z-order is
+ * what you'll get.
  */
 function EquipPreviewModal({
   cosmetic,

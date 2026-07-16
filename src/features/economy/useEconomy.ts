@@ -16,7 +16,7 @@ export const economyKeys = {
   h2hRecord: (userId: string) => ['h2h-record', userId] as const,
 };
 
-/** The full seeded cosmetics catalog (32 rows, effectively static). */
+/** The full seeded cosmetics catalog (19 beaver items, §10.2; effectively static). */
 export function useCosmeticsCatalog() {
   return useQuery({
     queryKey: economyKeys.catalog,
