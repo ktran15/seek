@@ -4,6 +4,36 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Beaver character pivot — decisions + onboarding rework (2026-07-16) — branch `beaver-onboarding-rework`
+
+Founder resolved the 5 open §18 character decisions as **final** and directed the §5 onboarding rework. Docs + the onboarding rework are built; the deeper beaver systems are **NOT** started (founder gates them — see STOP below).
+
+**Decisions (now final in all spec docs):**
+1. **Starter cosmetics = start plain** — onboarding sets only sex + body color; all gear from crates.
+2. **5 customization points confirmed** — base body + 4 gacha slots (hats/tails/gloves/eyes).
+3. **Rival = "Bucky"** — one fixed NPC; named in §7.9, config (`config.rival.name`), Rig Bible §7.
+4. **Body = sex (male/female) × 3 colors = 6 distinct bodies** — female is a *distinct design*, so the rig now has **two frozen canonicals** sharing one anchor envelope (Rig Bible §4/§8/§10).
+5. **Starting Happiness = 70** — `profiles.happiness` default 70, `config.careLoop.startingHappiness`.
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Spec docs updated (SEEK_MVP_BUILD_SPEC_V2 §5/§6/§7.9/§10/§18, Rig Bible §2/§4/§7/§8/§10, aesthetic doc) — 5 decisions marked final | ✅ done |
+| 2 | Migration `20260716000001_beaver_care_loop_profile_columns.sql`: profiles + `beaver_name` (client-updatable), `happiness` (default 70, server-auth), `streak_count` (default 0, server-auth); column-scoped SELECT per M13 model. `database.types.ts` + `useProfile` updated | ✅ authored — **founder must `npx supabase db push`** |
+| 3 | `config.careLoop` block + rename `mascot`→`rival` (Bucky) + flag `enableRivalOpponent`; new `src/features/beaver` catalog + `BeaverPreview` (renders `beaverBody{Sex}{Color}` art when it lands, else placeholder) | ✅ done |
+| 4 | Onboarding rework (§5): reordered flow + 4 new screens (meet/name/customize/care-loop), orphaned hiker screens removed, beaver-care nudge in notifications; 176 tests green, tsc clean | ✅ done |
+
+**Onboarding flow now:** username (identity, prepended) → Enable Notifications → Why we're great → Meet your beaver → Name your beaver → Customize your beaver → Care-loop explainer → Invite → Begin.
+
+**⚠️ STOP — awaiting founder review before any work beyond §5.** Do NOT start the M8 beaver rework / further systems without founder go-ahead:
+- Care-loop **behavior**: day-close Happiness decay/restore, `buy_snack` RPC + vending machine, 5-state selection logic, streak settle logic.
+- Beaver **render rework**: Profile/Edit-avatar still show the legacy *hiker* avatar (AvatarPreview + `avatar/catalog`); the beaver compositor + Happiness-state rendering + Happiness meter + 🔥 streak display are the M8 rework.
+- **Cosmetics reschema** (current DB seeds 8 hiker slots boots/pants/etc; spec §10.2 now wants 4 beaver slots hats/tails/gloves/eyes) — deferred with the M8 rework so the app isn't left mid-migration (flagged to founder).
+- Real beaver body/state art + Bucky art (founder-supplied) drop into registry slots later.
+
+**Founder actions:** (1) `npx supabase db push` (the new migration). (2) Review the onboarding screens on device.
+
+---
+
 ## Current milestone: **M13 — Polish & animation** (spec §15, aesthetic §8) — branch `m12-real-assets` (continues; founder approved starting while the artist works)
 
 | # | Sub-step | Status |
