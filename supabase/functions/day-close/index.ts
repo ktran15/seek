@@ -18,7 +18,6 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import { awardH2HWin, awardVotePlacement } from '../_shared/awards.ts';
 import { betaDayInTimezone } from '../_shared/betaDay.ts';
-import { settleHappiness, settleStreak } from '../_shared/careLoop.ts';
 import { countVotesByPoster, votePlacement } from '../_shared/cvTally.ts';
 import { notifyAndPush } from '../_shared/notify.ts';
 import { resolveMascotMatch, type H2HVictorRule } from '../_shared/h2hLogic.ts';
@@ -194,9 +193,15 @@ async function closeH2H(
  * Settle the care loop for the closed day (spec §10.4/§10.7): each beaver
  * whose challenge was completed gains `completionRestore`, everyone else loses
  * `dailyDecay` (clamped 0–100); streak increments on completion, resets on a
- * miss. Idempotent — `happiness_settled_day` gates each profile so re-runs
- * (and the concurrent-close race) never double-apply. Runs for ALL profiles,
- * not just submitters, because a missed day is exactly the decay case.
+ * miss. Runs for ALL profiles, not just submitters, because a missed day is
+ * exactly the decay case.
+ *
+ * The settle itself is ONE set-based SQL statement (`settle_care_day`,
+ * migration 20260716000003; math mirrored + jest-tested in
+ * _shared/careLoop.ts): each row's happiness is computed from its CURRENT
+ * value under the row lock, so a buy_snack landing mid-settle is never
+ * clobbered, and the happiness_settled_day gate in the WHERE keeps re-runs
+ * (and the concurrent-close race) idempotent per profile.
  */
 async function settleCareLoop(
   admin: ReturnType<typeof createClient>,
@@ -220,34 +225,16 @@ async function settleCareLoop(
     .select('user_id')
     .eq('challenge_id', challenge.id)
     .eq('state', 'submitted');
-  const completed = new Set((subs ?? []).map((s) => s.user_id as string));
+  const completed = [...new Set((subs ?? []).map((s) => s.user_id as string))];
 
-  const { data: profiles } = await admin
-    .from('profiles')
-    .select('id, happiness, streak_count')
-    .lt('happiness_settled_day', challenge.beta_day);
-
-  let settled = 0;
-  for (const p of profiles ?? []) {
-    const did = completed.has(p.id as string);
-    const happiness = settleHappiness(p.happiness as number, {
-      completed: did,
-      decay,
-      restore,
-    });
-    const streak_count = settleStreak(p.streak_count as number, did);
-
-    // Claim the settle so a concurrent/re-run day-close that loses the race
-    // updates 0 rows and doesn't re-apply.
-    const { data: claimed } = await admin
-      .from('profiles')
-      .update({ happiness, streak_count, happiness_settled_day: challenge.beta_day })
-      .eq('id', p.id as string)
-      .lt('happiness_settled_day', challenge.beta_day)
-      .select('id');
-    if (claimed && claimed.length > 0) settled++;
-  }
-  return settled;
+  const { data: settled, error } = await admin.rpc('settle_care_day', {
+    day_in: challenge.beta_day,
+    completed_ids: completed,
+    decay_in: decay,
+    restore_in: restore,
+  });
+  if (error) throw new Error(error.message);
+  return (settled as number) ?? 0;
 }
 
 /** Tally the day-3 community vote and notify every poster (spec §7.7). */

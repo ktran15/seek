@@ -31,13 +31,14 @@ Founder resolved the 5 open §18 character decisions as **final**, directed the 
 | M8-1 | Pure care-loop logic: client `beaver/happiness.ts` (5-state band selection + clamp) + server `_shared/careLoop.ts` (settleHappiness/settleStreak, amounts from app_settings); jest both | ✅ done |
 | M8-2 | Beaver compositor: `beaver/layers.ts` (4-slot z-order tail→body→gloves→eyes→hats, no base fallback) + state-aware body slot `beaverBody{Sex}{Color}{State}`; `BeaverPreview` composites state body + cosmetics (real art when registered, else rarity chip); tests | ✅ done |
 | M8-3 | Profile renders the beaver at its Happiness-state pose + 🦫 beaver_name + `HappinessMeter` + 🔥N streak (self + public); Settings "Edit beaver" (sex/color/rename) via shared `BaseBodyPicker` | ✅ done |
-| M8-4 | Migration `20260716000002`: cosmetics reschema → 4 beaver slots + 19-item §10.2 catalog (wipes old hiker cosmetics/equips), `care_loop` settings, `happiness_settled_day`, `snack_purchase` reason, `buy_snack()` RPC. day-close settles Happiness+streak per profile (idempotent) using the tested pure logic | ✅ authored — **founder must `npx supabase db push` + redeploy day-close** |
+| M8-4 | Migration `20260716000002`: cosmetics reschema → 4 beaver slots + 19-item §10.2 catalog (wipes old hiker cosmetics/equips), `care_loop` settings, `happiness_settled_day`, `snack_purchase` reason, `buy_snack()` RPC. day-close settles Happiness+streak per profile (idempotent) | ✅ authored — **founder must `npx supabase db push` + redeploy day-close** |
+| M8-6 | Review fix (2026-07-16): migration `20260716000003` `settle_care_day()` RPC — the settle is now ONE set-based SQL UPDATE computing each row from its current value under the row lock, so a concurrent `buy_snack()` can no longer be clobbered mid-settlement (the old read-all-then-loop-write pattern lost the snack's +15). Idempotency gate unchanged; `_shared/careLoop.ts` keeps the jest-tested mirror (`settleCareRow`) incl. race tests | ✅ authored — **same founder actions below** |
 | M8-5 | Inventory equip/preview on the beaver (persists to `avatar_config.equipped`); Shop vending-machine snack (`useBuySnack`, live meter) | ✅ done |
 
 **M8 behavior:** completing a day → +20 Happiness (cap 100) & streak +1; missing → −10 & streak resets 0; settled at day close. Snack = 25 coins → +15 Happiness. All server-authoritative; 5 visual states select client-side from `profiles.happiness`.
 
 **⚠️ Founder actions (this branch):**
-1. `npx supabase db push` — applies BOTH new migrations (`20260716000001` care-loop columns, `20260716000002` cosmetics reschema + snack). **The reschema wipes old hiker `user_cosmetics` + equips — expected (beta).**
+1. `npx supabase db push` — applies all THREE new migrations (`20260716000001` care-loop columns, `20260716000002` cosmetics reschema + snack, `20260716000003` atomic `settle_care_day()` RPC). **The reschema wipes old hiker `user_cosmetics` + equips — expected (beta).**
 2. Redeploy day-close (it now settles the care loop): `npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar`
 3. Review on device: onboarding, Profile beaver + meter + streak, Edit beaver, Inventory equip, Shop snack. Test care loop by running a manual day-close (see M5 curl) and watching Happiness/streak move.
 
