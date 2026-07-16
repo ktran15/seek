@@ -4,9 +4,9 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
-## Beaver character pivot — decisions + onboarding rework (2026-07-16) — branch `beaver-onboarding-rework`
+## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
 
-Founder resolved the 5 open §18 character decisions as **final** and directed the §5 onboarding rework. Docs + the onboarding rework are built; the deeper beaver systems are **NOT** started (founder gates them — see STOP below).
+Founder resolved the 5 open §18 character decisions as **final**, directed the §5 onboarding rework, reviewed it, then gave the go-ahead for the **M8 beaver systems** (care loop, render rework, cosmetics reschema, snack). All built below.
 
 **Decisions (now final in all spec docs):**
 1. **Starter cosmetics = start plain** — onboarding sets only sex + body color; all gear from crates.
@@ -24,13 +24,27 @@ Founder resolved the 5 open §18 character decisions as **final** and directed t
 
 **Onboarding flow now:** username (identity, prepended) → Enable Notifications → Why we're great → Meet your beaver → Name your beaver → Customize your beaver → Care-loop explainer → Invite → Begin.
 
-**⚠️ STOP — awaiting founder review before any work beyond §5.** Do NOT start the M8 beaver rework / further systems without founder go-ahead:
-- Care-loop **behavior**: day-close Happiness decay/restore, `buy_snack` RPC + vending machine, 5-state selection logic, streak settle logic.
-- Beaver **render rework**: Profile/Edit-avatar still show the legacy *hiker* avatar (AvatarPreview + `avatar/catalog`); the beaver compositor + Happiness-state rendering + Happiness meter + 🔥 streak display are the M8 rework.
-- **Cosmetics reschema** (current DB seeds 8 hiker slots boots/pants/etc; spec §10.2 now wants 4 beaver slots hats/tails/gloves/eyes) — deferred with the M8 rework so the app isn't left mid-migration (flagged to founder).
-- Real beaver body/state art + Bucky art (founder-supplied) drop into registry slots later.
+### M8 — Beaver, cosmetics & care loop (spec §10) — built 2026-07-16
 
-**Founder actions:** (1) `npx supabase db push` (the new migration). (2) Review the onboarding screens on device.
+| # | Sub-step | Status |
+|---|----------|--------|
+| M8-1 | Pure care-loop logic: client `beaver/happiness.ts` (5-state band selection + clamp) + server `_shared/careLoop.ts` (settleHappiness/settleStreak, amounts from app_settings); jest both | ✅ done |
+| M8-2 | Beaver compositor: `beaver/layers.ts` (4-slot z-order tail→body→gloves→eyes→hats, no base fallback) + state-aware body slot `beaverBody{Sex}{Color}{State}`; `BeaverPreview` composites state body + cosmetics (real art when registered, else rarity chip); tests | ✅ done |
+| M8-3 | Profile renders the beaver at its Happiness-state pose + 🦫 beaver_name + `HappinessMeter` + 🔥N streak (self + public); Settings "Edit beaver" (sex/color/rename) via shared `BaseBodyPicker` | ✅ done |
+| M8-4 | Migration `20260716000002`: cosmetics reschema → 4 beaver slots + 19-item §10.2 catalog (wipes old hiker cosmetics/equips), `care_loop` settings, `happiness_settled_day`, `snack_purchase` reason, `buy_snack()` RPC. day-close settles Happiness+streak per profile (idempotent) using the tested pure logic | ✅ authored — **founder must `npx supabase db push` + redeploy day-close** |
+| M8-5 | Inventory equip/preview on the beaver (persists to `avatar_config.equipped`); Shop vending-machine snack (`useBuySnack`, live meter) | ✅ done |
+
+**M8 behavior:** completing a day → +20 Happiness (cap 100) & streak +1; missing → −10 & streak resets 0; settled at day close. Snack = 25 coins → +15 Happiness. All server-authoritative; 5 visual states select client-side from `profiles.happiness`.
+
+**⚠️ Founder actions (this branch):**
+1. `npx supabase db push` — applies BOTH new migrations (`20260716000001` care-loop columns, `20260716000002` cosmetics reschema + snack). **The reschema wipes old hiker `user_cosmetics` + equips — expected (beta).**
+2. Redeploy day-close (it now settles the care loop): `npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar`
+3. Review on device: onboarding, Profile beaver + meter + streak, Edit beaver, Inventory equip, Shop snack. Test care loop by running a manual day-close (see M5 curl) and watching Happiness/streak move.
+
+**Still founder-supplied (art, unblocked to land zero-code into registry slots):**
+- Beaver bodies `beaverBody{Sex}{Color}{State}` (2 canonicals × 3 colors × 5 states) + the 19 cosmetic layer slots (`cosHats*`/`cosTails*`/`cosGloves*`/`cosEyes*`) + Bucky (`rivalBeaver`). Until then: fur-colored placeholder disc + rarity-chip cosmetics.
+
+**Flagged for later (not dead-code-cleaned this session):** the legacy hiker avatar module (`src/features/avatar/*`) is now used ONLY by the dev `/dev/art-qa` screen; retire both once the beaver art QA screen exists.
 
 ---
 
