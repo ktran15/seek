@@ -10,8 +10,10 @@
 
   Workflow:
     1. Load a body PNG — it's drawn auto-centered on the 1024×1024 composite
-       canvas at natural size (the body carries no placement data; centered is
-       the rule). Load several bodies (states/sexes) and swap to QA placements.
+       canvas (centered is the rule; bodies never take x/y). Body exports can
+       differ in natural size, so each body has a SCALE (Body panel) that is
+       saved with its key. Load several bodies (states/sexes) and swap to QA
+       placements — and to check the scaled bodies all read as one beaver size.
     2. Drop in cosmetic PNGs (cropped tight). Drag to move, arrows to nudge
        (Shift = 10px), scale/rotation in the panel. Toggle layers to preview
        combinations. ▲▼ adjust a specific item's z if the default slot order
@@ -187,6 +189,12 @@
         <button id="btnBody">Load body…</button>
         <select id="bodySelect" title="Swap bodies (states / sexes) to QA placements"></select>
       </div>
+      <div class="row" id="bodyScaleRow" style="display:none">
+        <label style="color:var(--dim)">scale</label>
+        <input type="number" id="inBodyScale" step="0.01" min="0.05" style="width:70px" />
+        <input type="range" id="rngBodyScale" min="0.2" max="2" step="0.01" style="flex:1" />
+        <span id="bodySizeLabel" style="color:var(--dim);font-size:11px"></span>
+      </div>
       <input type="file" id="fileBody" accept="image/png" multiple hidden />
     </section>
 
@@ -331,12 +339,25 @@ function render() {
     el.style.height = b.h + 'px';
     el.style.left = (CANVAS - b.w) / 2 + 'px';
     el.style.top = (CANVAS - b.h) / 2 + 'px';
+    el.style.transform = `scale(${b.scale})`; // scales about center → stays centered
     stage.appendChild(el);
   }
   entries.filter((e) => e.l.z >= 1).forEach(drawCos);
 
   renderLayerList();
+  renderBodyPanel();
   renderInspector();
+}
+
+function renderBodyPanel() {
+  const has = activeBody >= 0;
+  $('bodyScaleRow').style.display = has ? '' : 'none';
+  if (!has) return;
+  const b = bodies[activeBody];
+  $('inBodyScale').value = b.scale;
+  $('rngBodyScale').value = String(Math.min(2, Math.max(0.2, b.scale)));
+  $('bodySizeLabel').textContent =
+    `${b.w}×${b.h} → ${Math.round(b.w * b.scale)}×${Math.round(b.h * b.scale)}px`;
 }
 
 function renderLayerList() {
@@ -429,15 +450,32 @@ async function addBodies(files) {
       if (img.naturalWidth > CANVAS || img.naturalHeight > CANVAS) {
         toast(`${f.name} is ${img.naturalWidth}×${img.naturalHeight} — larger than the ${CANVAS}² canvas`, true);
       }
-      bodies.push({ name: f.name, img, w: img.naturalWidth, h: img.naturalHeight });
+      const key = keyFromFilename(f.name);
+      const saved = importedItems[key];
+      const body = {
+        name: f.name, key, img,
+        w: img.naturalWidth, h: img.naturalHeight,
+        scale: saved?.scale ?? 1,
+      };
+      if (saved) { delete importedItems[key]; toast(`${key}: resumed saved scale`); }
+      const existing = bodies.findIndex((b) => b.key === key);
+      if (existing >= 0) { bodies[existing] = body; activeBody = existing; }
+      else { bodies.push(body); activeBody = bodies.length - 1; }
     } catch (e) { toast(e.message, true); }
   }
-  if (activeBody < 0 && bodies.length) activeBody = 0;
   const sel = $('bodySelect');
   sel.innerHTML = bodies.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
   sel.value = String(activeBody);
   render();
 }
+
+function setBodyScale(v) {
+  if (activeBody < 0 || Number.isNaN(v)) return;
+  bodies[activeBody].scale = Math.max(0.05, Math.round(v * 1000) / 1000);
+  markDirty(); render();
+}
+$('inBodyScale').addEventListener('input', (e) => setBodyScale(Number(e.target.value)));
+$('rngBodyScale').addEventListener('input', (e) => setBodyScale(Number(e.target.value)));
 
 async function addCosmetics(files) {
   for (const f of files) {
@@ -592,6 +630,12 @@ function buildJson() {
     if (l.z !== defaultZ(l.key)) item.z = l.z;
     items[l.key] = item;
   }
+  // bodies: always centered (x/y fixed at 0), scale normalizes differing exports
+  for (const b of bodies) {
+    const item = { x: 0, y: 0, w: b.w, h: b.h };
+    if (b.scale !== 1) item.scale = b.scale;
+    items[b.key] = item;
+  }
   const sorted = Object.fromEntries(Object.entries(items).sort(([a], [b]) => a.localeCompare(b)));
   return JSON.stringify({ canvas: CANVAS, items: sorted }, null, 2) + '\n';
 }
@@ -606,12 +650,16 @@ function applyJson(text) {
   importedItems = {};
   for (const [key, it] of Object.entries(items)) {
     const i = layers.findIndex((l) => l.key === key);
+    const b = bodies.findIndex((bd) => bd.key === key);
     if (i >= 0) {
       Object.assign(layers[i], {
         x: it.x ?? 0, y: it.y ?? 0,
         scale: it.scale ?? 1, rotation: it.rotation ?? 0,
         z: it.z ?? defaultZ(key),
       });
+      matched++;
+    } else if (b >= 0) {
+      bodies[b].scale = it.scale ?? 1; // bodies take scale only, always centered
       matched++;
     } else {
       importedItems[key] = it; // keep for save even though its art isn't here
