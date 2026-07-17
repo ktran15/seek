@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Seek — Placement Studio</title>
+<!--
+  Placement Studio — internal desktop tool (Rig Bible §5). NOT part of the
+  shipped app. Open this file directly in Chrome/Edge (File System Access API
+  needed for in-place Save; Export/Copy work everywhere).
+
+  Workflow:
+    1. Load a body PNG — it's drawn auto-centered on the 1024×1024 composite
+       canvas at natural size (the body carries no placement data; centered is
+       the rule). Load several bodies (states/sexes) and swap to QA placements.
+    2. Drop in cosmetic PNGs (cropped tight). Drag to move, arrows to nudge
+       (Shift = 10px), scale/rotation in the panel. Toggle layers to preview
+       combinations. ▲▼ adjust a specific item's z if the default slot order
+       stacks wrong.
+    3. Link assets/art/beaver-placement.json once, then Save after each item.
+       Placements already in the file are preserved even if their art isn't
+       currently loaded; loaded items always win.
+
+  Data schema (Rig Bible §5): items keyed by registry asset_slot_name;
+  x/y = center offset from canvas center (px @1024); w/h = natural size;
+  scale/rotation/z omitted when default (1 / 0° / slot default).
+-->
+<style>
+  :root {
+    --bg: #1e2222; --panel: #262c2b; --panel2: #2e3535; --line: #3d4645;
+    --text: #e8e4dc; --dim: #9aa5a0; --accent: #ec8340; --info: #7fb8e8;
+    --danger: #e07a6a; --ok: #8fbc7f;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex; flex-direction: column;
+    background: var(--bg); color: var(--text);
+    font: 13px/1.45 system-ui, sans-serif;
+    user-select: none; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: .3px; }
+  header .spacer { flex: 1; }
+  header .file-status { color: var(--dim); font-size: 12px; max-width: 340px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  header .file-status.linked { color: var(--ok); }
+  main { flex: 1; display: flex; min-height: 0; }
+
+  /* ---- stage ---- */
+  #stageWrap {
+    flex: 1; position: relative; overflow: auto;
+    display: grid; place-items: center; background: var(--bg);
+  }
+  #stageScale { transform-origin: center center; }
+  #stage {
+    position: relative; background:
+      repeating-conic-gradient(#242a29 0% 25%, #2b3231 0% 50%) 0 0 / 32px 32px;
+    outline: 1px solid var(--line); box-shadow: 0 0 0 1px #000, 0 8px 40px rgba(0,0,0,.5);
+  }
+  #stage.show-grid::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 999;
+    background:
+      linear-gradient(to right, transparent calc(50% - .5px), rgba(127,184,232,.55) calc(50% - .5px), rgba(127,184,232,.55) calc(50% + .5px), transparent calc(50% + .5px)),
+      linear-gradient(to bottom, transparent calc(50% - .5px), rgba(127,184,232,.55) calc(50% - .5px), rgba(127,184,232,.55) calc(50% + .5px), transparent calc(50% + .5px)),
+      repeating-linear-gradient(to right, rgba(127,184,232,.12) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(to bottom, rgba(127,184,232,.12) 0 1px, transparent 1px 64px);
+  }
+  #stage img { position: absolute; image-rendering: auto; -webkit-user-drag: none; }
+  #stage img.body-img { pointer-events: none; }
+  #stage img.dimmed { opacity: .35; }
+  #stage img.cos { cursor: grab; }
+  #stage img.cos:active { cursor: grabbing; }
+  #stage img.cos.selected { outline: 2px dashed var(--accent); outline-offset: 1px; }
+  #stage .empty-hint {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--dim); font-size: 15px; text-align: center; pointer-events: none;
+  }
+  #stageBar {
+    position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px;
+    background: rgba(30,34,34,.85); border: 1px solid var(--line);
+    border-radius: 8px; padding: 5px 8px; align-items: center; z-index: 5;
+  }
+
+  /* ---- side panel ---- */
+  aside {
+    width: 320px; flex: none; display: flex; flex-direction: column;
+    background: var(--panel); border-left: 1px solid var(--line); min-height: 0;
+  }
+  section { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  section h2 {
+    margin: 0 0 8px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--dim);
+  }
+  #layerList { flex: 1; overflow-y: auto; min-height: 80px; }
+  .layer-row {
+    display: flex; align-items: center; gap: 6px; padding: 5px 6px;
+    border-radius: 6px; cursor: pointer; margin-bottom: 2px;
+  }
+  .layer-row:hover { background: var(--panel2); }
+  .layer-row.selected { background: #3a4340; outline: 1px solid var(--accent); }
+  .layer-row.body-row { color: var(--dim); cursor: default; }
+  .layer-row .lname {
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .layer-row .zlabel { color: var(--dim); font-size: 11px; min-width: 34px; text-align: right; }
+  .layer-row .warn { color: var(--danger); font-size: 12px; }
+  .layer-row button { padding: 1px 6px; }
+
+  /* ---- inspector ---- */
+  #inspector .grid {
+    display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 6px 8px; align-items: center;
+  }
+  #inspector label { color: var(--dim); font-size: 12px; }
+  #inspector .wide { grid-column: 2 / 5; }
+  #inspector .keyrow { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  #inspector .keyrow input { flex: 1; font-family: ui-monospace, monospace; }
+  #inspector .hint { color: var(--dim); font-size: 11px; margin-top: 6px; }
+
+  input[type="number"], input[type="text"] {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 5px; padding: 3px 6px; width: 100%; font: inherit;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 5px; padding: 3px 6px; font: inherit; max-width: 170px;
+  }
+  button {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 10px; font: inherit; cursor: pointer;
+  }
+  button:hover { border-color: var(--dim); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #21201c; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); }
+  button:disabled { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .row + .row { margin-top: 6px; }
+  #toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 8px 16px; opacity: 0; transition: opacity .25s;
+    pointer-events: none; z-index: 50; max-width: 70vw;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err { border-color: var(--danger); color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦫 Placement Studio</h1>
+  <span style="color:var(--dim)">canvas <b id="canvasLabel">1024</b>²</span>
+  <span class="spacer"></span>
+  <span id="fileStatus" class="file-status">JSON not linked — Save will prompt</span>
+  <button id="btnLink" title="Pick assets/art/beaver-placement.json once; Save then writes in place">Link JSON…</button>
+  <button id="btnLoadJson" title="Import an existing placement JSON (merges; loaded layers win)">Load JSON…</button>
+  <button id="btnExport" title="Download the JSON">Export</button>
+  <button id="btnCopy" title="Copy the JSON to the clipboard">Copy</button>
+  <button id="btnSave" class="primary" title="Write placements to the linked JSON (S)">Save</button>
+</header>
+
+<main>
+  <div id="stageWrap">
+    <div id="stageScale"><div id="stage">
+      <div class="empty-hint" id="emptyHint">
+        Load a <b>body</b> PNG, then drop cosmetic PNGs anywhere.<br />
+        Drag to move · arrows nudge (Shift=10) · [ ] rotate · − = scale
+      </div>
+    </div></div>
+    <div id="stageBar">
+      <button data-zoom="fit">Fit</button>
+      <button data-zoom="0.5">50%</button>
+      <button data-zoom="1">100%</button>
+      <button data-zoom="2">200%</button>
+      <label style="color:var(--dim)"><input type="checkbox" id="chkGrid" checked /> grid</label>
+      <label style="color:var(--dim)"><input type="checkbox" id="chkDim" /> dim body</label>
+    </div>
+  </div>
+
+  <aside>
+    <section>
+      <h2>Body (auto-centered, z1)</h2>
+      <div class="row">
+        <button id="btnBody">Load body…</button>
+        <select id="bodySelect" title="Swap bodies (states / sexes) to QA placements"></select>
+      </div>
+      <input type="file" id="fileBody" accept="image/png" multiple hidden />
+    </section>
+
+    <section style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <h2>Cosmetic layers <span style="float:right;font-weight:normal">▲▼ = z</span></h2>
+      <div class="row" style="margin-bottom:6px">
+        <button id="btnCos">Add cosmetics…</button>
+        <span style="color:var(--dim);font-size:11px">or drag &amp; drop PNGs onto the canvas</span>
+      </div>
+      <input type="file" id="fileCos" accept="image/png" multiple hidden />
+      <div id="layerList"></div>
+    </section>
+
+    <section id="inspector">
+      <h2>Selected item</h2>
+      <div id="inspectorBody" style="display:none">
+        <div class="keyrow">
+          <label title="Registry asset_slot_name — the JSON key">key</label>
+          <input type="text" id="inKey" spellcheck="false" />
+        </div>
+        <div class="grid">
+          <label>x</label><input type="number" id="inX" step="1" />
+          <label>y</label><input type="number" id="inY" step="1" />
+          <label>scale</label><input type="number" id="inScale" step="0.01" min="0.05" />
+          <label>rot°</label><input type="number" id="inRot" step="0.5" />
+          <label>z</label><input type="number" id="inZ" step="0.5" />
+          <label></label><button id="btnResetZ" title="Back to the slot default">z default</button>
+          <label class="wide" id="natLabel" style="font-size:11px"></label>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="btnCenter" title="Move to canvas center">Center</button>
+          <button id="btnReset" title="x0 y0 scale1 rot0">Reset</button>
+          <button id="btnRemove" style="color:var(--danger)">Remove</button>
+        </div>
+        <div class="hint" id="savedHint"></div>
+      </div>
+      <div id="inspectorEmpty" style="color:var(--dim)">Nothing selected.</div>
+    </section>
+  </aside>
+</main>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ================= constants / state ================= */
+
+const CANVAS = 1024; // composite canvas (Rig Bible §1); confirmed 2026-07-16
+const DEFAULT_Z = { tails: 0, gloves: 2, eyes: 3, hats: 4 }; // body = 1 (§3)
+const UNKNOWN_Z = 5;
+
+/** @type {{key:string,file:string,img:HTMLImageElement,w:number,h:number,x:number,y:number,scale:number,rotation:number,z:number,visible:boolean}[]} */
+let layers = [];
+let bodies = []; // {name, img, w, h}
+let activeBody = -1;
+let selected = -1;
+let zoom = 1;
+let jsonHandle = null;        // FileSystemFileHandle once linked
+let importedItems = {};       // placements from a loaded JSON not (yet) matched by a loaded layer
+let dirty = false;
+
+const $ = (id) => document.getElementById(id);
+const stage = $('stage');
+stage.style.width = stage.style.height = CANVAS + 'px';
+$('canvasLabel').textContent = String(CANVAS);
+
+/* ================= helpers ================= */
+
+function toast(msg, isErr = false) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(() => (t.className = ''), 2600);
+}
+
+/** cos-hats-baseball_cap.png -> cosHatsBaseballCap */
+function keyFromFilename(name) {
+  const base = name.replace(/\.[a-z0-9]+$/i, '');
+  const parts = base.split(/[-_\s]+/).filter(Boolean);
+  return parts
+    .map((p, i) => (i === 0 ? p.charAt(0).toLowerCase() + p.slice(1)
+                            : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join('');
+}
+
+function slotOf(key) {
+  const k = key.toLowerCase();
+  if (k.includes('tail')) return 'tails';
+  if (k.includes('glove') || k.includes('mitt')) return 'gloves';
+  if (k.includes('eye') || k.includes('sunglass') || k.includes('goggle') || k.includes('monocle')) return 'eyes';
+  if (k.includes('hat') || k.includes('beanie') || k.includes('cap') || k.includes('crown')) return 'hats';
+  return null;
+}
+function defaultZ(key) {
+  const slot = slotOf(key);
+  return slot ? DEFAULT_Z[slot] : UNKNOWN_Z;
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not read ' + file.name));
+    img.src = url;
+  });
+}
+
+/* ================= rendering ================= */
+
+function render() {
+  // clear stage imgs
+  for (const el of [...stage.querySelectorAll('img')]) el.remove();
+  $('emptyHint').style.display = bodies.length || layers.length ? 'none' : '';
+
+  // draw order: cosmetics with z < 1 (tails), body (z1), rest ascending
+  const entries = layers
+    .map((l, i) => ({ l, i }))
+    .filter((e) => e.l.visible)
+    .sort((a, b) => a.l.z - b.l.z || a.i - b.i);
+
+  const drawCos = ({ l, i }) => {
+    const el = l.img.cloneNode();
+    el.className = 'cos' + (i === selected ? ' selected' : '');
+    el.style.width = l.w + 'px';
+    el.style.height = l.h + 'px';
+    el.style.left = CANVAS / 2 + l.x - l.w / 2 + 'px';
+    el.style.top = CANVAS / 2 + l.y - l.h / 2 + 'px';
+    el.style.transform = `scale(${l.scale}) rotate(${l.rotation}deg)`;
+    el.dataset.idx = String(i);
+    stage.appendChild(el);
+  };
+
+  entries.filter((e) => e.l.z < 1).forEach(drawCos);
+  if (activeBody >= 0) {
+    const b = bodies[activeBody];
+    const el = b.img.cloneNode();
+    el.className = 'body-img' + ($('chkDim').checked ? ' dimmed' : '');
+    el.style.width = b.w + 'px';
+    el.style.height = b.h + 'px';
+    el.style.left = (CANVAS - b.w) / 2 + 'px';
+    el.style.top = (CANVAS - b.h) / 2 + 'px';
+    stage.appendChild(el);
+  }
+  entries.filter((e) => e.l.z >= 1).forEach(drawCos);
+
+  renderLayerList();
+  renderInspector();
+}
+
+function renderLayerList() {
+  const list = $('layerList');
+  list.innerHTML = '';
+
+  // topmost first, body row interleaved at z1
+  const order = layers
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => b.l.z - a.l.z || b.i - a.i);
+  const rows = [];
+  let bodyDone = false;
+  for (const e of order) {
+    if (!bodyDone && e.l.z < 1) { rows.push('body'); bodyDone = true; }
+    rows.push(e);
+  }
+  if (!bodyDone) rows.push('body');
+
+  for (const r of rows) {
+    const row = document.createElement('div');
+    if (r === 'body') {
+      row.className = 'layer-row body-row';
+      row.innerHTML = `<span>🦫</span><span class="lname">body ${
+        activeBody >= 0 ? '· ' + bodies[activeBody].name : '(none loaded)'
+      }</span><span class="zlabel">z1</span>`;
+      list.appendChild(row);
+      continue;
+    }
+    const { l, i } = r;
+    row.className = 'layer-row' + (i === selected ? ' selected' : '');
+    const oversize = l.w > CANVAS || l.h > CANVAS;
+    row.innerHTML =
+      `<input type="checkbox" ${l.visible ? 'checked' : ''} title="visible" />` +
+      `<span class="lname" title="${l.file}">${l.key}</span>` +
+      (oversize ? `<span class="warn" title="larger than the ${CANVAS}px canvas">⚠</span>` : '') +
+      `<span class="zlabel">z${fmt(l.z)}</span>` +
+      `<button data-up title="stack higher">▲</button><button data-down title="stack lower">▼</button>`;
+    row.addEventListener('click', (ev) => {
+      if (ev.target.matches('input,button')) return;
+      select(i);
+    });
+    row.querySelector('input').addEventListener('change', (ev) => {
+      l.visible = ev.target.checked; render();
+    });
+    row.querySelector('[data-up]').addEventListener('click', () => bumpZ(i, +1));
+    row.querySelector('[data-down]').addEventListener('click', () => bumpZ(i, -1));
+    list.appendChild(row);
+  }
+}
+
+function fmt(n) { return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100); }
+
+function renderInspector() {
+  const has = selected >= 0 && layers[selected];
+  $('inspectorBody').style.display = has ? '' : 'none';
+  $('inspectorEmpty').style.display = has ? 'none' : '';
+  if (!has) return;
+  const l = layers[selected];
+  $('inKey').value = l.key;
+  $('inX').value = Math.round(l.x);
+  $('inY').value = Math.round(l.y);
+  $('inScale').value = l.scale;
+  $('inRot').value = l.rotation;
+  $('inZ').value = l.z;
+  $('natLabel').textContent = `natural ${l.w}×${l.h}px · file ${l.file} · slot ${slotOf(l.key) ?? '?'} (default z${defaultZ(l.key)})`;
+  $('savedHint').textContent = dirty ? 'Unsaved changes — hit Save.' : '';
+}
+
+function select(i) { selected = i; render(); }
+
+function markDirty() { dirty = true; }
+
+/* z bump: step above/below the nearest neighbour in stack order */
+function bumpZ(i, dir) {
+  const l = layers[i];
+  const others = layers.filter((_, j) => j !== i).map((o) => o.z).concat([1]); // 1 = body
+  const cands = dir > 0 ? others.filter((z) => z >= l.z) : others.filter((z) => z <= l.z);
+  if (!cands.length) return;
+  const nearest = dir > 0 ? Math.min(...cands) : Math.max(...cands);
+  l.z = nearest + dir * 0.5;
+  markDirty(); render();
+}
+
+/* ================= body / cosmetic loading ================= */
+
+async function addBodies(files) {
+  for (const f of files) {
+    try {
+      const img = await loadImageFromFile(f);
+      if (img.naturalWidth > CANVAS || img.naturalHeight > CANVAS) {
+        toast(`${f.name} is ${img.naturalWidth}×${img.naturalHeight} — larger than the ${CANVAS}² canvas`, true);
+      }
+      bodies.push({ name: f.name, img, w: img.naturalWidth, h: img.naturalHeight });
+    } catch (e) { toast(e.message, true); }
+  }
+  if (activeBody < 0 && bodies.length) activeBody = 0;
+  const sel = $('bodySelect');
+  sel.innerHTML = bodies.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
+  sel.value = String(activeBody);
+  render();
+}
+
+async function addCosmetics(files) {
+  for (const f of files) {
+    try {
+      const img = await loadImageFromFile(f);
+      const key = keyFromFilename(f.name);
+      const existing = layers.findIndex((l) => l.key === key);
+      const saved = importedItems[key];
+      const layer = {
+        key, file: f.name, img,
+        w: img.naturalWidth, h: img.naturalHeight,
+        x: saved?.x ?? 0, y: saved?.y ?? 0,
+        scale: saved?.scale ?? 1, rotation: saved?.rotation ?? 0,
+        z: saved?.z ?? defaultZ(key),
+        visible: true,
+      };
+      if (saved) delete importedItems[key];
+      if (existing >= 0) { layers[existing] = layer; selected = existing; }
+      else { layers.push(layer); selected = layers.length - 1; }
+      if (saved) toast(`${key}: resumed saved placement`);
+    } catch (e) { toast(e.message, true); }
+  }
+  markDirty(); render();
+}
+
+$('btnBody').addEventListener('click', () => $('fileBody').click());
+$('fileBody').addEventListener('change', (e) => { addBodies([...e.target.files]); e.target.value = ''; });
+$('bodySelect').addEventListener('change', (e) => { activeBody = Number(e.target.value); render(); });
+$('btnCos').addEventListener('click', () => $('fileCos').click());
+$('fileCos').addEventListener('change', (e) => { addCosmetics([...e.target.files]); e.target.value = ''; });
+
+/* drag & drop: PNGs whose name contains "body" load as bodies, else cosmetics */
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const files = [...e.dataTransfer.files].filter((f) => /png$/i.test(f.name));
+  if (!files.length) return;
+  addBodies(files.filter((f) => /body|beaver_?body|canonical/i.test(f.name)));
+  addCosmetics(files.filter((f) => !/body|beaver_?body|canonical/i.test(f.name)));
+});
+
+/* ================= stage interaction ================= */
+
+let drag = null;
+stage.addEventListener('pointerdown', (e) => {
+  const idx = e.target.dataset?.idx;
+  if (idx === undefined) { select(-1); return; }
+  select(Number(idx));
+  const l = layers[Number(idx)];
+  drag = { startX: e.clientX, startY: e.clientY, origX: l.x, origY: l.y };
+  e.preventDefault();
+});
+window.addEventListener('pointermove', (e) => {
+  if (!drag || selected < 0) return;
+  const l = layers[selected];
+  l.x = drag.origX + (e.clientX - drag.startX) / zoom;
+  l.y = drag.origY + (e.clientY - drag.startY) / zoom;
+  markDirty(); render();
+});
+window.addEventListener('pointerup', () => (drag = null));
+
+window.addEventListener('keydown', (e) => {
+  if (e.target.matches('input,select')) return;
+  if (selected < 0) {
+    if (e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    return;
+  }
+  const l = layers[selected];
+  const step = e.shiftKey ? 10 : 1;
+  let handled = true;
+  switch (e.key) {
+    case 'ArrowLeft': l.x -= step; break;
+    case 'ArrowRight': l.x += step; break;
+    case 'ArrowUp': l.y -= step; break;
+    case 'ArrowDown': l.y += step; break;
+    case '[': l.rotation = Math.round((l.rotation - (e.shiftKey ? 5 : 1)) * 10) / 10; break;
+    case ']': l.rotation = Math.round((l.rotation + (e.shiftKey ? 5 : 1)) * 10) / 10; break;
+    case '-': l.scale = Math.max(0.05, Math.round((l.scale - 0.01) * 100) / 100); break;
+    case '=': case '+': l.scale = Math.round((l.scale + 0.01) * 100) / 100; break;
+    case 's': case 'S': save(); break;
+    default: handled = false;
+  }
+  if (handled) { e.preventDefault(); markDirty(); render(); }
+});
+
+/* inspector inputs */
+function bindNum(id, prop, post) {
+  $(id).addEventListener('input', (e) => {
+    if (selected < 0) return;
+    const v = Number(e.target.value);
+    if (Number.isNaN(v)) return;
+    layers[selected][prop] = post ? post(v) : v;
+    markDirty(); render();
+  });
+}
+bindNum('inX', 'x'); bindNum('inY', 'y');
+bindNum('inScale', 'scale', (v) => Math.max(0.05, v));
+bindNum('inRot', 'rotation'); bindNum('inZ', 'z');
+$('inKey').addEventListener('change', (e) => {
+  if (selected < 0) return;
+  const v = e.target.value.trim();
+  if (v) { layers[selected].key = v; markDirty(); render(); }
+});
+$('btnResetZ').addEventListener('click', () => {
+  if (selected < 0) return;
+  layers[selected].z = defaultZ(layers[selected].key);
+  markDirty(); render();
+});
+$('btnCenter').addEventListener('click', () => {
+  if (selected < 0) return;
+  layers[selected].x = 0; layers[selected].y = 0; markDirty(); render();
+});
+$('btnReset').addEventListener('click', () => {
+  if (selected < 0) return;
+  Object.assign(layers[selected], { x: 0, y: 0, scale: 1, rotation: 0 });
+  markDirty(); render();
+});
+$('btnRemove').addEventListener('click', () => {
+  if (selected < 0) return;
+  layers.splice(selected, 1); selected = -1; markDirty(); render();
+});
+
+/* zoom */
+function setZoom(z) {
+  if (z === 'fit') {
+    const wrap = $('stageWrap');
+    z = Math.min((wrap.clientWidth - 40) / CANVAS, (wrap.clientHeight - 40) / CANVAS, 1);
+  }
+  zoom = z;
+  // stageScale is the layout box (so scrollbars work when zoomed in);
+  // the stage itself scales from its top-left corner inside it.
+  $('stageScale').style.width = CANVAS * z + 'px';
+  $('stageScale').style.height = CANVAS * z + 'px';
+  stage.style.transformOrigin = 'top left';
+  stage.style.transform = `scale(${z})`;
+}
+document.querySelectorAll('#stageBar [data-zoom]').forEach((b) =>
+  b.addEventListener('click', () => setZoom(b.dataset.zoom === 'fit' ? 'fit' : Number(b.dataset.zoom))),
+);
+$('chkGrid').addEventListener('change', (e) => stage.classList.toggle('show-grid', e.target.checked));
+$('chkDim').addEventListener('change', render);
+window.addEventListener('resize', () => setZoom('fit'));
+
+/* ================= JSON in / out ================= */
+
+function buildJson() {
+  const items = { ...importedItems }; // preserve placements whose art isn't loaded
+  for (const l of layers) {
+    const item = { x: Math.round(l.x), y: Math.round(l.y), w: l.w, h: l.h };
+    if (l.scale !== 1) item.scale = Math.round(l.scale * 1000) / 1000;
+    if (l.rotation !== 0) item.rotation = Math.round(l.rotation * 10) / 10;
+    if (l.z !== defaultZ(l.key)) item.z = l.z;
+    items[l.key] = item;
+  }
+  const sorted = Object.fromEntries(Object.entries(items).sort(([a], [b]) => a.localeCompare(b)));
+  return JSON.stringify({ canvas: CANVAS, items: sorted }, null, 2) + '\n';
+}
+
+function applyJson(text) {
+  const data = JSON.parse(text);
+  if (data.canvas && data.canvas !== CANVAS) {
+    toast(`JSON canvas is ${data.canvas}, tool is ${CANVAS} — offsets will not match`, true);
+  }
+  const items = data.items ?? {};
+  let matched = 0;
+  importedItems = {};
+  for (const [key, it] of Object.entries(items)) {
+    const i = layers.findIndex((l) => l.key === key);
+    if (i >= 0) {
+      Object.assign(layers[i], {
+        x: it.x ?? 0, y: it.y ?? 0,
+        scale: it.scale ?? 1, rotation: it.rotation ?? 0,
+        z: it.z ?? defaultZ(key),
+      });
+      matched++;
+    } else {
+      importedItems[key] = it; // keep for save even though its art isn't here
+    }
+  }
+  dirty = false;
+  render();
+  toast(`Loaded ${Object.keys(items).length} placements (${matched} matched loaded layers)`);
+}
+
+$('btnLink').addEventListener('click', async () => {
+  if (!window.showSaveFilePicker) { toast('File System Access API unavailable — use Export instead', true); return; }
+  try {
+    jsonHandle = await window.showSaveFilePicker({
+      suggestedName: 'beaver-placement.json',
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+    });
+    // if the picked file already has content, offer its data
+    try {
+      const file = await jsonHandle.getFile();
+      const text = await file.text();
+      if (text.trim()) applyJson(text);
+    } catch { /* fresh file */ }
+    $('fileStatus').textContent = 'Linked: ' + jsonHandle.name;
+    $('fileStatus').classList.add('linked');
+    toast('Linked — Save now writes in place');
+  } catch { /* user cancelled */ }
+});
+
+$('btnLoadJson').addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = async () => {
+    if (!inp.files[0]) return;
+    try { applyJson(await inp.files[0].text()); }
+    catch (e) { toast('Bad JSON: ' + e.message, true); }
+  };
+  inp.click();
+});
+
+async function save() {
+  const text = buildJson();
+  if (jsonHandle) {
+    try {
+      const w = await jsonHandle.createWritable();
+      await w.write(text); await w.close();
+      dirty = false; render();
+      toast('Saved ' + jsonHandle.name + ' ✓');
+      return;
+    } catch (e) { toast('Write failed: ' + e.message, true); return; }
+  }
+  if (window.showSaveFilePicker) { $('btnLink').click(); return; }
+  exportJson(); // fallback for browsers without FS Access
+}
+$('btnSave').addEventListener('click', save);
+
+function exportJson() {
+  const blob = new Blob([buildJson()], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'beaver-placement.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  dirty = false; render();
+}
+$('btnExport').addEventListener('click', exportJson);
+$('btnCopy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText(buildJson());
+  toast('JSON copied');
+});
+
+window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
+
+/* ================= init ================= */
+setZoom('fit');
+stage.classList.add('show-grid');
+render();
+</script>
+</body>
+</html>

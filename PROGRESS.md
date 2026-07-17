@@ -47,6 +47,14 @@ Founder resolved the 5 open §18 character decisions as **final**, directed the 
 
 **Flagged for later (not dead-code-cleaned this session):** the legacy hiker avatar module (`src/features/avatar/*`) is now used ONLY by the dev `/dev/art-qa` screen; retire both once the beaver art QA screen exists. The hiker-era `cosHats{Common,Rare,Epic,Legendary}` registry slots + PNGs are orphaned with it.
 
+### Per-item placement pivot + Placement Studio (2026-07-16, founder-directed)
+
+Fixed per-slot anchor zones assumed art generated *to* those zones; the art is now **hand-drawn, cropped tight per item**, so placement is captured per item instead (Rig Bible §5 rewritten — frozen base, isolated layers, default z-order, and the registration envelope all still stand).
+
+- `tools/placement-studio/index.html` — internal desktop-browser tool, NOT shipped with the app, zero deps, open the file directly in Chrome/Edge. Body PNG auto-centers on the 1024² composite canvas (confirmed export size); drop cropped-tight cosmetic PNGs; drag/nudge (Shift=10px), scale, rotate; layer combos with visibility toggles; ▲▼ per-item z override; swap bodies (states/sexes) to QA a placement everywhere. "Link JSON…" once, then Save writes `assets/art/beaver-placement.json` in place (Export/Copy fallback); placements load back for resumed sessions and unmatched keys are preserved on save.
+- Data: `assets/art/beaver-placement.json` — keyed by `asset_slot_name`; x/y = center offset from canvas center (px), w/h natural size, scale/rotation/z only when non-default. Item absent → legacy full-canvas render.
+- **Next:** founder places all 25 assets (19 cosmetics + 6 bodies) in the tool → commit the art + `beaver-placement.json` → wire `BeaverPreview` to consume placement data (small pure placement helper + z-sort, unit-tested).
+
 **Known issues / later (independent review 2026-07-16 — assessed low-severity, deliberately NOT fixed now):**
 1. day-close's `submissions` read is capped at PostgREST's 1000-row default — fine at beta scale; paginate before real scale. (The profile settle itself is one set-based SQL statement since M8-6 — no cap there.)
 2. `avatar_config.equipped` is client-written with no server-side ownership check: a modded client could "wear" cosmetics it never earned. Cosmetic-only, zero economy impact; consider an equip-validation trigger post-beta.
