@@ -5,8 +5,14 @@
 <title>Seek — Placement Studio</title>
 <!--
   Placement Studio — internal desktop tool (Rig Bible §5). NOT part of the
-  shipped app. Open this file directly in Chrome/Edge (File System Access API
-  needed for in-place Save; Export/Copy work everywhere).
+  shipped app.
+
+  RECOMMENDED: `npm run placement` (tools/placement-studio/serve.mjs), then
+  open http://localhost:4173 — the page auto-loads the repo's
+  assets/art/beaver-placement.json and Save writes straight back to it, so
+  anyone who pulls the repo edits the same file (commit + push it like code).
+  Fallback: open this file directly in Chrome/Edge and use Link JSON…
+  (File System Access API) or Export/Copy.
 
   Workflow:
     1. Load a body PNG — it's drawn auto-centered on the 1024×1024 composite
@@ -156,7 +162,7 @@
   <h1>🦫 Placement Studio</h1>
   <span style="color:var(--dim)">canvas <b id="canvasLabel">1024</b>²</span>
   <span class="spacer"></span>
-  <span id="fileStatus" class="file-status">JSON not linked — Save will prompt</span>
+  <span id="fileStatus" class="file-status">JSON not linked — run `npm run placement` for auto-link, or Link JSON…</span>
   <button id="btnLink" title="Pick assets/art/beaver-placement.json once; Save then writes in place">Link JSON…</button>
   <button id="btnLoadJson" title="Import an existing placement JSON (merges; loaded layers win)">Load JSON…</button>
   <button id="btnExport" title="Download the JSON">Export</button>
@@ -253,7 +259,8 @@ let bodies = []; // {name, img, w, h}
 let activeBody = -1;
 let selected = -1;
 let zoom = 1;
-let jsonHandle = null;        // FileSystemFileHandle once linked
+let jsonHandle = null;        // FileSystemFileHandle once linked (file mode)
+let serverMode = false;       // served by serve.mjs: auto-load + save via /api/placement
 let importedItems = {};       // placements from a loaded JSON not (yet) matched by a loaded layer
 let dirty = false;
 
@@ -702,6 +709,15 @@ $('btnLoadJson').addEventListener('click', () => {
 
 async function save() {
   const text = buildJson();
+  if (serverMode) {
+    try {
+      const res = await fetch('/api/placement', { method: 'PUT', body: text });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      dirty = false; render();
+      toast('Saved to assets/art/beaver-placement.json ✓');
+    } catch (e) { toast('Save failed: ' + e.message, true); }
+    return;
+  }
   if (jsonHandle) {
     try {
       const w = await jsonHandle.createWritable();
@@ -737,6 +753,20 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 setZoom('fit');
 stage.classList.add('show-grid');
 render();
+
+/* Served by serve.mjs? Auto-load the repo JSON and save back to it. */
+(async () => {
+  if (location.protocol === 'file:') return; // plain-file mode: Link JSON flow
+  try {
+    const res = await fetch('/api/placement');
+    if (res.status === 200) applyJson(await res.text());
+    else if (res.status !== 204) return; // not our server
+    serverMode = true;
+    $('fileStatus').textContent = 'Auto-linked: assets/art/beaver-placement.json (local server)';
+    $('fileStatus').classList.add('linked');
+    $('btnLink').style.display = 'none';
+  } catch { /* no server — keep manual flow */ }
+})();
 </script>
 </body>
 </html>

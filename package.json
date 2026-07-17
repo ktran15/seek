@@ -59,7 +59,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "placement": "node tools/placement-studio/serve.mjs"
   },
   "private": true,
   "jest": {
