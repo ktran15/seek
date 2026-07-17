@@ -13,21 +13,19 @@ export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
  * comes from useMyCoins() instead. Fetch these explicitly, never `select('*')`.
  */
 const PUBLIC_PROFILE_COLUMNS =
-  'id, username, display_name, avatar_config, bio, onboarding_completed_at, created_at, beaver_name, happiness, streak_count';
+  'id, username, display_name, beaver_name, avatar_config, happiness, streak_count, bio, onboarding_completed_at, created_at';
 export type PublicProfile = Pick<
   Profile,
   | 'id'
   | 'username'
   | 'display_name'
+  | 'beaver_name'
   | 'avatar_config'
+  | 'happiness'
+  | 'streak_count'
   | 'bio'
   | 'onboarding_completed_at'
   | 'created_at'
-  // Beaver identity + care loop (spec §10) — public: another user's profile
-  // shows their beaver at its Happiness state, and 🔥streak sits by the name.
-  | 'beaver_name'
-  | 'happiness'
-  | 'streak_count'
 >;
 
 export const profileKeys = {

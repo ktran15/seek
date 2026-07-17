@@ -87,7 +87,7 @@ function RootNavigator() {
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="blocked-users" options={{ headerShown: true, title: 'Blocked Users' }} />
-        <Stack.Screen name="edit-avatar" options={{ headerShown: true, title: 'Edit Avatar' }} />
+        <Stack.Screen name="edit-avatar" options={{ headerShown: true, title: 'Edit Beaver' }} />
         {/* Swipe-back is allowed pre-arm; the screen itself flips
             gestureEnabled off from capture onward (spec §7.4). */}
         <Stack.Screen name="challenge-flow/[day]" options={{ gestureEnabled: true }} />

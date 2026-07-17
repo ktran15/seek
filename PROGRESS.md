@@ -4,6 +4,73 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
+
+Founder resolved the 5 open §18 character decisions as **final**, directed the §5 onboarding rework, reviewed it, then gave the go-ahead for the **M8 beaver systems** (care loop, render rework, cosmetics reschema, snack). All built below.
+
+**Decisions (now final in all spec docs):**
+1. **Starter cosmetics = start plain** — onboarding sets only sex + body color; all gear from crates.
+2. **5 customization points confirmed** — base body + 4 gacha slots (hats/tails/gloves/eyes).
+3. **Rival = "Bucky"** — one fixed NPC; named in §7.9, config (`config.rival.name`), Rig Bible §7.
+4. **Body = sex (male/female) × 3 colors = 6 distinct bodies** — female is a *distinct design*, so the rig now has **two frozen canonicals** sharing one anchor envelope (Rig Bible §4/§8/§10).
+5. **Starting Happiness = 70** — `profiles.happiness` default 70, `config.careLoop.startingHappiness`.
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Spec docs updated (SEEK_MVP_BUILD_SPEC_V2 §5/§6/§7.9/§10/§18, Rig Bible §2/§4/§7/§8/§10, aesthetic doc) — 5 decisions marked final | ✅ done |
+| 2 | Migration `20260716000001_beaver_care_loop_profile_columns.sql`: profiles + `beaver_name` (client-updatable), `happiness` (default 70, server-auth), `streak_count` (default 0, server-auth); column-scoped SELECT per M13 model. `database.types.ts` + `useProfile` updated | ✅ done — pushed 2026-07-17 |
+| 3 | `config.careLoop` block + rename `mascot`→`rival` (Bucky) + flag `enableRivalOpponent`; new `src/features/beaver` catalog + `BeaverPreview` (renders `beaverBody{Sex}{Color}` art when it lands, else placeholder) | ✅ done |
+| 4 | Onboarding rework (§5): reordered flow + 4 new screens (meet/name/customize/care-loop), orphaned hiker screens removed, beaver-care nudge in notifications; 176 tests green, tsc clean | ✅ done |
+
+**Onboarding flow now:** username (identity, prepended) → Enable Notifications → Why we're great → Meet your beaver → Name your beaver → Customize your beaver → Care-loop explainer → Invite → Begin.
+
+### M8 — Beaver, cosmetics & care loop (spec §10) — built 2026-07-16
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| M8-1 | Pure care-loop logic: client `beaver/happiness.ts` (5-state band selection + clamp) + server `_shared/careLoop.ts` (settleHappiness/settleStreak, amounts from app_settings); jest both | ✅ done |
+| M8-2 | Beaver compositor: `beaver/layers.ts` (4-slot z-order tail→body→gloves→eyes→hats, no base fallback) + state-aware body slot `beaverBody{Sex}{Color}{State}`; `BeaverPreview` composites state body + cosmetics (real art when registered, else rarity chip); tests | ✅ done |
+| M8-3 | Profile renders the beaver at its Happiness-state pose + 🦫 beaver_name + `HappinessMeter` + 🔥N streak (self + public); Settings "Edit beaver" (sex/color/rename) via shared `BaseBodyPicker` | ✅ done |
+| M8-4 | Migration `20260716000002`: cosmetics reschema → 4 beaver slots + 19-item §10.2 catalog (wipes old hiker cosmetics/equips), `care_loop` settings, `happiness_settled_day`, `snack_purchase` reason, `buy_snack()` RPC. day-close settles Happiness+streak per profile (idempotent) | ✅ done — pushed + day-close **v9** redeployed 2026-07-17 |
+| M8-6 | Review fix (2026-07-16): migration `20260716000003` `settle_care_day()` RPC — the settle is now ONE set-based SQL UPDATE computing each row from its current value under the row lock, so a concurrent `buy_snack()` can no longer be clobbered mid-settlement (the old read-all-then-loop-write pattern lost the snack's +15). Idempotency gate unchanged; `_shared/careLoop.ts` keeps the jest-tested mirror (`settleCareRow`) incl. race tests | ✅ done — RPC pushed 2026-07-17 |
+| M8-5 | Inventory equip/preview on the beaver (persists to `avatar_config.equipped`); Shop vending-machine snack (`useBuySnack`, live meter) | ✅ done |
+
+**M8 behavior:** completing a day → +20 Happiness (cap 100) & streak +1; missing → −10 & streak resets 0; settled at day close. Snack = 25 coins → +15 Happiness. All server-authoritative; 5 visual states select client-side from `profiles.happiness`.
+
+**⚠️ Founder actions (this branch):**
+1. ✅ **DONE (2026-07-17)** — `npx supabase db push` applied all THREE new migrations (`20260716000001` care-loop columns — columns already existed from a 2026-07-13 dashboard apply, so the `if not exists` guards no-op'd them; `20260716000002` cosmetics reschema + snack; `20260716000003` atomic `settle_care_day()` RPC). Remote migration history now fully in sync (17/17). The reschema wiped old hiker `user_cosmetics` + equips — expected (beta).
+2. ✅ **DONE (2026-07-17)** — redeployed day-close (now settles the care loop via the `settle_care_day` RPC): `npx supabase functions deploy day-close --no-verify-jwt --project-ref aducawlftwdowvsnryar` → **v9**, verify_jwt=false. No other function changed in M8 (only `day-close` + `_shared/careLoop.ts`, and day-close no longer imports careLoop.ts — the settle math lives in the SQL RPC).
+3. ⬜ Review on device: onboarding, Profile beaver + meter + streak, Edit beaver, Inventory equip, Shop snack. Test care loop by running a manual day-close (see M5 curl) and watching Happiness/streak move.
+
+**Migration-history reconciliation (2026-07-17) — RESOLVED:** the remote DB had a version `20260713000001` (name `m14_beaver_care_loop`) applied directly via the dashboard SQL editor during the 07-13 pivot, with **no source file in any git branch**, which blocked `db push`. Its real SQL was recovered from the remote history (`supabase_migrations.schema_migrations.statements`) via the dashboard and committed as `supabase/migrations/20260713000001_m14_beaver_care_loop.sql`, so the repo now reproduces production. Content: adds `beaver_name`/`happiness`/`streak_count` to `profiles` + a full revoke/re-grant of the column-scoped SELECT (the complete public-column list). It's already applied remotely so `db push` skips it; `20260716000001` re-adds the same columns with `if not exists` guards, so a fresh `db reset` and the live DB converge. `db push --dry-run` → "Remote database is up to date" (17/17 in sync).
+
+**Live DB verified (2026-07-17, dashboard):** after the push — `cosmetics` = 19 rows (all in the 4 beaver slots; old hiker catalog gone), `app_settings.care_loop` = `{startingHappiness:70, dailyDecay:10, completionRestore:20, snack:{cost:25, restore:15}}`, and both `buy_snack` + `settle_care_day` functions present.
+
+**⚠️ Billing (2026-07-17):** the Supabase org (`ktran15's Org`, Free plan) shows **"exceeded its quota in the previous billing cycle"** with a grace period until **2026-08-11**, after which projects get restricted. Needs attention before that date (upgrade plan or reduce usage).
+
+**`.env` fix (2026-07-17):** the local `.env` had a 3-line comment block written without `#` markers, which broke the dotenv parser used by both the Supabase CLI and Expo (`LegacyDbConfigLoadError: failed to parse environment file`). Commented those lines out; `.env` now parses.
+
+**Still founder-supplied (art, unblocked to land zero-code into registry slots):**
+- Beaver bodies `beaverBody{Sex}{Color}{State}` (2 canonicals × 3 colors × 5 states) + the 19 cosmetic layer slots (`cosHats*`/`cosTails*`/`cosGloves*`/`cosEyes*`) + Bucky (`rivalBeaver`). Until then: fur-colored placeholder disc + rarity-chip cosmetics.
+
+**Flagged for later (not dead-code-cleaned this session):** the legacy hiker avatar module (`src/features/avatar/*`) is now used ONLY by the dev `/dev/art-qa` screen; retire both once the beaver art QA screen exists. The hiker-era `cosHats{Common,Rare,Epic,Legendary}` registry slots + PNGs are orphaned with it.
+
+### Per-item placement pivot + Placement Studio (2026-07-16, founder-directed)
+
+Fixed per-slot anchor zones assumed art generated *to* those zones; the art is now **hand-drawn, cropped tight per item**, so placement is captured per item instead (Rig Bible §5 rewritten — frozen base, isolated layers, default z-order, and the registration envelope all still stand).
+
+- `tools/placement-studio/index.html` — internal desktop-browser tool, NOT shipped with the app, zero deps, open the file directly in Chrome/Edge. Body PNG auto-centers on the 1024² composite canvas (confirmed export size) with a per-body **scale** control (bodies never take x/y; scale normalizes differing export sizes); drop cropped-tight cosmetic PNGs; drag/nudge (Shift=10px), scale, rotate; layer combos with visibility toggles; ▲▼ per-item z override; swap bodies (states/sexes) to QA a placement everywhere. "Link JSON…" once, then Save writes `assets/art/beaver-placement.json` in place (Export/Copy fallback); placements load back for resumed sessions and unmatched keys are preserved on save.
+- Data: `assets/art/beaver-placement.json` — keyed by `asset_slot_name`; x/y = center offset from canvas center (px), w/h natural size, scale/rotation/z only when non-default. Item absent → legacy full-canvas render.
+- **Next:** founder places all 25 assets (19 cosmetics + 6 bodies) in the tool → commit the art + `beaver-placement.json` → wire `BeaverPreview` to consume placement data (small pure placement helper + z-sort, unit-tested).
+
+**Known issues / later (independent review 2026-07-16 — assessed low-severity, deliberately NOT fixed now):**
+1. day-close's `submissions` read is capped at PostgREST's 1000-row default — fine at beta scale; paginate before real scale. (The profile settle itself is one set-based SQL statement since M8-6 — no cap there.)
+2. `avatar_config.equipped` is client-written with no server-side ownership check: a modded client could "wear" cosmetics it never earned. Cosmetic-only, zero economy impact; consider an equip-validation trigger post-beta.
+3. The Shop sells a snack at 100 Happiness (per spec §10.5 "any time, repeatable" — but it burns 25 coins for zero gain); disable the button at a full meter in the M13 polish pass.
+4. A day whose day-close never ran is never back-settled — the `happiness_settled_day` gate jumps past it and one decay/restore is lost. Accepted idempotency tradeoff; revisit only if closes prove flaky.
+
+---
+
 ## Current milestone: **M13 — Polish & animation** (spec §15, aesthetic §8) — branch `m12-real-assets` (continues; founder approved starting while the artist works)
 
 | # | Sub-step | Status |
@@ -17,26 +84,6 @@
 | 5 | Transition/press-feel audit + empty/error-state sweep + wire the `loadingScreen` art (auth/boot backdrop) + final QA | ⬜ |
 
 **Next step:** sub-step 2 (climb animation). Asset note (2026-07-10): founders now generate/curate all remaining art themselves and hand over final files for the registry slots (see the M12 decision entry below) — deliveries drop in whenever they land.
-
-## 🦫 CHARACTER PIVOT — beaver avatar + care loop (founder-directed, 2026-07-12/13)
-
-The hiker avatar is retired. The player's avatar IS a customizable beaver with a Tamagotchi care loop (Happiness) + a daily streak. **Specs are the source of truth and are fully updated** (spec §10 is the new Character & Care System; rig bible §4 now has TWO canonical bodies).
-
-**Founder decisions (all LOCKED 2026-07-13):** start plain (no starter cosmetics) · 5 customization points = base body + 4 gacha slots (hats/tails/gloves/eyes, 19 items) · rival NPC is **Bucky** (one fixed character) · body = **male/female × brown/white/black**, female is its own design *not* a recolor → two canonical bodies · starting Happiness **70** (Content).
-
-| # | Sub-step | Status |
-|---|----------|--------|
-| 1 | Specs updated for the pivot + the 5 resolved decisions (`d579f69`, `c39bc6c`) | ✅ done |
-| 2 | Beaver foundation (`99ca838`): migration (`beaver_name`, `happiness` 0–100 default 70, `streak_count`; happiness/streak have NO client write grant — server-authoritative; new columns added to the M13 column-scoped SELECT grant); pure `happinessState()` + 6 tests (exhaustive 0–100 band coverage); beaver catalog + `beaverBodySlot(sex,color,state)` (the 30 registry slots real art drops into); `BeaverPreview` with a **self-cleaning placeholder** (falls back to existing beaver art on a colored disc; vanishes the moment real slots resolve); `config.beaver` TUNE + `config.rival.name = 'Bucky'` | ✅ done |
-| 3 | Onboarding rework (`6837bc4`): new order (username → notifications → social-proof → **meet → name → customize → care-loop** → invite → begin); `about.tsx` + `avatar.tsx` deleted. Naming suggestions are Bucky-free; customize writes `{bodySex, bodyColor}` and no `equipped` (start plain); care-loop teaches moods by showing 3 real beavers at real Happiness values | ✅ done — **founder verifies on device** |
-| 4 | Server-side care loop: day-close Happiness settlement (+20 complete / −10 miss, clamp) + streak count/reset; `buy_snack` RPC + Shop vending machine | ⬜ next |
-| 5 | Cosmetics overhaul: reseed the `cosmetics` catalog to the 19 beaver items across 4 slots; retire the 8 hiker slots; rework Inventory/equip + the layered renderer (tail→body→gloves→eyes→hat) | ⬜ |
-| 6 | Profile surfaces: beaver at its Happiness state, Happiness meter, 🔥 streak beside the username; Settings → Edit beaver (replaces Edit avatar base) | ⬜ |
-| 7 | Bucky: rename the H2H fallback surfaces/copy; registry slots for his states | ⬜ |
-
-**⬜ FOUNDER ACTION:** `npx supabase db push` (applies the M13 hardening + profiles-privacy migrations **and** the new `20260713000001_m14_beaver_care_loop.sql`), then reload the app.
-
-**Art status:** ALL beaver art is placeholder. Real art = 30 body images (2 sexes × 3 colors × 5 states) + 19 cosmetics + Bucky's states, dropped into the named registry slots for a zero-code swap. **Rig watch-item:** the male and female bodies MUST share one anchor grid or the cosmetic catalog forks from 19 to 38 items (rig bible §4.3).
 
 ### Security audit remediation (2026-07-11..12) — founder-directed "fix everything" + M3 Option A
 Full audit ran first (no Criticals; RLS on all tables, server-authoritative writes, no client service key). **⬜ FOUNDER ACTION: `npx supabase db push`** applies BOTH migrations below (`20260711000001_m13_security_hardening.sql` + `20260712000001_m13_profiles_column_privacy.sql`), then **reload the app** (the client no longer `select('*')`s profiles). I could not apply them myself — the Supabase MCP is read-only. Pre-apply check already run 2026-07-12: **zero duplicate `(ref_id, reason)` ledger rows**, so the M1 unique indexes build cleanly.

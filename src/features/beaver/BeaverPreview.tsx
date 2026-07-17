@@ -1,154 +1,190 @@
-import { useEffect } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
 
-import { getAsset, getAssetOrNull } from '@/assets/registry';
+import { getAssetOrNull } from '@/assets/registry';
+import { config } from '@/config';
 import type { AvatarConfig } from '@/lib/database.types';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 import {
-  beaverBodySlot,
-  bodyColorOf,
-  bodySexOf,
-  colorOption,
-  BODY_SEXES,
+  beaverBodyColor,
+  beaverBodySlotName,
+  beaverSex,
+  bodyColorOption,
+  sexLabel,
 } from './catalog';
-import { happinessState, type HappinessState } from './happiness';
+import { happinessState } from './happiness';
+import {
+  BEHIND_BODY,
+  resolveBeaverLayers,
+  type BeaverCatalogEntry,
+  type BeaverSlot,
+  type ResolvedBeaverLayer,
+} from './layers';
 
-/**
- * The player's beaver (spec §10). Renders the body for
- * (sex × color × Happiness state) from its registry slot, so real art is a
- * ZERO-CODE swap: drop the 30 body files into the `beaver*` slots and this
- * component picks them up.
- *
- * PLACEHOLDER PHASE (no body art yet): the slot resolves to null, so we fall
- * back to the existing beaver art on a body-colored disc, plus a caption
- * naming the chosen body. Those affordances are **self-cleaning** — the moment
- * a real slot resolves, the disc and caption disappear and only the art shows.
- *
- * Equipped cosmetics (hats/tails/gloves/eyes) layer on top of EVERY state —
- * they are wired in the cosmetics sub-step, not here.
- */
-
-/** Per-state placeholder treatment — droop + fade as Happiness falls (§10.3). */
-const STATE_TREATMENT: Record<
-  HappinessState,
-  { opacity: number; translateY: number; scale: number }
-> = {
-  thriving: { opacity: 1, translateY: -4, scale: 1.02 },
-  content: { opacity: 1, translateY: 0, scale: 1 },
-  okay: { opacity: 0.92, translateY: 3, scale: 0.99 },
-  unhappy: { opacity: 0.8, translateY: 6, scale: 0.97 },
-  neglected: { opacity: 0.62, translateY: 9, scale: 0.95 },
+/** Where each slot's placeholder chip sits over the beaver (fractions). */
+const SLOT_POS: Record<BeaverSlot, object> = {
+  hats: { top: '3%' },
+  eyes: { top: '33%' },
+  gloves: { top: '58%' },
+  tails: { bottom: '2%' },
+};
+const SLOT_LABEL: Record<BeaverSlot, string> = {
+  hats: 'Hat',
+  eyes: 'Eyes',
+  gloves: 'Gloves',
+  tails: 'Tail',
 };
 
+/**
+ * Renders the player beaver: its body at the current Happiness-state pose
+ * (spec §10.3) with equipped cosmetics composited in the LOCKED z-order (Rig
+ * Bible §3): tail behind the body, then gloves, eyes, hats on top.
+ *
+ * Real art (`beaverBody{Sex}{Color}{State}` bodies, per-cosmetic asset slots)
+ * renders as full-canvas registered images with zero code change once it
+ * lands. Until then: the body is a fur-colored placeholder disc and each
+ * equipped cosmetic shows as a rarity-colored chip at its slot — so equip /
+ * try-on gives real feedback in placeholder-land.
+ *
+ * `happiness` picks the state pose; it defaults to the starting value (70 =
+ * Content), which is what onboarding shows before a beaver has a live stat.
+ */
 export function BeaverPreview({
-  config,
-  happiness = 70,
-  size = 200,
-  /** Hide the placeholder caption where the screen already names the body. */
-  showCaption = true,
+  config: avatar,
+  happiness = config.careLoop.startingHappiness,
+  cosmetics = [],
+  height = 200,
 }: {
-  config: AvatarConfig | null | undefined;
+  config: AvatarConfig | undefined;
   happiness?: number;
-  size?: number;
-  showCaption?: boolean;
+  cosmetics?: readonly BeaverCatalogEntry[];
+  height?: number;
 }) {
-  const reducedMotion = useReducedMotion();
-  const sex = bodySexOf(config);
-  const color = bodyColorOf(config);
+  const sex = beaverSex(avatar);
+  const color = beaverBodyColor(avatar);
+  const option = bodyColorOption(color);
   const state = happinessState(happiness);
+  const label = `${sexLabel(sex)} · ${option.label} beaver, ${state.label}`;
 
-  const bodyArt = getAssetOrNull(beaverBodySlot(sex, color, state.id));
-  const isPlaceholder = bodyArt === null;
-  // The one real beaver we already have stands in until the body art lands.
-  const source = bodyArt ?? getAsset('mascotAvatar');
-  const treatment = STATE_TREATMENT[state.id];
+  const worn = resolveBeaverLayers(avatar?.equipped, cosmetics);
+  const bodyArt = getAssetOrNull(beaverBodySlotName(avatar, state.id));
 
-  // Thriving gets a gentle idle bounce (aesthetic §8) — calm under Reduce Motion.
-  const bounce = useSharedValue(0);
-  const thriving = state.id === 'thriving' && !reducedMotion;
-  useEffect(() => {
-    if (thriving) {
-      bounce.value = withRepeat(
-        withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
-        -1,
-        true,
+  const box = { width: height, height };
+  const fullLayer = {
+    position: 'absolute' as const,
+    left: 0,
+    top: 0,
+    width: height,
+    height,
+  };
+
+  // A cosmetic layer: real art (full-canvas registered image) when present,
+  // else a rarity-colored chip at the slot's placeholder position.
+  const cosmeticLayer = (l: ResolvedBeaverLayer) => {
+    const art = l.cosmetic.asset_slot_name
+      ? getAssetOrNull(l.cosmetic.asset_slot_name)
+      : null;
+    if (art) {
+      return (
+        <Image
+          key={l.slot}
+          source={art}
+          style={fullLayer}
+          resizeMode="contain"
+        />
       );
-    } else {
-      bounce.value = 0;
     }
-  }, [thriving, bounce]);
+    return (
+      <View
+        key={l.slot}
+        style={[
+          styles.chip,
+          SLOT_POS[l.slot],
+          { backgroundColor: colors.rarity[l.cosmetic.rarity] },
+        ]}
+      >
+        <Text style={styles.chipText} numberOfLines={1}>
+          {SLOT_LABEL[l.slot]}
+        </Text>
+      </View>
+    );
+  };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: treatment.translateY + bounce.value * -5 },
-      { scale: treatment.scale },
-    ],
-    opacity: treatment.opacity,
-  }));
-
-  const sexLabel = BODY_SEXES.find((o) => o.id === sex)?.label ?? '';
+  const body = bodyArt ? (
+    <Image source={bodyArt} style={fullLayer} resizeMode="contain" />
+  ) : (
+    <BodyPlaceholder height={height} swatch={option.swatch} female={sex === 'female'} />
+  );
 
   return (
-    <View style={styles.container} accessibilityLabel={`Your beaver, ${state.label}`}>
-      <View style={{ width: size, height: size }}>
-        {isPlaceholder && (
-          <View
-            style={[
-              styles.disc,
-              {
-                borderRadius: size / 2,
-                backgroundColor: colorOption(color).swatch,
-              },
-            ]}
-          />
-        )}
-        <Animated.View style={[styles.bodyWrap, animatedStyle]}>
-          <Image
-            source={source}
-            style={{ width: size, height: size }}
-            resizeMode="contain"
-          />
-        </Animated.View>
+    <View style={styles.wrap}>
+      <View style={[box, styles.stage]} accessibilityLabel={label}>
+        {worn.filter((l) => BEHIND_BODY.has(l.slot)).map(cosmeticLayer)}
+        {body}
+        {worn.filter((l) => !BEHIND_BODY.has(l.slot)).map(cosmeticLayer)}
       </View>
-
-      {isPlaceholder && showCaption && (
+      {!bodyArt ? (
         <Text style={[textStyles.caption, styles.caption]}>
-          {sexLabel} · {colorOption(color).label} · {state.label} (placeholder art)
+          Placeholder — {option.label.toLowerCase()} beaver art coming soon
         </Text>
-      )}
+      ) : null}
+    </View>
+  );
+}
+
+/** Fur-colored disc placeholder (no real body art yet). */
+function BodyPlaceholder({
+  height,
+  swatch,
+  female,
+}: {
+  height: number;
+  swatch: string;
+  female: boolean;
+}) {
+  const disc = Math.round(height * 0.72);
+  return (
+    <View style={[StyleSheet.absoluteFill, styles.center]}>
+      <View
+        style={[
+          styles.disc,
+          { width: disc, height: disc, borderRadius: disc / 2, backgroundColor: swatch },
+        ]}
+      >
+        <Text style={{ fontSize: Math.round(disc * 0.46) }}>🦫</Text>
+        {female ? (
+          <Text style={[styles.femaleCue, { fontSize: Math.round(disc * 0.2) }]}>
+            🎀
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: spacing.xxs,
-  },
-  // Placeholder-only: a body-colored disc so the color choice actually reads
-  // while every body still shares the same stand-in art.
+  wrap: { alignItems: 'center', gap: spacing.xs },
+  stage: { alignSelf: 'center', overflow: 'hidden' },
+  center: { alignItems: 'center', justifyContent: 'center' },
   disc: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.35,
-  },
-  bodyWrap: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.shadow,
   },
-  caption: {
-    color: colors.textSecondary,
-    textAlign: 'center',
+  femaleCue: { position: 'absolute', top: '6%' },
+  caption: { color: colors.textSecondary, textAlign: 'center' },
+  chip: {
+    position: 'absolute',
+    alignSelf: 'center',
     paddingHorizontal: spacing.xs,
-    borderRadius: radii.sm,
+    paddingVertical: spacing.xxs,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    borderColor: colors.textOnPrimary,
+  },
+  chipText: {
+    ...textStyles.caption,
+    color: colors.textOnPrimary,
   },
 });

@@ -81,6 +81,10 @@ Deno.serve(async (req) => {
       report.vote_results = await closeVote(admin, challenge);
     }
 
+    // Every day (all modes): settle each beaver's Happiness + streak for the
+    // day that just closed (spec §10.4/§10.7). Idempotent per profile.
+    report.care_settled = await settleCareLoop(admin, challenge);
+
     return json({ beta_day: betaDay, ...report });
   } catch (e) {
     console.error('[day-close]', e);
@@ -183,6 +187,54 @@ async function closeH2H(
     resolved++;
   }
   return resolved;
+}
+
+/**
+ * Settle the care loop for the closed day (spec §10.4/§10.7): each beaver
+ * whose challenge was completed gains `completionRestore`, everyone else loses
+ * `dailyDecay` (clamped 0–100); streak increments on completion, resets on a
+ * miss. Runs for ALL profiles, not just submitters, because a missed day is
+ * exactly the decay case.
+ *
+ * The settle itself is ONE set-based SQL statement (`settle_care_day`,
+ * migration 20260716000003; math mirrored + jest-tested in
+ * _shared/careLoop.ts): each row's happiness is computed from its CURRENT
+ * value under the row lock, so a buy_snack landing mid-settle is never
+ * clobbered, and the happiness_settled_day gate in the WHERE keeps re-runs
+ * (and the concurrent-close race) idempotent per profile.
+ */
+async function settleCareLoop(
+  admin: ReturnType<typeof createClient>,
+  challenge: ChallengeRow,
+): Promise<number> {
+  const { data: careSetting } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'care_loop')
+    .single();
+  const care = (careSetting?.value ?? {}) as {
+    dailyDecay?: number;
+    completionRestore?: number;
+  };
+  const decay = care.dailyDecay ?? 10;
+  const restore = care.completionRestore ?? 20;
+
+  // Completed this day = a submitted proof (pass or fail, §10.4).
+  const { data: subs } = await admin
+    .from('submissions')
+    .select('user_id')
+    .eq('challenge_id', challenge.id)
+    .eq('state', 'submitted');
+  const completed = [...new Set((subs ?? []).map((s) => s.user_id as string))];
+
+  const { data: settled, error } = await admin.rpc('settle_care_day', {
+    day_in: challenge.beta_day,
+    completed_ids: completed,
+    decay_in: decay,
+    restore_in: restore,
+  });
+  if (error) throw new Error(error.message);
+  return (settled as number) ?? 0;
 }
 
 /** Tally the day-3 community vote and notify every poster (spec §7.7). */

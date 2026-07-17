@@ -89,12 +89,12 @@
 
 ---
 
-## 6. The Beaver — player character + rival (concept LOCKED; identity details open)
+## 6. The Beaver — player character + rival (concept LOCKED; identities decided — final art founder-supplied)
 
 **The player's avatar IS a beaver** (character pivot, spec §10 — there is no separate hiker). Beaver chosen deliberately: beavers are *builders and doers* (they achieve through effort — dead-on for a "do hard things" app), outdoor/wilderness-native (fits the mountain world), and instantly characterful. **The beaver is customizable** (base body color + gacha cosmetics) **and emotive** (a Tamagotchi care loop with five Happiness states).
 
 - **Design:** friendly beaver with **prominent buck teeth**, hero-tier illustration (§5) — rich, outlined, cel-shaded, earthy palette. The base body is a clean, neutral, dress-able beaver so cosmetics read clearly on it.
-- **Base body — 6 variants = male/female × Brown/White/Black** (spec §10.1, LOCKED). **Male and female are two genuinely different designs**, each with its own silhouette — *not* recolors of one another. Within each, the 3 colors ARE shape-identical recolors. **Both bodies must be drawn to the same anchor grid** so one cosmetic catalog fits both (rig bible §4).
+- **Base body — 6 distinct bodies:** sex (male/female) × color (Brown / White / Black), spec §10.1. The female body is a **distinct design** (its own silhouette), not a recolor of the male — **two frozen canonicals**, each recolored into its 3 colors, sharing one registration envelope so every cosmetic fits all six (rig bible §4).
 - **Cosmetics (gacha):** worn on the beaver across 4 slots — **hats, tails, gloves, eyes** (spec §10.2). *Functional/repeated* detail tier (§5): cleaner/simpler than hero objects, still in-style, so many read at a glance in inventory.
 
 **Happiness states (5 — emotional, purely cosmetic).** The beaver's mood is expressed through its base pose/expression, driven by the Happiness stat (spec §10.3). Direction:
@@ -105,8 +105,8 @@
 - **Neglected (0–20):** hunched, dull/desaturated coloring — **still sympathetic and cute, never distressing or guilt-inducing.** We want the user to *want* to cheer it up, not feel punished.
 - **Cosmetics render on top of every state** — a Neglected beaver still wears its hat/tail/gloves/eyes on the sadder pose. Keep the states within one registration envelope so a single cosmetic layer set composites across all five (rig bible).
 
-**Bucky (the rival H2H opponent).** When no friend can be paired, the opponent is **Bucky** (name LOCKED) — a **single recurring rival beaver**, recognizable as "the opponent," **visually separated** from the player's own beaver (different palette/build/attitude) so the two are never confused. Same hero-tier craft. Needs **win / lose / idle expression states** for H2H moments. He is the opponent character, **not** the player's beaver and **not** a mascot the player owns.
-- **Open (founder):** the two canonical player-body designs and Bucky's design/personality specifics. Build against config + registry slots (`beaverBase/*`, `buckyNeutral`/`buckyCheer`/`buckyDefeat`); labeled placeholder until final art.
+**The rival (H2H opponent NPC).** When no friend can be paired, the opponent is a **different, distinct beaver** (spec §7.9) — recognizable as "the opponent," **visually separated** from the player's own beaver (different palette/build/attitude) so the two are never confused. Same hero-tier craft. Needs **win / lose / idle expression states** for H2H moments. It is a stand-in opponent, **not** the game's singular mascot.
+- **Decided (2026-07-16, spec §18):** the rival is **one fixed recurring character named "Bucky"** (config `rival.name`; Rig Bible §7) — a beaver deliberately distinct from the player's. **Still open (founder):** both characters' exact final designs and Bucky's personality specifics. Build against config + registry slots (`beaverBody{Sex}{Color}{State}` for the player's 6 bodies × 5 Happiness states, `rivalBeaver` + expression states for Bucky); labeled placeholder until final art.
 - **Tone:** friendly, warm, motivating — never punishing, even at low Happiness or on a loss.
 
 ---

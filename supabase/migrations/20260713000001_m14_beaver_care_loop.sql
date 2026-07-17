@@ -1,3 +1,21 @@
+-- 20260713000001 — m14_beaver_care_loop
+--
+-- PROVENANCE (recovered 2026-07-17): this migration was applied DIRECTLY to the
+-- remote database on 2026-07-13 (during the character pivot) and its source file
+-- was never committed to git, so the repo could not reproduce production. The
+-- SQL below was recovered verbatim from the remote migration history
+-- (supabase_migrations.schema_migrations, name `m14_beaver_care_loop`) via the
+-- dashboard SQL editor and restored here. It replaces the temporary no-op
+-- reconcile stub.
+--
+-- It is ALREADY APPLIED on the linked project, so `supabase db push` skips it
+-- (the version is present in the remote history). The later 20260716000001
+-- migration re-adds the same three columns with `if not exists` guards, so a
+-- fresh `db reset` and the live DB converge on the same schema. Kept as-is for a
+-- faithful, replayable history.
+--
+-- ============================ recovered SQL ============================
+
 -- M14 character pivot: beaver identity + care loop (spec §10)
 --
 -- APPLY (founder): `npx supabase db push`.
@@ -28,7 +46,8 @@ grant update (beaver_name) on table public.profiles to authenticated;
 -- Re-grant the column-scoped SELECT with the three new public columns
 -- (superseding the M13 grant; coins + joined_beta_day remain excluded).
 revoke select on table public.profiles from authenticated, anon;
+
 grant select (id, username, display_name, avatar_config, bio,
-              onboarding_completed_at, created_at,
-              beaver_name, happiness, streak_count)
+  onboarding_completed_at, created_at,
+  beaver_name, happiness, streak_count)
   on table public.profiles to authenticated;

@@ -89,7 +89,7 @@ export default function SettingsScreen() {
           style={styles.row}
         >
           <Text style={[textStyles.bodyEmphasis, styles.rowLabel]}>
-            Edit avatar base
+            Edit beaver
           </Text>
           <Text style={[textStyles.caption, styles.rowBadge]}>›</Text>
         </Pressable>

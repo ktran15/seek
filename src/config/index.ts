@@ -34,7 +34,8 @@ export const config = {
   },
 
   flags: {
-    enableMascotOpponent: true,
+    /** The H2H NPC-opponent (Bucky) fallback toggle (spec §3, §7.9). */
+    enableRivalOpponent: true,
     /** Locked to 'soft' for this beta (spec §7.8); 'hard' is a config flip. */
     inviteGate: 'soft' as InviteGate,
   },
@@ -79,33 +80,23 @@ export const config = {
   },
 
   /**
-   * The beaver care loop (spec §10). All TUNE. Happiness is server-authoritative;
-   * these values are the shared source of truth for client copy and the
-   * server-side settlement (keep in sync with app_settings).
+   * The H2H fallback opponent — "Bucky" (spec §7.9). One fixed rival NPC
+   * (name DECIDED 2026-07-16, §18). Only the art is still founder-supplied.
    */
-  beaver: {
-    /** LOCKED default (spec §10.4): a new beaver starts Content. */
-    startingHappiness: 70,
-    /** TUNE: Happiness lost when a day is missed. */
-    dailyDecay: 10,
-    /** TUNE: Happiness restored by completing the day (additive, cap 100). */
-    completionRestore: 20,
-    /** TUNE: vending-machine snack (spec §9.5). */
-    snackCost: 25,
-    snackRestore: 15,
-    /** Max length of the player-chosen beaver name. */
-    maxNameLength: 20,
-  },
-
-  /** The H2H fallback opponent (spec §7.9) — one fixed rival NPC. */
   rival: {
-    /** LOCKED 2026-07-13: the rival beaver is named Bucky. */
+    /** DECIDED (§18): the rival is named "Bucky." */
     name: 'Bucky',
-    /** Asset registry slot the rival renders from (placeholder until art). */
+    /**
+     * Asset registry slot Bucky renders from. Currently the frozen beaver
+     * canonical placeholder art (`mascotAvatar`); flips to a dedicated
+     * `rivalBeaver` slot when Bucky's own art lands (Rig Bible §7).
+     */
     assetSlot: 'mascotAvatar',
     /**
      * TUNE (FOUNDER-SET): fixed beatable-but-not-trivial target scores for
-     * mascot H2H resolution, per H2H day (spec §7.9). Placeholders.
+     * Bucky's H2H resolution, per H2H day (spec §7.9). Placeholders.
+     * (Server mirror lives in app_settings key `mascot` — schema name
+     * retained for stability, spec §6.)
      */
     targets: {
       day1WaterBottleSeconds: 12,
@@ -113,6 +104,25 @@ export const config = {
       day4HardThreePointersMade: 3,
       day5SelfieCount: 8,
     },
+  },
+
+  /**
+   * Beaver care loop (spec §10.3–10.5). Happiness is server-authoritative —
+   * these are the settle-time amounts the day-close/snack logic (M8 rework)
+   * will read. Bounds are LOCKED 0–100.
+   */
+  careLoop: {
+    /** DECIDED (§18, 2026-07-16): a new beaver starts at 70 (Content range). */
+    startingHappiness: 70,
+    /** TUNE: Happiness lost per day when the day is NOT completed (§10.4). */
+    dailyDecay: 10,
+    /** TUNE: Happiness restored on completing a day (§10.4; additive, cap 100). */
+    completionRestore: 20,
+    /** TUNE: vending-machine snack — coin cost / Happiness restored (§10.5). */
+    snack: { cost: 25, restore: 15 },
+    /** LOCKED clamp bounds (§10.3). */
+    min: 0,
+    max: 100,
   },
 
   invites: {

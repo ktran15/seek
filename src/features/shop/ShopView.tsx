@@ -4,8 +4,9 @@ import { getAsset, type AssetSlot } from '@/assets/registry';
 import { PressButton } from '@/components/ui/PressButton';
 import { config } from '@/config';
 import { useSession } from '@/features/auth/useSession';
-import { useBuyCrate } from '@/features/economy/useEconomy';
-import { useMyCoins } from '@/features/profile/useProfile';
+import { HappinessMeter } from '@/features/beaver/HappinessMeter';
+import { useBuyCrate, useBuySnack } from '@/features/economy/useEconomy';
+import { useMyCoins, useProfile } from '@/features/profile/useProfile';
 import { colors, elevation, radii, spacing, textStyles } from '@/theme';
 
 type BuyableTier = 'wood' | 'blue' | 'red' | 'yellow';
@@ -30,8 +31,35 @@ export function ShopView() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { data: coins } = useMyCoins(userId);
+  const { data: profile } = useProfile(userId);
   const buyCrate = useBuyCrate(userId);
+  const buySnack = useBuySnack(userId);
   const balance = coins ?? 0;
+  const happiness = profile?.happiness ?? config.careLoop.startingHappiness;
+  const snack = config.careLoop.snack;
+
+  const buyTheSnack = () => {
+    Alert.alert(
+      'Snack',
+      `Feed your beaver for ${snack.cost} coins? (+${snack.restore} Happiness)`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Buy',
+          onPress: () =>
+            buySnack.mutate(undefined, {
+              onSuccess: (newHappiness) =>
+                Alert.alert('Yum!', `Happiness is now ${newHappiness}/100.`),
+              onError: (e) =>
+                Alert.alert(
+                  'Purchase failed',
+                  e instanceof Error ? e.message : 'Try again.',
+                ),
+            }),
+        },
+      ],
+    );
+  };
 
   const buy = (crate: ShopCrate) => {
     Alert.alert(crate.name, `Buy for ${crate.price} coins?`, [
@@ -83,6 +111,25 @@ export function ShopView() {
             </View>
           );
         })}
+      </View>
+
+      <Text style={[textStyles.header, styles.sectionTitle]}>Vending machine</Text>
+      <View style={[styles.snackCard, elevation.card]}>
+        <View style={styles.snackHeader}>
+          <Text style={styles.snackEmoji}>🍎</Text>
+          <View style={styles.snackText}>
+            <Text style={[textStyles.headerS, styles.crateName]}>Snack</Text>
+            <Text style={[textStyles.caption, styles.snackNote]}>
+              +{snack.restore} Happiness · {snack.cost} coins
+            </Text>
+          </View>
+        </View>
+        <HappinessMeter happiness={happiness} />
+        <PressButton
+          label={balance >= snack.cost ? 'BUY SNACK' : 'NOT ENOUGH'}
+          disabled={balance < snack.cost || buySnack.isPending}
+          onPress={buyTheSnack}
+        />
       </View>
     </ScrollView>
   );
@@ -138,4 +185,23 @@ const styles = StyleSheet.create({
   price: {
     color: colors.celebration,
   },
+  sectionTitle: {
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  snackCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.card,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  snackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  snackEmoji: { fontSize: 40 },
+  snackText: { flex: 1, gap: spacing.xxs },
+  snackNote: { color: colors.textSecondary },
 });

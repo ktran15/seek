@@ -1,162 +1,77 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { config } from '@/config';
-import { useSession } from '@/features/auth/useSession';
-import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { useProfile } from '@/features/profile/useProfile';
 import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
- * Onboarding — THE CARE LOOP (spec §5 step 6, §10.3–10.5).
- *
- * Graphic-driven, minimal text: the three moods are TAUGHT BY SHOWING three
- * real beavers at real Happiness values (the same BeaverPreview + state logic
- * the app uses), not described in a paragraph. Two rules, one snack note.
- *
- * Tone (aesthetic §6): warm and motivating, never guilt-tripping — low
- * Happiness costs the player NOTHING in gameplay (§10.3), and the copy says so.
+ * Onboarding "Care-loop explainer" (spec §5 step 6, §10.6). Teaches the loop
+ * graphically, minimal text: show up → beaver's happy + streak grows; skip →
+ * it dips (never a gameplay penalty, §10.3); a Shop snack tops it up. No write.
  */
-const MOODS = [
-  { happiness: 95, caption: 'Show up' },
-  { happiness: 50, caption: 'Skip a day' },
-  { happiness: 10, caption: 'Go quiet' },
-];
-
 export default function CareLoopStep() {
-  const { session } = useSession();
-  const { data: profile } = useProfile(session?.user.id);
-  const beaver = profile?.beaver_name?.trim() || 'your beaver';
-
   return (
     <OnboardingScreen
       step="care-loop"
-      title={`Keep ${beaver} happy`}
+      title="Show up. Stay happy."
       ctaLabel="GOT IT"
       onCta={() => goToNextStep('care-loop')}
     >
-      <View style={styles.moods}>
-        {MOODS.map((mood) => (
-          <View key={mood.caption} style={styles.mood}>
-            <BeaverPreview
-              config={profile?.avatar_config}
-              happiness={mood.happiness}
-              size={84}
-              showCaption={false}
-            />
-            <Text style={[textStyles.caption, styles.moodCaption]}>
-              {mood.caption}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.rules}>
-        <View style={styles.rule}>
-          <View style={[styles.badge, styles.badgeUp]}>
-            <Ionicons name="arrow-up" size={18} color={colors.textOnPrimary} />
-          </View>
-          <Text style={[textStyles.bodyEmphasis, styles.ruleText]}>
-            Finish the day’s challenge
-          </Text>
-          <Text style={[textStyles.headerS, styles.deltaUp]}>
-            +{config.beaver.completionRestore}
-          </Text>
-        </View>
-
-        <View style={styles.rule}>
-          <View style={[styles.badge, styles.badgeDown]}>
-            <Ionicons name="arrow-down" size={18} color={colors.textOnPrimary} />
-          </View>
-          <Text style={[textStyles.bodyEmphasis, styles.ruleText]}>Miss a day</Text>
-          <Text style={[textStyles.headerS, styles.deltaDown]}>
-            −{config.beaver.dailyDecay}
-          </Text>
-        </View>
-
-        <View style={styles.rule}>
-          <View style={[styles.badge, styles.badgeSnack]}>
-            <Ionicons name="fast-food" size={18} color={colors.textOnPrimary} />
-          </View>
-          <Text style={[textStyles.bodyEmphasis, styles.ruleText]}>
-            Snack from the Shop
-          </Text>
-          <Text style={[textStyles.headerS, styles.deltaSnack]}>
-            +{config.beaver.snackRestore}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={[textStyles.caption, styles.reassure]}>
-        A sad beaver never blocks you — nothing locks, nothing’s lost. He just
-        misses you.
+      <Text style={[textStyles.body, styles.lead]}>
+        Your beaver’s mood follows your habit — not a scoreboard.
       </Text>
+
+      <View style={[styles.card, styles.cardGood]}>
+        <Text style={styles.emoji}>✅</Text>
+        <View style={styles.cardText}>
+          <Text style={[textStyles.headerS, styles.cardTitle]}>
+            Finish the day
+          </Text>
+          <Text style={[textStyles.body, styles.cardBody]}>
+            Happiness goes up 🐾 and your streak grows 🔥
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.card, styles.cardDip]}>
+        <Text style={styles.emoji}>😴</Text>
+        <View style={styles.cardText}>
+          <Text style={[textStyles.headerS, styles.cardTitle]}>Skip a day</Text>
+          <Text style={[textStyles.body, styles.cardBody]}>
+            It dips a little — no penalty, just a nudge to come back.
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.card, styles.cardSnack]}>
+        <Text style={styles.emoji}>🍎</Text>
+        <View style={styles.cardText}>
+          <Text style={[textStyles.headerS, styles.cardTitle]}>
+            Need a boost?
+          </Text>
+          <Text style={[textStyles.body, styles.cardBody]}>
+            Grab a snack from the Shop any time.
+          </Text>
+        </View>
+      </View>
     </OnboardingScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  moods: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-  },
-  mood: {
-    flex: 1,
-    alignItems: 'center',
-    gap: spacing.xxs,
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    paddingVertical: spacing.xs,
-  },
-  moodCaption: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  rules: {
-    gap: spacing.xs,
-  },
-  rule: {
+  lead: { color: colors.textPrimary, textAlign: 'center' },
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
+    gap: spacing.md,
     borderRadius: radii.card,
-    padding: spacing.sm,
+    padding: spacing.md,
   },
-  badge: {
-    width: 34,
-    height: 34,
-    borderRadius: radii.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeUp: {
-    backgroundColor: colors.surfaceNature,
-  },
-  badgeDown: {
-    backgroundColor: colors.textSecondary,
-  },
-  badgeSnack: {
-    backgroundColor: colors.celebration,
-  },
-  ruleText: {
-    flex: 1,
-    color: colors.textPrimary,
-  },
-  deltaUp: {
-    color: colors.surfaceNature,
-  },
-  deltaDown: {
-    color: colors.textSecondary,
-  },
-  deltaSnack: {
-    color: colors.celebration,
-  },
-  reassure: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
+  cardGood: { backgroundColor: colors.surfaceNature },
+  cardDip: { backgroundColor: colors.surface },
+  cardSnack: { backgroundColor: colors.surfaceSecondary },
+  emoji: { fontSize: 32 },
+  cardText: { flex: 1, gap: spacing.xxs },
+  cardTitle: { color: colors.textPrimary },
+  cardBody: { color: colors.textPrimary },
 });
