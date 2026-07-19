@@ -2,6 +2,7 @@ import type { AvatarConfig } from '@/lib/database.types';
 
 import {
   beaverBodyColor,
+  beaverBodySlotChain,
   beaverBodySlotName,
   beaverSex,
   DEFAULT_BEAVER,
@@ -19,8 +20,37 @@ describe('beaver base catalog', () => {
       beaverBodySlotName({ sex: 'female', bodyColor: 'white' }, 'thriving'),
     ).toBe('beaverBodyFemaleWhiteThriving');
     expect(
-      beaverBodySlotName({ sex: 'male', bodyColor: 'brown' }, 'neglected'),
-    ).toBe('beaverBodyMaleBrownNeglected');
+      beaverBodySlotName({ sex: 'female', bodyColor: 'brown' }, 'unhappy'),
+    ).toBe('beaverBodyFemaleBrownUnhappy');
+  });
+
+  it('okay + neglected are gender-agnostic: color-only slot, same for both sexes', () => {
+    expect(
+      beaverBodySlotName({ sex: 'male', bodyColor: 'brown' }, 'okay'),
+    ).toBe('beaverBodyBrownOkay');
+    expect(
+      beaverBodySlotName({ sex: 'female', bodyColor: 'brown' }, 'okay'),
+    ).toBe('beaverBodyBrownOkay');
+    expect(
+      beaverBodySlotName({ sex: 'male', bodyColor: 'white' }, 'neglected'),
+    ).toBe('beaverBodyWhiteNeglected');
+    expect(
+      beaverBodySlotName({ sex: 'female', bodyColor: 'white' }, 'neglected'),
+    ).toBe('beaverBodyWhiteNeglected');
+  });
+
+  it('slot chain falls back state → content → thriving without duplicates', () => {
+    expect(
+      beaverBodySlotChain({ sex: 'female', bodyColor: 'black' }, 'neglected'),
+    ).toEqual([
+      'beaverBodyBlackNeglected',
+      'beaverBodyFemaleBlackContent',
+      'beaverBodyFemaleBlackThriving',
+    ]);
+    // Asking for content itself doesn't repeat it.
+    expect(
+      beaverBodySlotChain({ sex: 'male', bodyColor: 'brown' }, 'content'),
+    ).toEqual(['beaverBodyMaleBrownContent', 'beaverBodyMaleBrownThriving']);
   });
 
   it('falls back to the default body (male/brown/content) for empty or partial config', () => {

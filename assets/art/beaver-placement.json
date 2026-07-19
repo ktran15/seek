@@ -1,19 +1,58 @@
 {
   "canvas": 1024,
   "items": {
+    "blackCroppedContentF": {
+      "x": 0,
+      "y": 0,
+      "w": 364,
+      "h": 468
+    },
+    "blackCroppedContentM": {
+      "x": 0,
+      "y": 0,
+      "w": 359,
+      "h": 470
+    },
+    "blackCroppedOkay": {
+      "x": 0,
+      "y": 0,
+      "w": 358,
+      "h": 466
+    },
+    "blackMCroppedUnhappy": {
+      "x": 0,
+      "y": 0,
+      "w": 358,
+      "h": 469
+    },
+    "blackNeglectedCropped": {
+      "x": 0,
+      "y": 0,
+      "w": 359,
+      "h": 465
+    },
+    "blueGloves": {
+      "x": 1,
+      "y": -14,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.64,
+      "rotation": -2
+    },
     "blueHat": {
       "x": -15,
       "y": -196,
       "w": 1322,
       "h": 972,
       "scale": 0.47,
-      "z": 1
+      "z": 5
     },
     "bow": {
-      "x": 0,
-      "y": 0,
+      "x": -1,
+      "y": -198,
       "w": 1185,
-      "h": 899
+      "h": 899,
+      "scale": 0.52
     },
     "bowTail": {
       "x": 169,
@@ -22,6 +61,42 @@
       "h": 1528,
       "scale": 0.51,
       "rotation": -7.5
+    },
+    "brownCroppedContentF": {
+      "x": 0,
+      "y": 0,
+      "w": 363,
+      "h": 471
+    },
+    "brownCroppedContentM": {
+      "x": 0,
+      "y": 0,
+      "w": 363,
+      "h": 473
+    },
+    "brownCroppedNeglected": {
+      "x": 0,
+      "y": 0,
+      "w": 371,
+      "h": 466
+    },
+    "brownCroppedOkay": {
+      "x": 0,
+      "y": 0,
+      "w": 363,
+      "h": 471
+    },
+    "brownFCroppedUnhappy": {
+      "x": 0,
+      "y": 0,
+      "w": 363,
+      "h": 470
+    },
+    "brownMCroppedUnhappy": {
+      "x": 0,
+      "y": 0,
+      "w": 368,
+      "h": 471
     },
     "checker": {
       "x": 136,
@@ -70,10 +145,34 @@
     },
     "crown": {
       "x": 2,
-      "y": -229,
+      "y": -230,
       "w": 1475,
       "h": 1045,
-      "scale": 0.38
+      "scale": 0.4
+    },
+    "eyePatch": {
+      "x": 59,
+      "y": -80,
+      "w": 1320,
+      "h": 1320,
+      "scale": 0.22,
+      "z": 4.5
+    },
+    "fUnhappyBlackCropped": {
+      "x": 0,
+      "y": 0,
+      "w": 534,
+      "h": 749,
+      "scale": 0.625
+    },
+    "goldenGloves": {
+      "x": 5,
+      "y": -19,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.66,
+      "rotation": -1.5,
+      "z": 2.5
     },
     "goldTail": {
       "x": 139,
@@ -82,13 +181,36 @@
       "h": 1528,
       "scale": 0.56
     },
+    "monocle": {
+      "x": 115,
+      "y": -20,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.48,
+      "z": 4.5
+    },
+    "pinkGlasses": {
+      "x": 6,
+      "y": -100,
+      "w": 2008,
+      "h": 1528,
+      "scale": 0.32,
+      "z": 4.5
+    },
+    "pinkGloves": {
+      "x": 4,
+      "y": 111,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.66,
+      "rotation": -2
+    },
     "propHat": {
       "x": -1,
       "y": -227,
       "w": 1455,
       "h": 1191,
-      "scale": 0.37,
-      "z": 1
+      "scale": 0.37
     },
     "rainbowTail": {
       "x": 158,
@@ -99,6 +221,14 @@
       "rotation": -3.5,
       "z": 0.5
     },
+    "redGloves": {
+      "x": 2,
+      "y": -28,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.69,
+      "rotation": -1.5
+    },
     "redTail": {
       "x": 129,
       "y": 77,
@@ -107,6 +237,68 @@
       "scale": 0.72,
       "rotation": -5,
       "z": 0.5
+    },
+    "skiGoggles": {
+      "x": 8,
+      "y": -65,
+      "w": 1528,
+      "h": 1528,
+      "scale": 0.71,
+      "z": 2.5
+    },
+    "sunglasses": {
+      "x": -11,
+      "y": -38,
+      "w": 1226,
+      "h": 1226,
+      "scale": 0.88,
+      "z": 4.5
+    },
+    "whiteBeanie": {
+      "x": -12,
+      "y": -228,
+      "w": 1278,
+      "h": 1147,
+      "scale": 0.49,
+      "rotation": -7,
+      "z": 2
+    },
+    "whiteCroppedContentF": {
+      "x": 0,
+      "y": 0,
+      "w": 355,
+      "h": 469
+    },
+    "whiteCroppedContentM": {
+      "x": 0,
+      "y": 0,
+      "w": 362,
+      "h": 469
+    },
+    "whiteCroppedNeglected": {
+      "x": 0,
+      "y": 0,
+      "w": 353,
+      "h": 466
+    },
+    "whiteCroppedOkay": {
+      "x": 0,
+      "y": 0,
+      "w": 352,
+      "h": 473
+    },
+    "whiteFCroppedUnhappy": {
+      "x": 0,
+      "y": 0,
+      "w": 521,
+      "h": 748,
+      "scale": 0.625
+    },
+    "whiteMCroppedUnhappy": {
+      "x": 0,
+      "y": 0,
+      "w": 354,
+      "h": 472
     }
   }
 }

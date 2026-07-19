@@ -8,11 +8,15 @@
   shipped app.
 
   RECOMMENDED: `npm run placement` (tools/placement-studio/serve.mjs), then
-  open http://localhost:4173 — the page auto-loads the repo's
-  assets/art/beaver-placement.json and Save writes straight back to it, so
-  anyone who pulls the repo edits the same file (commit + push it like code).
+  open http://localhost:4173. In this mode the tool PERSISTS EVERYTHING into the
+  repo: the PNGs you load are saved under assets/art/beaver/{bodies,cosmetics}/
+  and Save writes assets/art/beaver-placement.json — so on your next open the
+  page reloads every image and re-applies its placement automatically. Commit
+  the images + JSON like any other asset.
   Fallback: open this file directly in Chrome/Edge and use Link JSON…
-  (File System Access API) or Export/Copy.
+  (File System Access API) or Export/Copy — plain-file mode canNOT persist the
+  images (a browser can't write your assets folder), so you re-load PNGs by hand
+  each session; only the placement JSON round-trips.
 
   Workflow:
     1. Load a body PNG — it's drawn auto-centered on the 1024×1024 composite
@@ -289,6 +293,14 @@ function keyFromFilename(name) {
     .join('');
 }
 
+/* Saved placements are keyed in camelCase; source filenames vary in caps
+   (Bow.png, bow.png, BOW.png…). Match case-insensitively so any casing snaps. */
+function matchSavedKey(key) {
+  if (key in importedItems) return key;
+  const lk = key.toLowerCase();
+  return Object.keys(importedItems).find((k) => k.toLowerCase() === lk) ?? null;
+}
+
 function slotOf(key) {
   const k = key.toLowerCase();
   if (k.includes('tail')) return 'tails';
@@ -310,6 +322,22 @@ function loadImageFromFile(file) {
     img.onerror = () => reject(new Error('Could not read ' + file.name));
     img.src = url;
   });
+}
+
+function loadImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not load ' + url));
+    img.src = url;
+  });
+}
+
+/* Server mode: persist a loaded PNG into the repo so it reloads next session. */
+function uploadImage(kind, file) {
+  if (!serverMode) return;
+  fetch('/api/images/' + kind + '/' + encodeURIComponent(file.name), { method: 'PUT', body: file })
+    .catch(() => toast('Could not save ' + file.name + ' to assets', true));
 }
 
 /* ================= rendering ================= */
@@ -450,30 +478,47 @@ function bumpZ(i, dir) {
 
 /* ================= body / cosmetic loading ================= */
 
+function registerBody(name, img) {
+  if (img.naturalWidth > CANVAS || img.naturalHeight > CANVAS) {
+    toast(`${name} is ${img.naturalWidth}×${img.naturalHeight} — larger than the ${CANVAS}² canvas`, true);
+  }
+  let key = keyFromFilename(name);
+  const savedKey = matchSavedKey(key);
+  if (savedKey) key = savedKey; // adopt the saved key's casing so JSON keys stay stable
+  const saved = savedKey ? importedItems[savedKey] : null;
+  const body = {
+    name, key, img,
+    w: img.naturalWidth, h: img.naturalHeight,
+    scale: saved?.scale ?? 1,
+  };
+  if (saved) { delete importedItems[savedKey]; toast(`${key}: resumed saved scale`); }
+  const existing = bodies.findIndex((b) => b.key.toLowerCase() === key.toLowerCase());
+  if (existing >= 0) { bodies[existing] = body; activeBody = existing; }
+  else { bodies.push(body); activeBody = bodies.length - 1; }
+}
+
+function refreshBodySelect() {
+  const sel = $('bodySelect');
+  sel.innerHTML = bodies.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
+  sel.value = String(activeBody);
+}
+
 async function addBodies(files) {
   for (const f of files) {
     try {
       const img = await loadImageFromFile(f);
-      if (img.naturalWidth > CANVAS || img.naturalHeight > CANVAS) {
-        toast(`${f.name} is ${img.naturalWidth}×${img.naturalHeight} — larger than the ${CANVAS}² canvas`, true);
-      }
-      const key = keyFromFilename(f.name);
-      const saved = importedItems[key];
-      const body = {
-        name: f.name, key, img,
-        w: img.naturalWidth, h: img.naturalHeight,
-        scale: saved?.scale ?? 1,
-      };
-      if (saved) { delete importedItems[key]; toast(`${key}: resumed saved scale`); }
-      const existing = bodies.findIndex((b) => b.key === key);
-      if (existing >= 0) { bodies[existing] = body; activeBody = existing; }
-      else { bodies.push(body); activeBody = bodies.length - 1; }
+      registerBody(f.name, img);
+      uploadImage('bodies', f); // persist into assets/art/beaver/bodies/ (server mode)
     } catch (e) { toast(e.message, true); }
   }
-  const sel = $('bodySelect');
-  sel.innerHTML = bodies.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
-  sel.value = String(activeBody);
+  refreshBodySelect();
   render();
+}
+
+/* Reload a persisted body from the server (auto-restore on open). */
+async function addBodyFromURL(name) {
+  const img = await loadImageFromURL('/api/images/bodies/' + encodeURIComponent(name));
+  registerBody(name, img);
 }
 
 function setBodyScale(v) {
@@ -484,28 +529,40 @@ function setBodyScale(v) {
 $('inBodyScale').addEventListener('input', (e) => setBodyScale(Number(e.target.value)));
 $('rngBodyScale').addEventListener('input', (e) => setBodyScale(Number(e.target.value)));
 
+function registerCosmetic(name, img) {
+  let key = keyFromFilename(name);
+  const savedKey = matchSavedKey(key);
+  if (savedKey) key = savedKey; // adopt the saved key's casing so JSON keys stay stable
+  const saved = savedKey ? importedItems[savedKey] : null;
+  const existing = layers.findIndex((l) => l.key.toLowerCase() === key.toLowerCase());
+  const layer = {
+    key, file: name, img,
+    w: img.naturalWidth, h: img.naturalHeight,
+    x: saved?.x ?? 0, y: saved?.y ?? 0,
+    scale: saved?.scale ?? 1, rotation: saved?.rotation ?? 0,
+    z: saved?.z ?? defaultZ(key),
+    visible: true,
+  };
+  if (saved) { delete importedItems[savedKey]; toast(`${key}: resumed saved placement`); }
+  if (existing >= 0) { layers[existing] = layer; selected = existing; }
+  else { layers.push(layer); selected = layers.length - 1; }
+}
+
 async function addCosmetics(files) {
   for (const f of files) {
     try {
       const img = await loadImageFromFile(f);
-      const key = keyFromFilename(f.name);
-      const existing = layers.findIndex((l) => l.key === key);
-      const saved = importedItems[key];
-      const layer = {
-        key, file: f.name, img,
-        w: img.naturalWidth, h: img.naturalHeight,
-        x: saved?.x ?? 0, y: saved?.y ?? 0,
-        scale: saved?.scale ?? 1, rotation: saved?.rotation ?? 0,
-        z: saved?.z ?? defaultZ(key),
-        visible: true,
-      };
-      if (saved) delete importedItems[key];
-      if (existing >= 0) { layers[existing] = layer; selected = existing; }
-      else { layers.push(layer); selected = layers.length - 1; }
-      if (saved) toast(`${key}: resumed saved placement`);
+      registerCosmetic(f.name, img);
+      uploadImage('cosmetics', f); // persist into assets/art/beaver/cosmetics/ (server mode)
     } catch (e) { toast(e.message, true); }
   }
   markDirty(); render();
+}
+
+/* Reload a persisted cosmetic from the server (auto-restore on open). */
+async function addCosmeticFromURL(name) {
+  const img = await loadImageFromURL('/api/images/cosmetics/' + encodeURIComponent(name));
+  registerCosmetic(name, img);
 }
 
 $('btnBody').addEventListener('click', () => $('fileBody').click());
@@ -602,6 +659,11 @@ $('btnReset').addEventListener('click', () => {
 });
 $('btnRemove').addEventListener('click', () => {
   if (selected < 0) return;
+  const l = layers[selected];
+  // server mode: also drop the persisted PNG so it won't auto-reload next open
+  if (serverMode && l.file) {
+    fetch('/api/images/cosmetics/' + encodeURIComponent(l.file), { method: 'DELETE' }).catch(() => {});
+  }
   layers.splice(selected, 1); selected = -1; markDirty(); render();
 });
 
@@ -656,8 +718,8 @@ function applyJson(text) {
   let matched = 0;
   importedItems = {};
   for (const [key, it] of Object.entries(items)) {
-    const i = layers.findIndex((l) => l.key === key);
-    const b = bodies.findIndex((bd) => bd.key === key);
+    const i = layers.findIndex((l) => l.key.toLowerCase() === key.toLowerCase());
+    const b = bodies.findIndex((bd) => bd.key.toLowerCase() === key.toLowerCase());
     if (i >= 0) {
       Object.assign(layers[i], {
         x: it.x ?? 0, y: it.y ?? 0,
@@ -754,18 +816,37 @@ setZoom('fit');
 stage.classList.add('show-grid');
 render();
 
-/* Served by serve.mjs? Auto-load the repo JSON and save back to it. */
+/* Served by serve.mjs? Reload persisted art, then re-apply saved placements. */
 (async () => {
   if (location.protocol === 'file:') return; // plain-file mode: Link JSON flow
+  let placementRes;
+  try { placementRes = await fetch('/api/placement'); }
+  catch { return; /* no server — keep manual flow */ }
+  if (placementRes.status !== 200 && placementRes.status !== 204) return; // not our server
+  serverMode = true;
+  $('fileStatus').textContent = 'Auto-linked: assets/art/beaver/ + beaver-placement.json (local server)';
+  $('fileStatus').classList.add('linked');
+  $('btnLink').style.display = 'none';
+
+  // 1. reload every persisted PNG (bodies first, then cosmetics)…
   try {
-    const res = await fetch('/api/placement');
-    if (res.status === 200) applyJson(await res.text());
-    else if (res.status !== 204) return; // not our server
-    serverMode = true;
-    $('fileStatus').textContent = 'Auto-linked: assets/art/beaver-placement.json (local server)';
-    $('fileStatus').classList.add('linked');
-    $('btnLink').style.display = 'none';
-  } catch { /* no server — keep manual flow */ }
+    const imgs = await (await fetch('/api/images')).json();
+    for (const name of imgs.bodies || []) {
+      try { await addBodyFromURL(name); } catch (e) { toast(e.message, true); }
+    }
+    for (const name of imgs.cosmetics || []) {
+      try { await addCosmeticFromURL(name); } catch (e) { toast(e.message, true); }
+    }
+    refreshBodySelect();
+  } catch { /* no images persisted yet — first run */ }
+
+  // 2. …then snap the saved placements onto whatever loaded.
+  if (placementRes.status === 200) {
+    try { applyJson(await placementRes.text()); } catch { /* empty/bad file */ }
+  }
+  render();
+  const n = bodies.length + layers.length;
+  if (n) toast(`Restored ${n} art file${n === 1 ? '' : 's'} from assets`);
 })();
 </script>
 </body>
