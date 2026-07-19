@@ -85,6 +85,28 @@ Everything depends on the two frozen beaver bodies. Produce them before any cosm
 2. **Freeze them** as `beaver_body_male_canonical.png` and `beaver_body_female_canonical.png` (each the Content/default state). Both silhouettes/poses are now **immutable** — the fit references for every cosmetic and every other state. **Anchor zones (§5) are traced once and MUST land identically on both** — verify a hat/eyes/gloves/tail item lands correctly on both canonicals before locking.
 3. **Body-color variants = shape-identical recolors *within each sex*.** From each frozen canonical produce its **3 colors** — Brown, White, Black — as **pure recolors: same exact silhouette, pose, and shading, only color changes** (same discipline as "one crate recolored 5 ways"). Two canonicals × 3 colors = the **6 base bodies** (spec §10.1): Male Brown/White/Black, Female Brown/White/Black. Do NOT regenerate the body shape per color — color is the only variable *inside* a sex; the *silhouette* is the only variable *between* sexes.
 4. **Happiness-state poses (5), per canonical.** For each state — **Thriving, Content, Okay, Unhappy, Neglected** (spec §10.3) — produce a pose/expression variant **against that sex's frozen base**, holding the §1 registration envelope (mood lives in face/ears/shoulders/tail-height, not in relocating anchors). Content = the frozen base itself. Each state is then recolored across its 3 colors → the state × color set per sex. Neglected uses **dull/desaturated** coloring but stays sympathetic (§6), never distressing.
+
+> **FINAL ART AS DELIVERED (2026-07-19) — 24 bodies, not 30.** Three states are
+> per-sex, two are shared: **Thriving, Content, Unhappy** ship as sex × color
+> (6 files each), while **Okay and Neglected ship as ONE design per color**
+> (3 files each) rendered identically for male and female. Filenames
+> (`assets/art/beaver/bodies/`) follow color+state+gender wording with two
+> irregular orderings, and **Thriving is the unmarked default** — its files
+> carry no state word (`Crop{Color}{M|F}.png`):
+> - Thriving: `CropBrownM/F`, `CropWhiteM/F`, `CropBlackM/F`
+> - Content: `{Color}CroppedContent{M|F}`
+> - Okay: `{Color}CroppedOkay` (no gender)
+> - Unhappy: `{Color}{M|F}CroppedUnhappy` — except black female =
+>   `FUnhappyBlackCropped`
+> - Neglected: `BrownCroppedNeglected`, `WhiteCroppedNeglected`,
+>   `BlackNeglectedCropped` (no gender)
+>
+> Because of the irregulars, the **authoritative mapping is an explicit table**
+> (registry slots in `assets/registry.ts`, placement keys in
+> `src/features/beaver/placement.ts`) — never derive these filenames from a
+> pattern. Two Unhappy exports (`FUnhappyBlackCropped` 534×749,
+> `WhiteFCroppedUnhappy` 521×748) are larger than the ~360×470 family standard
+> and carry `scale: 0.625` in the placement data to normalize.
 5. **The beaver's own eyes belong to the body/state** (they carry the emotion), NOT to a cosmetic slot. The `eyes` **cosmetic** slot (§5) is a face accessory worn over them.
 
 > Player "base customization" is therefore just: **pick sex (male/female) + one of the 3 body colors** = one of 6 bodies. Everything else on the beaver is a gacha cosmetic (§5). The 5 states are driven by Happiness at runtime, not chosen by the user.
@@ -103,14 +125,29 @@ Everything depends on the two frozen beaver bodies. Produce them before any cosm
 {
   "canvas": 1024,
   "items": {
-    "cosHatsCrown": { "x": -12, "y": -38, "scale": 1.06, "rotation": -3, "w": 512, "h": 384, "z": 4 }
+    "crown": { "x": 2, "y": -230, "w": 1475, "h": 1045, "scale": 0.4 }
   }
 }
 ```
 
-- Keyed by the item's **registry `asset_slot_name`** (the same key the cosmetics DB row carries).
-- `x`/`y` — offset of the item's center from the canvas center, in canvas pixels. `w`/`h` — the file's natural pixel size (recorded automatically at save). `scale` (default 1) and `rotation` (degrees, default 0) — omitted when default. `z` — only present when overriding the slot default (§3).
-- **Bodies** get entries too (keyed `beaverBody{Sex}{Color}{State}`): always `x:0, y:0` (centered is the rule) with an optional `scale` to normalize differing export sizes — never rotation or z.
+- **Keyed by the tool's filename-derived camelCase key** (`Crown.png` → `crown`,
+  `BlueHat.png` → `blueHat`, `CropBrownM.png` → `cropBrownM`) — the founder
+  works by filename in the Studio. The **slot-name → placement-key mapping**
+  (registry `asset_slot_name` / body slot → tool key, all 43 items) lives in
+  `src/features/beaver/placement.ts` and is the app's single lookup path; its
+  completeness unit test fails if an art file or JSON key drifts.
+- `x`/`y` — offset of the item's center from the canvas center, in canvas pixels. `w`/`h` — the file's natural pixel size (recorded automatically at save). `scale` (default 1) and `rotation` (degrees, default 0) — omitted when default.
+- `z` — only present when the founder overrode the stacking in the tool. When
+  absent, the effective z is the **tool's keyword default for that key** (tail→0,
+  glove/mitt→2, eye/sunglass/goggle/monocle→3, hat/beanie/cap/crown→4, no
+  keyword→5 topmost) — replicated exactly in `placement.ts` so the app stacks
+  items precisely as the founder saw and approved them. Note this can differ
+  from the §3 slot default (e.g. the Bow Hat's key `bow` matches no keyword and
+  renders topmost at z5).
+- **Bodies** get entries too (keyed by their filename key, e.g. `cropBrownM`):
+  always `x:0, y:0` (centered is the rule) with an optional `scale` to
+  normalize differing export sizes — never rotation or z; the app always draws
+  bodies at z1.
 - An item **absent** from the file renders as a full-canvas registered layer (the legacy default) — placement data can land incrementally.
 
 **Placement rule (the anchor rule's successor):** each item gets **one** placement, and that placement must read correctly on **all 5 Happiness states and both sex silhouettes** — verified in the tool by swapping bodies before saving. A hat must rest on the crown on Thriving and on Neglected alike. If a placement can't hold across states, the *state pose* is out of envelope (§1) — fix the art, don't fork the placement.
@@ -186,7 +223,7 @@ Fail any test → remake, don't patch. Misalignment and identity drift are cheap
 
 ## 10. How This Feeds the Build
 
-- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot (`beaverBody{Sex}{Color}` per the 6 bodies, the 5 state poses per sex, `hats/*`, `tails/*`, `gloves/*`, `eyes/*`, `rivalBeaver` = Bucky, `rival_cheer`, etc.). Swappable zero-code.
+- **Registry slots** (spec §4.2 / §14.3): each accepted layer drops into its named slot. Bodies (final 2026-07-19 pattern): `beaverBody{Sex}{Color}{State}` for the per-sex states (thriving/content/unhappy, e.g. `beaverBodyFemaleBlackThriving`) and **`beaverBody{Color}{State}` for the gender-agnostic states** (okay/neglected, e.g. `beaverBodyBrownOkay` — both sexes render it). Cosmetics: the 19 DB `asset_slot_name`s (`cosHatsCrown`, …). Rival: `rivalBeaver` = Bucky (+ expression states) — still placeholder. `beaverBodySlotName()` (src/features/beaver/catalog.ts) builds the name; `beaverBodySlotChain()` falls back state → content → thriving → placeholder so a missing combination degrades, never crashes. Swappable zero-code.
 - **App compositing:** the client renders the beaver on the 1024² composite grid — the **body layer, selected by (sex × body color × current Happiness state)**, auto-centered; each equipped cosmetic drawn at its recorded placement from `assets/art/beaver-placement.json` (center-offset/scale/rotation, scaled to the render size), stacked in the z-order of §3 with any per-item override. An item with no placement entry renders as a full-canvas registered layer (legacy default).
 - **`avatar_config`** (spec §6, §10): stores the chosen **sex + body color** + equipped cosmetic id per gacha slot; the renderer maps each to its registry file. The Happiness **state** is derived from `profiles.happiness` at render time (not stored in `avatar_config`).
 - **Milestone fit:** freeze the canonical **beaver base + the 5 state poses + the rival** first, then produce cosmetics against them and **place each one in Placement Studio (§5)** as it's accepted. Beaver compositing + the state-selection logic are the M8 rework (spec §10); they run on placeholders until real art + placement data are supplied.

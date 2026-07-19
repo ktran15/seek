@@ -455,7 +455,7 @@ Short, friendly, on-brand copy.
 
 ### 14.3 Slot list
 - `appLogo`, `loadingScreen`
-- **Beaver (the player avatar) — `beaverBody{Sex}{Color}`** across the 6 bodies = **two canonicals (male/female, distinct silhouettes) × 3 colors** (Brown/White/Black), color being a recolor *within* each sex (§10.1, Rig Bible §4); **× 5 Happiness-state poses** (Thriving/Content/Okay/Unhappy/Neglected, §10.3), all on the shared registration envelope. Cosmetics composite on top of every state and fit both canonicals.
+- **Beaver (the player avatar)** — the 6 bodies = **two canonicals (male/female, distinct silhouettes) × 3 colors** (Brown/White/Black), color being a recolor *within* each sex (§10.1, Rig Bible §4), across the 5 Happiness states (§10.3). **Final art (2026-07-19): 24 body images, not 30** — Thriving/Content/Unhappy are per-sex (`beaverBody{Sex}{Color}{State}`), while **Okay and Neglected are one shared design per color** (`beaverBody{Color}{State}`, both sexes render it; Rig Bible §4/§10). Cosmetics composite on top of every state and fit both canonicals.
 - **`rivalBeaver`** (+ optional win/lose/expression states) — the H2H NPC opponent, **visually distinct** from the player beaver; identity/design TBD, placeholder until founder provides (§7.9).
 - **Beaver cosmetic art** per gacha slot (`hats/*`, `tails/*`, `gloves/*`, `eyes/*`) — independent transparent layers aligned to the shared beaver rig/anchors (rig bible). 19 items (§10.2).
 - `snack` — the vending-machine item art (§9.5).

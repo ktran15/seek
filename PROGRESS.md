@@ -60,8 +60,28 @@ Founder resolved the 5 open §18 character decisions as **final**, directed the 
 Fixed per-slot anchor zones assumed art generated *to* those zones; the art is now **hand-drawn, cropped tight per item**, so placement is captured per item instead (Rig Bible §5 rewritten — frozen base, isolated layers, default z-order, and the registration envelope all still stand).
 
 - `tools/placement-studio/index.html` — internal desktop-browser tool, NOT shipped with the app, zero deps, open the file directly in Chrome/Edge. Body PNG auto-centers on the 1024² composite canvas (confirmed export size) with a per-body **scale** control (bodies never take x/y; scale normalizes differing export sizes); drop cropped-tight cosmetic PNGs; drag/nudge (Shift=10px), scale, rotate; layer combos with visibility toggles; ▲▼ per-item z override; swap bodies (states/sexes) to QA a placement everywhere. "Link JSON…" once, then Save writes `assets/art/beaver-placement.json` in place (Export/Copy fallback); placements load back for resumed sessions and unmatched keys are preserved on save.
-- Data: `assets/art/beaver-placement.json` — keyed by `asset_slot_name`; x/y = center offset from canvas center (px), w/h natural size, scale/rotation/z only when non-default. Item absent → legacy full-canvas render.
-- **Next:** founder places all 25 assets (19 cosmetics + 6 bodies) in the tool → commit the art + `beaver-placement.json` → wire `BeaverPreview` to consume placement data (small pure placement helper + z-sort, unit-tested).
+- Data: `assets/art/beaver-placement.json` — keyed by the tool's **filename-derived camelCase key** (`Crown.png` → `crown`); x/y = center offset from canvas center (px), w/h natural size, scale/rotation/z only when non-default. Item absent → legacy full-canvas render. The slot-name → key mapping lives in `src/features/beaver/placement.ts`.
+- ✅ **DONE (2026-07-19):** founder placed **all 43 items** (19 cosmetics + 24 bodies) and the full pipeline landed — see the "Final beaver art wired" section below.
+
+### Final beaver art wired end-to-end (2026-07-19)
+
+All beaver body + cosmetic art is final in `assets/art/beaver/{bodies,cosmetics}/` (43 PNGs, all alpha-checked) and renders through the real compositor.
+
+**Naming as delivered (differs from the planned uniform `beaverBody{Sex}{Color}{State}`):**
+- **Thriving = the unmarked default** — no state word: `Crop{Color}{M|F}.png`.
+- **Content** `{Color}CroppedContent{M|F}` and **Unhappy** `{Color}{M|F}CroppedUnhappy` are per-sex — except black-female Unhappy = **`FUnhappyBlackCropped.png`** (irregular word order).
+- **Okay** `{Color}CroppedOkay` and **Neglected** `{Brown|White}CroppedNeglected` / **`BlackNeglectedCropped`** (irregular) are **gender-agnostic: one design per color, both sexes render the same file** → 24 bodies total, not 30.
+- Because of the irregulars, everything is mapped by **explicit table**, never pattern: registry slots in `assets/registry.ts`, placement keys in `src/features/beaver/placement.ts` (unit test pins completeness of both).
+
+**Lookup logic:** `beaverBodySlotName()` → `beaverBody{Sex}{Color}{State}` for thriving/content/unhappy, `beaverBody{Color}{State}` for okay/neglected; `beaverBodySlotChain()` falls back state → content → thriving → placeholder disc (missing combos degrade, never crash). Cosmetic slots are the 19 DB `asset_slot_name`s.
+
+**Compositor:** `BeaverPreview` now draws on the 1024² grid — body centered at z1 (scale-normalized; the two oversized Unhappy exports carry `scale: 0.625` in the JSON), each cosmetic at its authored x/y/scale/rotation, z-sorted. Unset z reproduces the **tool's keyword defaults** (replicated in `placement.ts`) so stacking matches exactly what the founder approved — e.g. `bow` (Bow Hat) renders topmost at z5. Stage doesn't clip (art intentionally hangs past the canvas edge). `zoom` prop (default 1) magnifies about the canvas center.
+
+**QA:** `/dev/beaver-qa` (dev-only) sweeps sex × color × 5 states × all 19 cosmetics on the real compositor. Verified in Chrome (expo web): all 5 states correct for male + female, okay/neglected render identical art for both sexes, black-female Unhappy (irregular file + 0.625 normalization) correct, crown/sunglasses/gloves/tail composite at authored placements with correct z. iOS bundle compiles via Metro (HTTP 200). 22 suites / 209 tests green; tsc clean.
+
+**Web-as-QA-vehicle fixes (native untouched):** metro.config.js stubs react-native-pager-view on web; supabase client passes AsyncStorage only on native (web shim crashed expo-router SSR); `usePushNotifications.web.ts` no-op variant.
+
+**Founder on-device review (the remaining step):** `npx expo start` → Expo Go → `/dev/beaver-qa` to sweep states/cosmetics on device; then the real Profile with live happiness (set a test account's `profiles.happiness` per band — 90/70/50/30/10 — via the dashboard SQL editor to watch the profile beaver change state). Tune `zoom` per screen if the beaver reads small.
 
 **Known issues / later (independent review 2026-07-16 — assessed low-severity, deliberately NOT fixed now):**
 1. day-close's `submissions` read is capped at PostgREST's 1000-row default — fine at beta scale; paginate before real scale. (The profile settle itself is one set-based SQL statement since M8-6 — no cap there.)
