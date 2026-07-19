@@ -402,9 +402,12 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: spacing.xs,
   },
+  // width+maxWidth+center (NOT alignSelf:'stretch'+maxWidth — Yoga clamps the
+  // stretched width but leaves the box start-aligned, i.e. off-center).
   meterWrap: {
-    alignSelf: 'stretch',
-    maxWidth: 240,
+    width: '100%',
+    maxWidth: 260,
+    alignSelf: 'center',
     marginTop: spacing.xs,
   },
   displayName: {

@@ -5,6 +5,7 @@ import { Redirect } from 'expo-router';
 
 import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { BEAVER_BODY_COLORS, BEAVER_SEXES } from '@/features/beaver/catalog';
+import { HappinessMeter } from '@/features/beaver/HappinessMeter';
 import { happinessState } from '@/features/beaver/happiness';
 import {
   BEAVER_SLOT_ORDER,
@@ -112,6 +113,10 @@ export default function BeaverQA() {
           height={PREVIEW_HEIGHT}
           zoom={ZOOMS[zoomIdx]}
         />
+        {/* The meter tracks the Happiness control — sweeps all 5 fill states. */}
+        <View style={styles.meterWrap}>
+          <HappinessMeter happiness={happiness} />
+        </View>
       </View>
 
       <View style={styles.controls}>
@@ -169,6 +174,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: radii.card,
     paddingVertical: spacing.md,
+  },
+  meterWrap: {
+    width: '100%',
+    maxWidth: 260,
+    alignSelf: 'center',
+    marginTop: spacing.sm,
   },
   controls: {
     gap: spacing.xs,
