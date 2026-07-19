@@ -44,11 +44,12 @@ const SECTIONS = ['Stats', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /**
- * Profile-screen beaver magnification (founder-directed 2026-07-19: ~130%
- * bigger than the plain render). Exported so /dev/beaver-qa's profile-chrome
- * mock previews exactly this value. Tune here.
+ * Profile-screen beaver magnification. Exported so /dev/beaver-qa's
+ * profile-chrome mock previews exactly this value. Tune here.
+ * History: 2.3 (founder-directed 2026-07-19, ~130% bigger) → ×0.85 founder
+ * trim same day = 1.955.
  */
-export const PROFILE_BEAVER_ZOOM = 2.3;
+export const PROFILE_BEAVER_ZOOM = 1.955;
 
 /**
  * Friend-request control per relationship state (mirrors the Add Friends
