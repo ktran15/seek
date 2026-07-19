@@ -49,15 +49,15 @@ export function pushContentFor(
       const vsMascot = payload.vs_mascot === true;
       if (won) {
         return {
-          title: vsMascot ? '⚔️ You beat the mascot!' : '⚔️ Rival defeated!',
+          title: vsMascot ? 'You beat the mascot!' : 'Rival defeated!',
           body: 'You won today’s head-to-head — go claim your spoils.',
           url: '/notifications',
         };
       }
       return {
         title: vsMascot
-          ? '⚔️ The mascot takes this one'
-          : '⚔️ Your rival edged it',
+          ? 'The mascot takes this one'
+          : 'Your rival edged it',
         body: 'Today’s head-to-head slipped away. Reset and go again.',
         url: '/notifications',
       };
@@ -67,27 +67,27 @@ export function pushContentFor(
         typeof payload.placement === 'number' ? payload.placement : null;
       if (placement === 1) {
         return {
-          title: '🥇 Best dish of the day!',
+          title: 'Best dish of the day!',
           body: 'Your friends crowned your food #1 — rewards inside.',
           url: '/notifications',
         };
       }
       if (placement === 2 || placement === 3) {
         return {
-          title: `${placement === 2 ? '🥈' : '🥉'} You took ${ORDINAL[placement]} in the vote!`,
+          title: `You took ${ORDINAL[placement]} in the vote!`,
           body: 'Your dish placed with your friends — rewards inside.',
           url: '/notifications',
         };
       }
       return {
-        title: '🍽️ The votes are in',
+        title: 'The votes are in',
         body: 'See how your dish stacked up with your friends.',
         url: '/notifications',
       };
     }
     case 'vote_countdown':
       return {
-        title: '⏳ Voting closes in 2 hours',
+        title: 'Voting closes in 2 hours',
         body: 'Crown today’s best dish before the window shuts.',
         url: '/vote',
       };
@@ -95,21 +95,21 @@ export function pushContentFor(
       const coins = typeof payload.coins === 'number' ? payload.coins : 0;
       if (payload.solo === true) {
         return {
-          title: `🏔️ Week complete: +${coins} coins`,
+          title: `Week complete: +${coins} coins`,
           body: 'You showed up all week — your payout just landed.',
           url: '/notifications',
         };
       }
       if (payload.gold_crate === true) {
         return {
-          title: '👑 You topped your leaderboard!',
+          title: 'You topped your leaderboard!',
           body: `+${coins} coins and a GOLD crate are yours.`,
           url: '/notifications',
         };
       }
       const rank = typeof payload.rank === 'number' ? payload.rank : null;
       return {
-        title: '🏅 Weekly results are in',
+        title: 'Weekly results are in',
         body:
           rank !== null
             ? `You placed ${ORDINAL[rank] ?? `#${rank}`} — +${coins} coins.`
@@ -125,7 +125,7 @@ export function pushContentFor(
       };
     case 'evening_reminder':
       return {
-        title: '⛰️ Still one shot left today',
+        title: 'Still one shot left today',
         body: 'Today’s challenge is waiting — it disappears at midnight.',
         url: '/challenge',
       };

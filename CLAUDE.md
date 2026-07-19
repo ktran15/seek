@@ -38,6 +38,7 @@ If anything in this file conflicts with the build spec, the build spec wins. If 
 - **Fonts:** Alfa Slab One (brand/hero, big + sparing), Nunito ExtraBold/Black (functional headers), Inter (body/UI), Archivo (timer — **tabular numerals**). All Google Fonts / OFL.
 - **Component feel:** 3D "press" buttons (accent fill + darker bottom lip that pushes down on tap — the signature interaction), 16px corner radius, restrained tactile shadows, subtly earth-tinted surfaces on cream (not stark white).
 - Everything reads from design tokens — no inline colors/fonts/spacing.
+- **No Apple/system emojis anywhere in the UI (LOCKED founder rule)** — including notification/push copy, placeholders, and fallback states. Use custom-illustrated icons in our art style (hero objects) or Ionicons tinted with role tokens (small functional UI) instead. Text-font glyphs (✓ · … ⋯ ✕) are fine; color-emoji-font characters are not. User-typed content is exempt.
 
 ## Assets
 - Every non-token asset loads from a **central named registry** (`assets/registry.ts`), referenced by slot name, never inline path. Swappable zero-code.

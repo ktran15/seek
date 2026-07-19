@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { getAssetOrNull } from '@/assets/registry';
@@ -209,11 +210,18 @@ function BodyPlaceholder({
           { width: disc, height: disc, borderRadius: disc / 2, backgroundColor: swatch },
         ]}
       >
-        <Text style={{ fontSize: Math.round(disc * 0.46) }}>🦫</Text>
+        <Ionicons
+          name="paw"
+          size={Math.round(disc * 0.42)}
+          color={colors.textOnPrimary}
+        />
         {female ? (
-          <Text style={[styles.femaleCue, { fontSize: Math.round(disc * 0.2) }]}>
-            🎀
-          </Text>
+          <Ionicons
+            name="female"
+            size={Math.round(disc * 0.2)}
+            color={colors.textOnPrimary}
+            style={styles.femaleCue}
+          />
         ) : null}
       </View>
     </View>

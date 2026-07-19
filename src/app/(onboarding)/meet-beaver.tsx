@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BeaverPreview } from '@/features/beaver/BeaverPreview';
@@ -27,15 +28,15 @@ export default function MeetBeaverStep() {
       </Text>
 
       <View style={styles.row}>
-        <Text style={styles.icon}>✏️</Text>
+        <Ionicons name="pencil" size={24} color={colors.info} />
         <Text style={[textStyles.body, styles.rowText]}>Name it</Text>
       </View>
       <View style={styles.row}>
-        <Text style={styles.icon}>🎨</Text>
+        <Ionicons name="color-palette" size={24} color={colors.primary} />
         <Text style={[textStyles.body, styles.rowText]}>Make it yours</Text>
       </View>
       <View style={styles.row}>
-        <Text style={styles.icon}>❤️</Text>
+        <Ionicons name="heart" size={24} color={colors.primaryPressed} />
         <Text style={[textStyles.body, styles.rowText]}>
           Keep it happy by showing up
         </Text>
@@ -62,6 +63,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     padding: spacing.md,
   },
-  icon: { fontSize: 24 },
   rowText: { color: colors.textPrimary, flex: 1 },
 });

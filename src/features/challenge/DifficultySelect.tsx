@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing, textStyles } from '@/theme';
@@ -36,7 +37,7 @@ const OPTIONS: Option[] = [
     difficulty: 'hard',
     title: 'Hard',
     task: '3-pointers — 30 seconds, most makes',
-    modeLine: '🔥 UNLOCKS HEAD-TO-HEAD · bonus coins + blue crate if you win',
+    modeLine: 'UNLOCKS HEAD-TO-HEAD · bonus coins + blue crate if you win',
     h2h: true,
   },
 ];
@@ -78,6 +79,11 @@ export function DifficultySelect({ busy, onSelect }: DifficultySelectProps) {
               option.h2h ? styles.modeHard : styles.mode,
             ]}
           >
+            {option.h2h ? (
+              <>
+                <Ionicons name="flame" size={12} color={colors.accent} />{' '}
+              </>
+            ) : null}
             {option.modeLine}
           </Text>
         </Pressable>

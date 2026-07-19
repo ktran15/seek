@@ -149,6 +149,10 @@ export const assetRegistry = {
   crateYellow: require('./art/crate-yellow.png'),
   crateGold: require('./art/crate-gold.png'),
 
+  // Care-loop snack (aesthetic §7): the vending-machine treat object —
+  // Shop card + onboarding care-loop explainer (no-emoji rule, 2026-07-19).
+  snackTreat: require('./art/snack-treat.png'),
+
   // Badges (v1 catalog, spec §6)
   badgeSummitReached: require('./art/badge-summit-reached.png'),
   badgeFirstWin: require('./art/badge-first-win.png'),

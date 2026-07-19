@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing, textStyles } from '@/theme';
@@ -27,7 +28,8 @@ export function HappinessMeter({
     >
       <View style={styles.labelRow}>
         <Text style={[textStyles.caption, styles.state]}>
-          ❤️ {state.label}
+          <Ionicons name="heart" size={12} color={colors.primaryPressed} />{' '}
+          {state.label}
         </Text>
         {showValue ? (
           <Text style={[textStyles.caption, styles.value]}>

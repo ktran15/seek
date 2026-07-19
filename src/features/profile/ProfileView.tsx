@@ -49,11 +49,15 @@ type Section = (typeof SECTIONS)[number];
  * re-request in v1); incoming points at Notifications, which owns
  * accept/decline — this screen never shows an inline accept.
  */
-const FRIEND_ACTIONS: Record<Relationship, { label: string; sendable: boolean }> = {
+const FRIEND_ACTIONS: Record<
+  Relationship,
+  { label: string; sendable: boolean; bell?: boolean }
+> = {
   none: { label: 'ADD FRIEND', sendable: true },
   outgoing: { label: 'REQUESTED', sendable: false },
   declined: { label: 'REQUESTED', sendable: false },
-  incoming: { label: 'RESPOND IN 🔔', sendable: false },
+  // bell → inline Ionicons bell (points at the TopBar bell; no system emoji).
+  incoming: { label: 'RESPOND IN', sendable: false, bell: true },
   friends: { label: 'FRIENDS', sendable: false },
 };
 
@@ -245,7 +249,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
 
       {profile?.beaver_name ? (
         <Text style={[textStyles.headerS, styles.beaverName]}>
-          🦫 {profile.beaver_name}
+          {profile.beaver_name}
         </Text>
       ) : null}
       <View style={styles.meterWrap}>
@@ -262,12 +266,16 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
           @{profile?.username ?? '—'}
         </Text>
         {profile && profile.streak_count > 0 ? (
-          <Text
-            style={[textStyles.bodyEmphasis, styles.streak]}
+          <View
+            style={styles.streak}
+            accessible
             accessibilityLabel={`${profile.streak_count} day streak`}
           >
-            🔥{profile.streak_count}
-          </Text>
+            <Ionicons name="flame" size={16} color={colors.primary} />
+            <Text style={[textStyles.bodyEmphasis, styles.streakCount]}>
+              {profile.streak_count}
+            </Text>
+          </View>
         ) : null}
       </View>
 
@@ -299,6 +307,12 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
             numberOfLines={1}
           >
             {action.label}
+            {action.bell ? (
+              <>
+                {' '}
+                <Ionicons name="notifications" size={15} color={colors.textSecondary} />
+              </>
+            ) : null}
           </Text>
         </Pressable>
       )}
@@ -406,6 +420,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   streak: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  streakCount: {
     color: colors.primary,
   },
   shareButton: {

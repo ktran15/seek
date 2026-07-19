@@ -66,6 +66,7 @@
 - **Depth:** **tactile but restrained** — soft shadows so cards, crates, and buttons feel like liftable physical objects. Present, never heavy. No gradients, no glow.
 - **Surfaces:** **subtly earth-tinted surfaces on the cream background** — not stark white — so functional screens (feed, profile, stats) stay warm and outdoor, not clinical. Keep tints **subtle** and use the deep greens (`#233837` / `#3D4625`) for text so legibility stays crisp. Reserve stronger earthy tints and richer texture for themed moments (mountain, crates, rewards).
 - **Consistency:** 3D-press buttons, 16px roundness, tactile depth, and tinted surfaces apply across every screen so the app feels like one coherent physical world.
+- **No Apple/system emojis — LOCKED (founder rule, enforced 2026-07-19):** no Apple/system emoji characters anywhere in the UI — not in labels, buttons, badges, meters, streaks, onboarding copy, placeholder/fallback states, in-app notification strings, or push-notification copy. Every symbol is either a **custom-illustrated icon in the §5 art style** (hero/reward objects — e.g. the snack treat) or an **icon-library glyph (Ionicons) tinted with role tokens** (small functional/repeated UI, per the §5 detail-tier rule). Plain text glyphs that render in the text font (✓ · … ⋯ ✕ ←) are fine; anything the OS renders in the color emoji font is not. User-generated content (comments, names) is the user's own text and is exempt.
 
 ---
 

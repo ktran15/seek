@@ -24,7 +24,7 @@ import { colors, radii, spacing, textStyles } from '@/theme';
 const ACTION_LABELS: Record<Relationship, string> = {
   none: 'ADD',
   outgoing: 'REQUESTED',
-  incoming: 'RESPOND IN 🔔',
+  incoming: 'RESPOND IN', // + inline bell icon (see renderItem) — no system emoji
   friends: 'FRIENDS',
   declined: 'REQUESTED', // declined is silent for the requester (no re-spam)
 };
@@ -135,6 +135,16 @@ export default function AddFriendsScreen() {
                     ]}
                   >
                     {ACTION_LABELS[rel]}
+                    {rel === 'incoming' ? (
+                      <>
+                        {' '}
+                        <Ionicons
+                          name="notifications"
+                          size={12}
+                          color={colors.textSecondary}
+                        />
+                      </>
+                    ) : null}
                   </Text>
                 </Pressable>
               </View>

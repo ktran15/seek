@@ -26,7 +26,7 @@ function describeNotification(n: AppNotification): string {
     const vsMascot = n.payload.vs_mascot === true;
     const rival = vsMascot ? config.rival.name : 'your rival';
     return won
-      ? `Day ${day} head-to-head: you beat ${rival}! 🎉`
+      ? `Day ${day} head-to-head: you beat ${rival}!`
       : `Day ${day} head-to-head: ${rival} took this one.`;
   }
   if (n.type === 'vote_result') {
@@ -36,7 +36,7 @@ function describeNotification(n: AppNotification): string {
         ? PLACEMENT_LABELS[n.payload.placement]
         : null;
     return placement
-      ? `Community vote: you placed ${placement} with ${votes} vote${votes === 1 ? '' : 's'}! 🏆`
+      ? `Community vote: you placed ${placement} with ${votes} vote${votes === 1 ? '' : 's'}!`
       : `Community vote: ${votes} vote${votes === 1 ? '' : 's'} — outside the top 3.`;
   }
   if (n.type === 'weekly_result') {
@@ -48,7 +48,7 @@ function describeNotification(n: AppNotification): string {
     const rankLabel =
       rank !== null ? (PLACEMENT_LABELS[rank] ?? `#${rank}`) : 'ranked';
     return n.payload.gold_crate === true
-      ? `Weekly leaderboard: ${rankLabel} place! +${coins} coins and a GOLD crate 👑`
+      ? `Weekly leaderboard: ${rankLabel} place! +${coins} coins and a GOLD crate.`
       : `Weekly leaderboard: you finished ${rankLabel} — +${coins} coins.`;
   }
   return 'Something happened on the mountain.';
