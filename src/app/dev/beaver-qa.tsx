@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -12,6 +13,7 @@ import {
   type BeaverCatalogEntry,
   type BeaverSlot,
 } from '@/features/beaver/layers';
+import { PROFILE_BEAVER_ZOOM } from '@/features/profile/ProfileView';
 import type { AvatarConfig } from '@/lib/database.types';
 import { colors, palette, radii, spacing, textStyles } from '@/theme';
 
@@ -148,6 +150,44 @@ export default function BeaverQA() {
           onPress={() => setDarkBg(!darkBg)}
         />
       </View>
+
+      {/* Profile-chrome mock (mirrors ProfileView's header cluster + values):
+          judges the PROFILE_BEAVER_ZOOM framing — side counters, name, meter,
+          streak — at a phone-ish width without needing a signed-in session. */}
+      <Text style={[textStyles.headerS, styles.sectionLabel]}>
+        Profile chrome preview (mock, zoom {PROFILE_BEAVER_ZOOM}×)
+      </Text>
+      <View style={styles.profileMock}>
+        <View style={styles.pHeaderRow}>
+          <View style={styles.pCounters}>
+            <Text style={[textStyles.headerS, styles.pCounter]}>3{'\n'}Friends</Text>
+          </View>
+          <BeaverPreview
+            config={config}
+            happiness={happiness}
+            cosmetics={QA_CATALOG}
+            zoom={PROFILE_BEAVER_ZOOM}
+          />
+          <View style={styles.pCounters}>
+            <Text style={[textStyles.headerS, styles.pInvite]}>＋{'\n'}Invite</Text>
+          </View>
+          <View style={styles.pGear}>
+            <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
+          </View>
+        </View>
+        <Text style={[textStyles.headerS, styles.pBeaverName]}>Chompers</Text>
+        <View style={styles.pMeterWrap}>
+          <HappinessMeter happiness={happiness} />
+        </View>
+        <Text style={[textStyles.headerL, styles.pDisplayName]}>Katie Tran</Text>
+        <View style={styles.pUsernameRow}>
+          <Text style={[textStyles.body, styles.pUsername]}>@trailblazer</Text>
+          <View style={styles.pStreak}>
+            <Ionicons name="flame" size={16} color={colors.primary} />
+            <Text style={[textStyles.bodyEmphasis, styles.pStreakCount]}>4</Text>
+          </View>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -199,4 +239,49 @@ const styles = StyleSheet.create({
   rowHint: {
     color: colors.textSecondary,
   },
+  sectionLabel: {
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+  },
+  // ── Profile-chrome mock: style values mirror ProfileView's ──
+  profileMock: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 390, // phone-ish width so overlap judgments match device
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: radii.card,
+    paddingVertical: spacing.md,
+  },
+  pHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    alignSelf: 'stretch',
+  },
+  pCounters: { width: 72 },
+  pCounter: { color: colors.textPrimary, textAlign: 'center' },
+  pInvite: { color: colors.info, textAlign: 'center' },
+  pGear: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pBeaverName: { color: colors.textPrimary, marginTop: spacing.xs },
+  pMeterWrap: {
+    width: '100%',
+    maxWidth: 260,
+    alignSelf: 'center',
+    marginTop: spacing.xs,
+  },
+  pDisplayName: { color: colors.textPrimary, marginTop: spacing.sm },
+  pUsernameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  pUsername: { color: colors.textSecondary },
+  pStreak: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  pStreakCount: { color: colors.primary },
 });

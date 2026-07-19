@@ -44,6 +44,13 @@ const SECTIONS = ['Stats', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /**
+ * Profile-screen beaver magnification (founder-directed 2026-07-19: ~130%
+ * bigger than the plain render). Exported so /dev/beaver-qa's profile-chrome
+ * mock previews exactly this value. Tune here.
+ */
+export const PROFILE_BEAVER_ZOOM = 2.3;
+
+/**
  * Friend-request control per relationship state (mirrors the Add Friends
  * action states): outgoing AND declined read REQUESTED (silent decline — no
  * re-request in v1); incoming points at Notifications, which owns
@@ -222,6 +229,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
           config={profile?.avatar_config}
           happiness={profile?.happiness ?? config.careLoop.startingHappiness}
           cosmetics={catalog ?? []}
+          zoom={PROFILE_BEAVER_ZOOM}
         />
         {isSelf && (
           <Pressable

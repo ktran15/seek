@@ -89,6 +89,14 @@ All beaver body + cosmetic art is final in `assets/art/beaver/{bodies,cosmetics}
 3. The Shop sells a snack at 100 Happiness (per spec §10.5 "any time, repeatable" — but it burns 25 coins for zero gain); disable the button at a full meter in the M13 polish pass.
 4. A day whose day-close never ran is never back-settled — the `happiness_settled_day` gate jumps past it and one decay/restore is lost. Accepted idempotency tradeoff; revisit only if closes prove flaky.
 
+### Founder polish triple (2026-07-19) — no-emoji rule + meter redesign + profile beaver size
+
+Three founder-directed items, one commit each on `beaver-onboarding-rework`:
+
+1. **No-emoji rule (LOCKED, committed `cf9d6f5`):** every Apple/system emoji purged from UI + notification/push copy; rule locked into aesthetic doc §4 + CLAUDE.md. Replacements: Ionicons tinted with role tokens for small functional UI (streak flame, bells, warning, care icons, coin pill — matches the founder-approved Trail Log chip pattern) and a **NEW illustrated `snackTreat` asset** (Shop vending card + care-loop onboarding) generated via nano banana with the locked §5 descriptor + crate/mountain refs (manifest batch `careLoop`; 2 API calls incl. one re-roll — first roll lettered the prompt's intent phrase onto the apple; note added to the manifest). Text-font glyphs (✓ ⋯ ✕ ·) kept; dev comment-sheet mock comments kept (simulated user content — exempt). **Push copy note:** remote push titles de-emoji only after the 4 push-sending fns are redeployed (h2h-pair, day-close, weekly-payout, vote-countdown) — cosmetic, can ride the next deploy; local notifications pick it up with the app build.
+2. **Happiness meter redesign (`09bf55e`):** raw bar → designed game element: 24px trough on a darker 3D lip (PressButton depth), fill = five flat cel hue planes (chestnut→vermillon→cadmium→indian yellow→gold; leading edge always = current state's color), flat sheen strip, state-tinted heart + centered label/value row. New tokens: `palette.gold`, `colors.happiness` ramp, `meterTrough(Lip)`, `sheen`. Profile centering bug fixed (stretch+maxWidth left-aligns under Yoga). `/dev/beaver-qa` now renders the meter under the stage (happiness control sweeps all 5 fills — verified in Chrome web).
+3. **Profile beaver ~130% bigger:** `PROFILE_BEAVER_ZOOM = 2.3` (exported from ProfileView; tune there) via BeaverPreview's existing `zoom`. `/dev/beaver-qa` gained a **Profile-chrome mock** (390px header cluster: counters/name/meter/streak, mirrors ProfileView values) — verified: no collisions with counters/name/gear at 2.3; hats crest above the header (stage intentionally doesn't clip) and may clip at the viewport top on device with tall hats — founder judges on device, tune the one constant if needed.
+
 ---
 
 ## Current milestone: **M13 — Polish & animation** (spec §15, aesthetic §8) — branch `m12-real-assets` (continues; founder approved starting while the artist works)
