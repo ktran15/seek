@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -46,15 +47,24 @@ export default function NotificationsStep() {
         <Text style={[textStyles.headerS, styles.cardTitle]}>
           We’ll ping you for:
         </Text>
-        <Text style={[textStyles.body, styles.cardLine]}>
-          🌄 The daily challenge reveal
-        </Text>
-        <Text style={[textStyles.body, styles.cardLine]}>
-          ⚔️ Your head-to-head results
-        </Text>
-        <Text style={[textStyles.body, styles.cardLine]}>
-          🦫 A nudge to keep your beaver happy
-        </Text>
+        <View style={styles.cardRow}>
+          <Ionicons name="sunny" size={20} color={colors.celebration} />
+          <Text style={[textStyles.body, styles.cardLine]}>
+            The daily challenge reveal
+          </Text>
+        </View>
+        <View style={styles.cardRow}>
+          <Ionicons name="flash" size={20} color={colors.primary} />
+          <Text style={[textStyles.body, styles.cardLine]}>
+            Your head-to-head results
+          </Text>
+        </View>
+        <View style={styles.cardRow}>
+          <Ionicons name="heart" size={20} color={colors.primaryPressed} />
+          <Text style={[textStyles.body, styles.cardLine]}>
+            A nudge to keep your beaver happy
+          </Text>
+        </View>
       </View>
     </OnboardingScreen>
   );
@@ -73,7 +83,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: colors.textPrimary,
   },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   cardLine: {
     color: colors.textPrimary,
+    flex: 1,
   },
 });

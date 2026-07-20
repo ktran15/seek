@@ -228,4 +228,18 @@ BATCHES.world = [
   },
 ];
 
+// Care-loop snack (aesthetic §7): the vending-machine treat object — a real
+// illustrated asset replacing the 🍎 system emoji stand-in (no-emoji rule,
+// founder-directed 2026-07-19).
+BATCHES.careLoop = [
+  standalone(
+    'snack-treat',
+    // NB: never phrase the intent as quoted copy — the model letters it onto
+    // the object (first roll came back wearing a text banner).
+    'a single appetizing shiny red apple with one green leaf on its stem, ' +
+      'a chunky cartoon-perfect healthy snack treat, slight 3/4 view. ' +
+      'Absolutely no text, no lettering, no labels, no banner',
+  ),
+];
+
 module.exports = { STYLE, BATCHES };

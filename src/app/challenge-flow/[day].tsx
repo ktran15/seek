@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -267,9 +268,12 @@ export default function ChallengeFlowScreen() {
                 </Text>
               </View>
               <View style={[styles.card, styles.warnCard]}>
-                <Text style={[textStyles.headerS, styles.warnText]}>
-                  ⚠️ You get ONE attempt
-                </Text>
+                <View style={styles.warnTitleRow}>
+                  <Ionicons name="warning" size={18} color={colors.primaryPressed} />
+                  <Text style={[textStyles.headerS, styles.warnText]}>
+                    You get ONE attempt
+                  </Text>
+                </View>
                 <Text style={[textStyles.bodySmall, styles.warnCopy]}>
                   Reveal costs nothing — prep as long as you like. But once you
                   tap Begin and capture starts, this is it.
@@ -421,6 +425,11 @@ const styles = StyleSheet.create({
   },
   warnCard: {
     backgroundColor: colors.surfaceSecondary,
+  },
+  warnTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
   },
   warnText: {
     color: colors.textPrimary,

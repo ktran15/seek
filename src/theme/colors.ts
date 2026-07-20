@@ -20,6 +20,9 @@ export const palette = {
   biceBlue: '#2774B4',
   chestnut: '#A44F3C',
   white: '#FFFFFF',
+  /** Bright gold peak — §2's rarity ladder tops out at "indian yellow / gold"
+   *  (the gold crate family); used where celebration peaks past yellow. */
+  gold: '#F2C14E',
 } as const;
 
 /** Role tokens — what screens actually use. Semantic logic (aesthetic §2):
@@ -69,4 +72,21 @@ export const colors = {
     epic: palette.vermillon,
     legendary: palette.indianYellow,
   },
+
+  /** Happiness-meter fill ramp — one flat hue plane per care state (§5:
+   *  cel planes, never smooth gradients), ember → gold so the bar warms and
+   *  brightens as the beaver thrives. All warm act/reward-family colors. */
+  happiness: {
+    neglected: palette.chestnut,
+    unhappy: palette.vermillon,
+    okay: palette.cadmiumOrange,
+    content: palette.indianYellow,
+    thriving: palette.gold,
+  },
+  /** Meter trough — an earth tint one step deeper than `surface` — and the
+   *  darker 3D bottom lip it sits on (PressButton depth language). */
+  meterTrough: '#E3D4C1',
+  meterTroughLip: '#CFBCA2',
+  /** Flat cel-highlight plane laid over accent fills (no gradients, §4). */
+  sheen: 'rgba(255, 255, 255, 0.28)',
 } as const;

@@ -1,4 +1,7 @@
-import { useState } from 'react';
+// Type-only import; the package ships as expo-router's own tabs dependency.
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigation } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
@@ -13,14 +16,32 @@ import { colors, radii, spacing, textStyles } from '@/theme';
  */
 export default function ProfileScreen() {
   const [page, setPage] = useState(0);
+  const pageRef = useRef(0);
+  const pagerRef = useRef<PagerView>(null);
+  // Typed as the tab navigator's prop so the 'tabPress' event exists.
+  const navigation =
+    useNavigation<BottomTabNavigationProp<Record<string, object | undefined>>>();
+
+  // Tapping the Profile tab while the pager shows the Shop returns to the
+  // Profile page (founder-reported: the already-focused tab press was a
+  // no-op, stranding the user on the Shop unless they swiped back).
+  useEffect(() => {
+    return navigation.addListener('tabPress', () => {
+      if (pageRef.current !== 0) pagerRef.current?.setPage(0);
+    });
+  }, [navigation]);
 
   return (
     <ErrorBoundary screen="Profile">
       <View style={styles.container}>
         <PagerView
+          ref={pagerRef}
           style={styles.pager}
           initialPage={0}
-          onPageSelected={(e) => setPage(e.nativeEvent.position)}
+          onPageSelected={(e) => {
+            pageRef.current = e.nativeEvent.position;
+            setPage(e.nativeEvent.position);
+          }}
         >
           <View key="profile" style={styles.page}>
             <ProfileView />

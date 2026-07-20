@@ -58,7 +58,7 @@ export default function InviteStep() {
       </View>
       {shared && (
         <Text style={[textStyles.bodyEmphasis, styles.shared]}>
-          Invite sent! 🎉 Add more rivals or continue.
+          Invite sent! Add more rivals or continue.
         </Text>
       )}
     </OnboardingScreen>

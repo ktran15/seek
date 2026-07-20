@@ -87,12 +87,71 @@ export const assetRegistry = {
   cosPetEpic: require('./placeholders/cos-pet-epic.png'),
   cosPetLegendary: require('./placeholders/cos-pet-legendary.png'),
 
+  // ── Beaver bodies (Rig Bible §4/§10) — final founder art, 2026-07-19 ──
+  // Selected by color × Happiness state, plus sex for the three states that
+  // have per-sex art (thriving/content/unhappy). Okay + neglected are ONE
+  // shared design per color (gender-agnostic — both sexes render the same
+  // file). Filenames are the founder's finals and are irregular in two spots
+  // (FUnhappyBlackCropped, BlackNeglectedCropped) — this table is the
+  // authoritative mapping; never derive these paths from patterns.
+  beaverBodyMaleBrownThriving: require('./art/beaver/bodies/CropBrownM.png'),
+  beaverBodyFemaleBrownThriving: require('./art/beaver/bodies/CropBrownF.png'),
+  beaverBodyMaleWhiteThriving: require('./art/beaver/bodies/CropWhiteM.png'),
+  beaverBodyFemaleWhiteThriving: require('./art/beaver/bodies/CropWhiteF.png'),
+  beaverBodyMaleBlackThriving: require('./art/beaver/bodies/CropBlackM.png'),
+  beaverBodyFemaleBlackThriving: require('./art/beaver/bodies/CropBlackF.png'),
+  beaverBodyMaleBrownContent: require('./art/beaver/bodies/BrownCroppedContentM.png'),
+  beaverBodyFemaleBrownContent: require('./art/beaver/bodies/BrownCroppedContentF.png'),
+  beaverBodyMaleWhiteContent: require('./art/beaver/bodies/WhiteCroppedContentM.png'),
+  beaverBodyFemaleWhiteContent: require('./art/beaver/bodies/WhiteCroppedContentF.png'),
+  beaverBodyMaleBlackContent: require('./art/beaver/bodies/BlackCroppedContentM.png'),
+  beaverBodyFemaleBlackContent: require('./art/beaver/bodies/BlackCroppedContentF.png'),
+  beaverBodyBrownOkay: require('./art/beaver/bodies/BrownCroppedOkay.png'),
+  beaverBodyWhiteOkay: require('./art/beaver/bodies/WhiteCroppedOkay.png'),
+  beaverBodyBlackOkay: require('./art/beaver/bodies/BlackCroppedOkay.png'),
+  beaverBodyMaleBrownUnhappy: require('./art/beaver/bodies/BrownMCroppedUnhappy.png'),
+  beaverBodyFemaleBrownUnhappy: require('./art/beaver/bodies/BrownFCroppedUnhappy.png'),
+  beaverBodyMaleWhiteUnhappy: require('./art/beaver/bodies/WhiteMCroppedUnhappy.png'),
+  beaverBodyFemaleWhiteUnhappy: require('./art/beaver/bodies/WhiteFCroppedUnhappy.png'),
+  beaverBodyMaleBlackUnhappy: require('./art/beaver/bodies/BlackMCroppedUnhappy.png'),
+  beaverBodyFemaleBlackUnhappy: require('./art/beaver/bodies/FUnhappyBlackCropped.png'),
+  beaverBodyBrownNeglected: require('./art/beaver/bodies/BrownCroppedNeglected.png'),
+  beaverBodyWhiteNeglected: require('./art/beaver/bodies/WhiteCroppedNeglected.png'),
+  beaverBodyBlackNeglected: require('./art/beaver/bodies/BlackNeglectedCropped.png'),
+
+  // ── Beaver cosmetics (§10.2 catalog, 19 items) — final founder art ──
+  // Keys are the DB `cosmetics.asset_slot_name` values (LOCKED in migration
+  // 20260716000002). PinkGlasses.png is the "Eye Shadow" item's art.
+  cosHatsBeanie: require('./art/beaver/cosmetics/WhiteBeanie.png'),
+  cosHatsBaseballCap: require('./art/beaver/cosmetics/BlueHat.png'),
+  cosHatsBowHat: require('./art/beaver/cosmetics/Bow.png'),
+  cosHatsPropeller: require('./art/beaver/cosmetics/PropHat.png'),
+  cosHatsCrown: require('./art/beaver/cosmetics/Crown.png'),
+  cosTailsRed: require('./art/beaver/cosmetics/RedTail.png'),
+  cosTailsCheckerboard: require('./art/beaver/cosmetics/Checker.png'),
+  cosTailsBow: require('./art/beaver/cosmetics/BowTail.png'),
+  cosTailsRainbow: require('./art/beaver/cosmetics/RainbowTail.png'),
+  cosTailsGold: require('./art/beaver/cosmetics/GoldTail.png'),
+  cosGlovesRedBoxing: require('./art/beaver/cosmetics/RedGloves.png'),
+  cosGlovesBlue: require('./art/beaver/cosmetics/BlueGloves.png'),
+  cosGlovesPinkMitts: require('./art/beaver/cosmetics/PinkGloves.png'),
+  cosGlovesGoldenBoxing: require('./art/beaver/cosmetics/GoldenGloves.png'),
+  cosEyesSunglasses: require('./art/beaver/cosmetics/Sunglasses.png'),
+  cosEyesEyePatch: require('./art/beaver/cosmetics/EyePatch.png'),
+  cosEyesShadow: require('./art/beaver/cosmetics/PinkGlasses.png'),
+  cosEyesSkiGoggles: require('./art/beaver/cosmetics/SkiGoggles.png'),
+  cosEyesGoldMonocle: require('./art/beaver/cosmetics/Monocle.png'),
+
   // Crates — one design, five recolors (spec §9.3)
   crateWooden: require('./art/crate-wooden.png'),
   crateBlue: require('./art/crate-blue.png'),
   crateRed: require('./art/crate-red.png'),
   crateYellow: require('./art/crate-yellow.png'),
   crateGold: require('./art/crate-gold.png'),
+
+  // Care-loop snack (aesthetic §7): the vending-machine treat object —
+  // Shop card + onboarding care-loop explainer (no-emoji rule, 2026-07-19).
+  snackTreat: require('./art/snack-treat.png'),
 
   // Badges (v1 catalog, spec §6)
   badgeSummitReached: require('./art/badge-summit-reached.png'),

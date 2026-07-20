@@ -66,6 +66,7 @@
 - **Depth:** **tactile but restrained** — soft shadows so cards, crates, and buttons feel like liftable physical objects. Present, never heavy. No gradients, no glow.
 - **Surfaces:** **subtly earth-tinted surfaces on the cream background** — not stark white — so functional screens (feed, profile, stats) stay warm and outdoor, not clinical. Keep tints **subtle** and use the deep greens (`#233837` / `#3D4625`) for text so legibility stays crisp. Reserve stronger earthy tints and richer texture for themed moments (mountain, crates, rewards).
 - **Consistency:** 3D-press buttons, 16px roundness, tactile depth, and tinted surfaces apply across every screen so the app feels like one coherent physical world.
+- **No Apple/system emojis — LOCKED (founder rule, enforced 2026-07-19):** no Apple/system emoji characters anywhere in the UI — not in labels, buttons, badges, meters, streaks, onboarding copy, placeholder/fallback states, in-app notification strings, or push-notification copy. Every symbol is either a **custom-illustrated icon in the §5 art style** (hero/reward objects — e.g. the snack treat) or an **icon-library glyph (Ionicons) tinted with role tokens** (small functional/repeated UI, per the §5 detail-tier rule). Plain text glyphs that render in the text font (✓ · … ⋯ ✕ ←) are fine; anything the OS renders in the color emoji font is not. User-generated content (comments, names) is the user's own text and is exempt.
 
 ---
 
@@ -106,7 +107,7 @@
 - **Cosmetics render on top of every state** — a Neglected beaver still wears its hat/tail/gloves/eyes on the sadder pose. Keep the states within one registration envelope so a single cosmetic layer set composites across all five (rig bible).
 
 **The rival (H2H opponent NPC).** When no friend can be paired, the opponent is a **different, distinct beaver** (spec §7.9) — recognizable as "the opponent," **visually separated** from the player's own beaver (different palette/build/attitude) so the two are never confused. Same hero-tier craft. Needs **win / lose / idle expression states** for H2H moments. It is a stand-in opponent, **not** the game's singular mascot.
-- **Decided (2026-07-16, spec §18):** the rival is **one fixed recurring character named "Bucky"** (config `rival.name`; Rig Bible §7) — a beaver deliberately distinct from the player's. **Still open (founder):** both characters' exact final designs and Bucky's personality specifics. Build against config + registry slots (`beaverBody{Sex}{Color}{State}` for the player's 6 bodies × 5 Happiness states, `rivalBeaver` + expression states for Bucky); labeled placeholder until final art.
+- **Decided (2026-07-16, spec §18):** the rival is **one fixed recurring character named "Bucky"** (config `rival.name`; Rig Bible §7) — a beaver deliberately distinct from the player's. **Still open (founder):** both characters' exact final designs and Bucky's personality specifics. Build against config + registry slots (player bodies: `beaverBody{Sex}{Color}{State}`, with the gender-agnostic okay/neglected states at `beaverBody{Color}{State}` — final art landed 2026-07-19, Rig Bible §4; `rivalBeaver` + expression states for Bucky — still a labeled placeholder until final art).
 - **Tone:** friendly, warm, motivating — never punishing, even at low Happiness or on a loss.
 
 ---

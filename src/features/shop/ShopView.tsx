@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getAsset, type AssetSlot } from '@/assets/registry';
@@ -88,8 +89,9 @@ export function ShopView() {
       <View style={styles.headerRow}>
         <Text style={[textStyles.hero, styles.title]}>Shop</Text>
         <View style={styles.balancePill}>
+          <Ionicons name="cash" size={16} color={colors.celebration} />
           <Text style={[textStyles.bodyEmphasis, styles.balanceLabel]}>
-            🪙 {balance}
+            {balance}
           </Text>
         </View>
       </View>
@@ -116,7 +118,7 @@ export function ShopView() {
       <Text style={[textStyles.header, styles.sectionTitle]}>Vending machine</Text>
       <View style={[styles.snackCard, elevation.card]}>
         <View style={styles.snackHeader}>
-          <Text style={styles.snackEmoji}>🍎</Text>
+          <Image source={getAsset('snackTreat')} style={styles.snackArt} />
           <View style={styles.snackText}>
             <Text style={[textStyles.headerS, styles.crateName]}>Snack</Text>
             <Text style={[textStyles.caption, styles.snackNote]}>
@@ -152,7 +154,10 @@ const styles = StyleSheet.create({
   },
   balancePill: {
     minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xxs,
     paddingHorizontal: spacing.sm,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
@@ -201,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  snackEmoji: { fontSize: 40 },
+  snackArt: { width: 48, height: 48 },
   snackText: { flex: 1, gap: spacing.xxs },
   snackNote: { color: colors.textSecondary },
 });

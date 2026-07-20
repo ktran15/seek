@@ -44,16 +44,28 @@ const SECTIONS = ['Stats', 'Inventory'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /**
+ * Profile-screen beaver magnification. Exported so /dev/beaver-qa's
+ * profile-chrome mock previews exactly this value. Tune here.
+ * History: 2.3 (founder-directed 2026-07-19, ~130% bigger) → ×0.85 founder
+ * trim same day = 1.955.
+ */
+export const PROFILE_BEAVER_ZOOM = 1.955;
+
+/**
  * Friend-request control per relationship state (mirrors the Add Friends
  * action states): outgoing AND declined read REQUESTED (silent decline — no
  * re-request in v1); incoming points at Notifications, which owns
  * accept/decline — this screen never shows an inline accept.
  */
-const FRIEND_ACTIONS: Record<Relationship, { label: string; sendable: boolean }> = {
+const FRIEND_ACTIONS: Record<
+  Relationship,
+  { label: string; sendable: boolean; bell?: boolean }
+> = {
   none: { label: 'ADD FRIEND', sendable: true },
   outgoing: { label: 'REQUESTED', sendable: false },
   declined: { label: 'REQUESTED', sendable: false },
-  incoming: { label: 'RESPOND IN 🔔', sendable: false },
+  // bell → inline Ionicons bell (points at the TopBar bell; no system emoji).
+  incoming: { label: 'RESPOND IN', sendable: false, bell: true },
   friends: { label: 'FRIENDS', sendable: false },
 };
 
@@ -218,6 +230,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
           config={profile?.avatar_config}
           happiness={profile?.happiness ?? config.careLoop.startingHappiness}
           cosmetics={catalog ?? []}
+          zoom={PROFILE_BEAVER_ZOOM}
         />
         {isSelf && (
           <Pressable
@@ -245,7 +258,7 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
 
       {profile?.beaver_name ? (
         <Text style={[textStyles.headerS, styles.beaverName]}>
-          🦫 {profile.beaver_name}
+          {profile.beaver_name}
         </Text>
       ) : null}
       <View style={styles.meterWrap}>
@@ -262,12 +275,16 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
           @{profile?.username ?? '—'}
         </Text>
         {profile && profile.streak_count > 0 ? (
-          <Text
-            style={[textStyles.bodyEmphasis, styles.streak]}
+          <View
+            style={styles.streak}
+            accessible
             accessibilityLabel={`${profile.streak_count} day streak`}
           >
-            🔥{profile.streak_count}
-          </Text>
+            <Ionicons name="flame" size={16} color={colors.primary} />
+            <Text style={[textStyles.bodyEmphasis, styles.streakCount]}>
+              {profile.streak_count}
+            </Text>
+          </View>
         ) : null}
       </View>
 
@@ -299,6 +316,12 @@ export function ProfileView({ viewUserId }: { viewUserId?: string } = {}) {
             numberOfLines={1}
           >
             {action.label}
+            {action.bell ? (
+              <>
+                {' '}
+                <Ionicons name="notifications" size={15} color={colors.textSecondary} />
+              </>
+            ) : null}
           </Text>
         </Pressable>
       )}
@@ -388,9 +411,12 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: spacing.xs,
   },
+  // width+maxWidth+center (NOT alignSelf:'stretch'+maxWidth — Yoga clamps the
+  // stretched width but leaves the box start-aligned, i.e. off-center).
   meterWrap: {
-    alignSelf: 'stretch',
-    maxWidth: 240,
+    width: '100%',
+    maxWidth: 260,
+    alignSelf: 'center',
     marginTop: spacing.xs,
   },
   displayName: {
@@ -406,6 +432,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   streak: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  streakCount: {
     color: colors.primary,
   },
   shareButton: {

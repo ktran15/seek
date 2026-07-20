@@ -1,5 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { getAsset } from '@/assets/registry';
 import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
 import { goToNextStep } from '@/features/onboarding/steps';
 import { colors, radii, spacing, textStyles } from '@/theme';
@@ -22,19 +24,19 @@ export default function CareLoopStep() {
       </Text>
 
       <View style={[styles.card, styles.cardGood]}>
-        <Text style={styles.emoji}>✅</Text>
+        <Ionicons name="checkmark-circle" size={32} color={colors.textOnDark} />
         <View style={styles.cardText}>
           <Text style={[textStyles.headerS, styles.cardTitle]}>
             Finish the day
           </Text>
           <Text style={[textStyles.body, styles.cardBody]}>
-            Happiness goes up 🐾 and your streak grows 🔥
+            Happiness goes up and your streak grows.
           </Text>
         </View>
       </View>
 
       <View style={[styles.card, styles.cardDip]}>
-        <Text style={styles.emoji}>😴</Text>
+        <Ionicons name="moon" size={32} color={colors.textSecondary} />
         <View style={styles.cardText}>
           <Text style={[textStyles.headerS, styles.cardTitle]}>Skip a day</Text>
           <Text style={[textStyles.body, styles.cardBody]}>
@@ -44,7 +46,7 @@ export default function CareLoopStep() {
       </View>
 
       <View style={[styles.card, styles.cardSnack]}>
-        <Text style={styles.emoji}>🍎</Text>
+        <Image source={getAsset('snackTreat')} style={styles.snackArt} />
         <View style={styles.cardText}>
           <Text style={[textStyles.headerS, styles.cardTitle]}>
             Need a boost?
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
   cardGood: { backgroundColor: colors.surfaceNature },
   cardDip: { backgroundColor: colors.surface },
   cardSnack: { backgroundColor: colors.surfaceSecondary },
-  emoji: { fontSize: 32 },
+  snackArt: { width: 36, height: 36 },
   cardText: { flex: 1, gap: spacing.xxs },
   cardTitle: { color: colors.textPrimary },
   cardBody: { color: colors.textPrimary },

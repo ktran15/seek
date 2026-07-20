@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import type { Database } from './database.types';
 
@@ -21,7 +21,10 @@ if (!supabaseUrl || !supabasePublishableKey) {
 // Edge Functions — never this client.
 export const supabase = createClient<Database>(supabaseUrl, supabasePublishableKey, {
   auth: {
-    storage: AsyncStorage,
+    // Native persists sessions in AsyncStorage. On web (a dev/QA vehicle only,
+    // v1 ships iOS) auth-js picks its own storage — AsyncStorage's web shim
+    // touches `window` at call time and crashes expo-router's static render.
+    ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
