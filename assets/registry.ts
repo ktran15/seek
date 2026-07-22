@@ -31,15 +31,14 @@ export const assetRegistry = {
   mascotCheer: require('./art/mascot-cheer.png'),
   mascotDefeat: require('./art/mascot-defeat.png'),
 
-  // Onboarding first-run heroes (founder Claude Design prototype, 2026-07-22).
-  // Founder-supplied finals drop into `assets/art/onboarding/`; until then these
-  // point at existing art so the flow is fully runnable on placeholders.
-  //   onboardingIntro   → beaver watching the sunrise (welcome hero)
-  //   onboardingSummit  → beaver planting a flag at the summit/sunset (begin hero)
-  //   onboardingBeaver  → the standing "Cutebeaver" illustration (meet/name/invite)
-  onboardingIntro: require('./art/mountain-background.png'),
-  onboardingSummit: require('./art/summit-state.png'),
-  onboardingBeaver: require('./art/mascot-avatar.png'),
+  // Onboarding first-run heroes (founder Claude Design prototype, 2026-07-22) —
+  // founder finals delivered 2026-07-21. The beaver itself renders through the
+  // real compositor (BeaverPreview) on every onboarding surface, so no flat
+  // beaver slot is needed here.
+  //   onboardingIntro   → beaver watching the sunrise (welcome hero, HTML screen 1)
+  //   onboardingSummit  → beaver planting a flag at the summit/sunset (begin hero, HTML screen 10)
+  onboardingIntro: require('./art/IntroMountainBackground.png'),
+  onboardingSummit: require('./art/EndMountainBackground.png'),
 
   // Mountain world
   mountainBackground: require('./art/mountain-background.png'),

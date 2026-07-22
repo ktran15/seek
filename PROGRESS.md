@@ -24,7 +24,7 @@ no inline hex/fonts (CLAUDE.md). Fonts added: `@expo-google-fonts/fraunces` +
 | 1 | Scoped design module + fonts + flat primitives (`OnboardingButton`, `TextLink`, `OnboardingField`, `ProgressDots`, `OnboardingScaffold`) | ✅ done |
 | 2 | All 10 prototype screens rebuilt: `(auth)` welcome (sunrise hero + serif Seek + Apple/Google/email) & create-account, then the 8 dot-tracked steps. Backend wiring preserved verbatim | ✅ done |
 | 3 | Flow is the prototype's **8 steps**. The standalone `customize-beaver` route is deleted, but its function is **folded into "Name your beaver"** (founder-directed 2026-07-22): the beaver window carries a Male/Female slider + colour swatches (live `BeaverPreview` updates as you pick), with the name field below. That screen now writes `beaver_name` **and** `avatar_config` (sex + bodyColor). Old `OnboardingScreen.tsx` scaffold deleted | ✅ done |
-| 4 | Registry slots `onboardingIntro` / `onboardingSummit` / `onboardingBeaver` (placeholder art until founder finals land) | ✅ done |
+| 4 | Registry slots `onboardingIntro` / `onboardingSummit` → founder finals `IntroMountainBackground.png` / `EndMountainBackground.png` (delivered + wired 2026-07-21). Beaver renders through the **real `BeaverPreview` compositor on every onboarding surface** (meet / name / invite) — no flat placeholder | ✅ done |
 | 5 | Verified: tsc clean, 209 tests green; rendered welcome + create-account on expo-web (fonts/palette/layout correct, no runtime errors) | ✅ done |
 
 **Onboarding flow now (8 steps):** Claim your name (username+display) → Don't
@@ -34,19 +34,20 @@ name**, writes `beaver_name` + `avatar_config`) → Show up. Stay happy. (care
 loop) → You need a rival (invite) → The mountain is waiting (begin →
 `onboarding_completed_at`).
 
-**⚠️ FOUNDER ACTION — supply 3 images (flow runs on placeholders until then):**
-drop the prototype's finals into a new `assets/art/onboarding/` folder; the
-registry slots currently point at stand-in art. Then tell the agent the filenames
-(or use these) and it flips the slots (zero code):
-1. **`onboardingIntro`** — beaver watching the sunrise (welcome hero). *Prototype file: `ChatGPT Image Jul 20…png`.* Placeholder: `mountain-background.png`.
-2. **`onboardingSummit`** — beaver planting a flag at the summit/sunset (begin hero). *Prototype file: `pasted-1784524927228-0.png`.* Placeholder: `summit-state.png`.
-3. **`onboardingBeaver`** — the standing "Cutebeaver" illustration (meet/name/invite). *Prototype file: `Cutebeaver.png`.* Placeholder: `mascot-avatar.png`.
+**Assets — DELIVERED (founder, 2026-07-21):** the two hero backgrounds are in
+`assets/art/` and wired: `IntroMountainBackground.png` (welcome hero) +
+`EndMountainBackground.png` (begin hero). The beaver is **not** a flat image —
+it renders live through `BeaverPreview`, so "just use the real beavers"
+(founder, 2026-07-22) is satisfied on all three beaver surfaces. No further art
+is outstanding for onboarding.
 
-**Next step:** founder reviews the flow on device (Expo Go: sign up → walk the 8
-steps) and delivers the 3 hero/beaver images + the app-wide overhaul prototype.
-Aesthetic doc carries a scoped "direction shift in progress" note; Rig Bible
-untouched (no character-art rules changed). The `.dc.html` prototype is left
-untracked in the repo root (references `uploads/` + `support.js` not committed).
+**Next step:** founder runs the flow through Expo (sign up → walk the 8 steps)
+to surface any visual issues to fix. Known tune-points if flagged: hero image
+crop (scaffold uses cover/center; the prototype biased the summit hero to
+`center 38%`), and the "slider" being a Male/Female segmented toggle. Aesthetic
+doc carries a scoped "direction shift in progress" note; Rig Bible untouched.
+The `.dc.html` prototype is left untracked in the repo root (references
+`uploads/` + `support.js`, not committed).
 
 ## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
 

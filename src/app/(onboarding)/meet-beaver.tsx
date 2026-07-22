@@ -1,12 +1,17 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { getAsset } from '@/assets/registry';
+import { useSession } from '@/features/auth/useSession';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
 import { obColors, obRadii, obText } from '@/features/onboarding/theme';
+import { useProfile } from '@/features/profile/useProfile';
 
 /** "Meet your beaver" (prototype screen 6) — graphic-first intro to the beaver. */
 export default function MeetBeaverStep() {
+  const { session } = useSession();
+  const { data: profile } = useProfile(session?.user.id);
+
   return (
     <OnboardingScaffold
       step="meet-beaver"
@@ -16,12 +21,7 @@ export default function MeetBeaverStep() {
       onCta={() => goToNextStep('meet-beaver')}
     >
       <View style={styles.stage}>
-        <Image
-          source={getAsset('onboardingBeaver')}
-          style={styles.beaver}
-          resizeMode="contain"
-          accessibilityLabel="Your beaver"
-        />
+        <BeaverPreview config={profile?.avatar_config} height={148} />
       </View>
 
       <Text style={[obText.helper, styles.helper]}>
@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  beaver: { height: 144, width: '70%' },
   helper: { color: obColors.textMuted, textAlign: 'center', marginTop: 12, marginBottom: 14 },
   rows: { gap: 9 },
   row: {

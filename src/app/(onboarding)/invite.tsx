@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { getAsset } from '@/assets/registry';
 import { useSession } from '@/features/auth/useSession';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
 import { obColors, obText } from '@/features/onboarding/theme';
 import { sendInvite } from '@/features/invites/sendInvite';
+import { useProfile } from '@/features/profile/useProfile';
 
 /**
  * "You need a rival" (prototype screen 9, spec §7.8) — inviteGate is LOCKED to
@@ -14,6 +15,7 @@ import { sendInvite } from '@/features/invites/sendInvite';
  */
 export default function InviteStep() {
   const { session } = useSession();
+  const { data: profile } = useProfile(session?.user.id);
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
 
@@ -48,12 +50,7 @@ export default function InviteStep() {
       <View style={styles.versus}>
         <View style={styles.avatarBlock}>
           <View style={styles.youRing}>
-            <Image
-              source={getAsset('onboardingBeaver')}
-              style={styles.youBeaver}
-              resizeMode="contain"
-              accessibilityLabel="You"
-            />
+            <BeaverPreview config={profile?.avatar_config} height={72} />
           </View>
           <Text style={[obText.caption, styles.avatarLabel]}>You</Text>
         </View>
@@ -107,7 +104,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  youBeaver: { width: 66, height: 66 },
   rivalRing: {
     width: 82,
     height: 82,
