@@ -4,6 +4,48 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Onboarding overhaul — rebuilt to the Claude Design prototype (2026-07-22) — branch `beaver-onboarding-rework`
+
+Founder-directed **complete overhaul of the onboarding/first-run flow** to a new
+Claude Design prototype (`Seek Onboarding Prototype.dc.html`, in repo root),
+reproduced faithfully ("to a tea"). **Scoped to onboarding only** — the founder
+has a separate app-wide overhaul prototype coming; the global theme and every
+other screen are deliberately untouched. Committed `89a7f8c`.
+
+**New visual direction (scoped):** warmer/lighter cream `#FBF4EA`, **Fraunces**
+(serif display) + **Hanken Grotesk** (body) Google Fonts, flat soft-shadow
+buttons (no 3D lip), rust `#B4551F` text links. All token-driven via a dedicated
+`src/features/onboarding/theme.ts` (`obColors`/`obFonts`/`obRadii`/`obText`) —
+no inline hex/fonts (CLAUDE.md). Fonts added: `@expo-google-fonts/fraunces` +
+`hanken-grotesk`, loaded in the root layout.
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Scoped design module + fonts + flat primitives (`OnboardingButton`, `TextLink`, `OnboardingField`, `ProgressDots`, `OnboardingScaffold`) | ✅ done |
+| 2 | All 10 prototype screens rebuilt: `(auth)` welcome (sunrise hero + serif Seek + Apple/Google/email) & create-account, then the 8 dot-tracked steps. Backend wiring preserved verbatim | ✅ done |
+| 3 | Flow trimmed to the prototype's **8 steps** — the standalone **`customize-beaver` step is removed** (route deleted; sex/colour still editable in Settings → Edit beaver). Old `OnboardingScreen.tsx` scaffold deleted | ✅ done |
+| 4 | Registry slots `onboardingIntro` / `onboardingSummit` / `onboardingBeaver` (placeholder art until founder finals land) | ✅ done |
+| 5 | Verified: tsc clean, 209 tests green; rendered welcome + create-account on expo-web (fonts/palette/layout correct, no runtime errors) | ✅ done |
+
+**Onboarding flow now (8 steps):** Claim your name (username+display) → Don't
+miss your shot (notifications+push register) → Built for doers (social proof) →
+Meet your beaver → Name your beaver → Show up. Stay happy. (care loop) → You
+need a rival (invite) → The mountain is waiting (begin → `onboarding_completed_at`).
+
+**⚠️ FOUNDER ACTION — supply 3 images (flow runs on placeholders until then):**
+drop the prototype's finals into a new `assets/art/onboarding/` folder; the
+registry slots currently point at stand-in art. Then tell the agent the filenames
+(or use these) and it flips the slots (zero code):
+1. **`onboardingIntro`** — beaver watching the sunrise (welcome hero). *Prototype file: `ChatGPT Image Jul 20…png`.* Placeholder: `mountain-background.png`.
+2. **`onboardingSummit`** — beaver planting a flag at the summit/sunset (begin hero). *Prototype file: `pasted-1784524927228-0.png`.* Placeholder: `summit-state.png`.
+3. **`onboardingBeaver`** — the standing "Cutebeaver" illustration (meet/name/invite). *Prototype file: `Cutebeaver.png`.* Placeholder: `mascot-avatar.png`.
+
+**Next step:** founder reviews the flow on device (Expo Go: sign up → walk the 8
+steps) and delivers the 3 hero/beaver images + the app-wide overhaul prototype.
+Aesthetic doc carries a scoped "direction shift in progress" note; Rig Bible
+untouched (no character-art rules changed). The `.dc.html` prototype is left
+untracked in the repo root (references `uploads/` + `support.js` not committed).
+
 ## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
 
 Founder resolved the 5 open §18 character decisions as **final**, directed the §5 onboarding rework, reviewed it, then gave the go-ahead for the **M8 beaver systems** (care loop, render rework, cosmetics reschema, snack). All built below.
