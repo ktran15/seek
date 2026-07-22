@@ -1,79 +1,87 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { getAsset } from '@/assets/registry';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { obColors, obText } from '@/features/onboarding/theme';
 
 /**
- * Onboarding "Care-loop explainer" (spec §5 step 6, §10.6). Teaches the loop
- * graphically, minimal text: show up → beaver's happy + streak grows; skip →
- * it dips (never a gameplay penalty, §10.3); a Shop snack tops it up. No write.
+ * "Show up. Stay happy." (prototype screen 8) — teaches the care loop: finish →
+ * happiness up + streak; skip → a small dip (never a gameplay penalty); a Shop
+ * snack tops it up. No write.
  */
 export default function CareLoopStep() {
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="care-loop"
       title="Show up. Stay happy."
-      ctaLabel="GOT IT"
+      titleStyle={obText.title29}
+      subtitle="Your beaver’s mood follows your habits."
+      ctaLabel="Got it"
       onCta={() => goToNextStep('care-loop')}
     >
-      <Text style={[textStyles.body, styles.lead]}>
-        Your beaver’s mood follows your habit — not a scoreboard.
-      </Text>
+      <View style={styles.cards}>
+        <View style={[styles.card, styles.cardGood]}>
+          <View style={[styles.icon, { backgroundColor: obColors.dotGreen }]}>
+            <Ionicons name="checkmark" size={15} color={obColors.white} />
+          </View>
+          <View style={styles.text}>
+            <Text style={[obText.cardTitle, styles.title]}>Finish the day</Text>
+            <Text style={[obText.cardBody, { color: obColors.textGreen }]}>
+              Happiness goes up and your streak grows.
+            </Text>
+          </View>
+        </View>
 
-      <View style={[styles.card, styles.cardGood]}>
-        <Ionicons name="checkmark-circle" size={32} color={colors.textOnDark} />
-        <View style={styles.cardText}>
-          <Text style={[textStyles.headerS, styles.cardTitle]}>
-            Finish the day
-          </Text>
-          <Text style={[textStyles.body, styles.cardBody]}>
-            Happiness goes up and your streak grows.
-          </Text>
+        <View style={[styles.card, styles.cardSkip]}>
+          <View style={[styles.icon, { backgroundColor: obColors.dotSkip }]}>
+            <View style={[styles.innerDot, { backgroundColor: obColors.screen }]} />
+          </View>
+          <View style={styles.text}>
+            <Text style={[obText.cardTitle, styles.title]}>Skip a day</Text>
+            <Text style={[obText.cardBody, { color: obColors.textMuted }]}>
+              It dips a little, no penalty, just a nudge to come back.
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.card, styles.cardBoost]}>
+          <View style={[styles.icon, { backgroundColor: obColors.primary }]}>
+            <View style={[styles.innerDot, { backgroundColor: obColors.onPrimary }]} />
+          </View>
+          <View style={styles.text}>
+            <Text style={[obText.cardTitle, styles.title]}>Need a boost?</Text>
+            <Text style={[obText.cardBody, { color: obColors.textBrown }]}>
+              Grab a snack from the Shop any time.
+            </Text>
+          </View>
         </View>
       </View>
-
-      <View style={[styles.card, styles.cardDip]}>
-        <Ionicons name="moon" size={32} color={colors.textSecondary} />
-        <View style={styles.cardText}>
-          <Text style={[textStyles.headerS, styles.cardTitle]}>Skip a day</Text>
-          <Text style={[textStyles.body, styles.cardBody]}>
-            It dips a little — no penalty, just a nudge to come back.
-          </Text>
-        </View>
-      </View>
-
-      <View style={[styles.card, styles.cardSnack]}>
-        <Image source={getAsset('snackTreat')} style={styles.snackArt} />
-        <View style={styles.cardText}>
-          <Text style={[textStyles.headerS, styles.cardTitle]}>
-            Need a boost?
-          </Text>
-          <Text style={[textStyles.body, styles.cardBody]}>
-            Grab a snack from the Shop any time.
-          </Text>
-        </View>
-      </View>
-    </OnboardingScreen>
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  lead: { color: colors.textPrimary, textAlign: 'center' },
+  cards: { marginTop: 22, gap: 12 },
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    borderRadius: radii.card,
-    padding: spacing.md,
+    alignItems: 'flex-start',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 15,
+    padding: 14,
   },
-  cardGood: { backgroundColor: colors.surfaceNature },
-  cardDip: { backgroundColor: colors.surface },
-  cardSnack: { backgroundColor: colors.surfaceSecondary },
-  snackArt: { width: 36, height: 36 },
-  cardText: { flex: 1, gap: spacing.xxs },
-  cardTitle: { color: colors.textPrimary },
-  cardBody: { color: colors.textPrimary },
+  cardGood: { backgroundColor: obColors.surfaceGreen, borderColor: obColors.borderGreen },
+  cardSkip: { backgroundColor: obColors.surface, borderColor: obColors.border },
+  cardBoost: { backgroundColor: obColors.surfacePeach, borderColor: obColors.borderPeach },
+  icon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  innerDot: { width: 9, height: 9, borderRadius: 5 },
+  text: { flex: 1, gap: 3 },
+  title: { color: obColors.text },
 });

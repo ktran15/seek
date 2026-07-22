@@ -1,6 +1,17 @@
 import { AlfaSlabOne_400Regular } from '@expo-google-fonts/alfa-slab-one';
 import { Archivo_800ExtraBold } from '@expo-google-fonts/archivo';
 import {
+  Fraunces_500Medium,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  HankenGrotesk_400Regular,
+  HankenGrotesk_500Medium,
+  HankenGrotesk_600SemiBold,
+  HankenGrotesk_700Bold,
+} from '@expo-google-fonts/hanken-grotesk';
+import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
@@ -116,6 +127,15 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Archivo_800ExtraBold,
+    // Onboarding/first-run direction (founder Claude Design prototype) —
+    // scoped to the (auth) + (onboarding) groups; see features/onboarding/theme.
+    Fraunces_500Medium,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    HankenGrotesk_400Regular,
+    HankenGrotesk_500Medium,
+    HankenGrotesk_600SemiBold,
+    HankenGrotesk_700Bold,
   });
 
   // Wait for fonts (or a font failure — then render with system fonts rather

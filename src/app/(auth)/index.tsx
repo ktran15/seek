@@ -1,20 +1,32 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getAsset } from '@/assets/registry';
-import { PressButton } from '@/components/ui/PressButton';
-import { config } from '@/config';
+import { OnboardingButton } from '@/features/onboarding/components/OnboardingButton';
+import { obColors, obRadii, obText } from '@/features/onboarding/theme';
 import {
   AuthCancelled,
   signInWithApple,
   signInWithGoogle,
 } from '@/features/auth/socialAuth';
-import { colors, radii, spacing, textStyles } from '@/theme';
 
+/** Welcome (prototype screen 1) — sunrise hero, brand, and the three sign-in
+ *  paths. Backend auth is unchanged; only the presentation is the new look. */
 export default function WelcomeScreen() {
   const [busy, setBusy] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
   const runSocial = async (method: () => Promise<void>) => {
     setBusy(true);
@@ -34,68 +46,58 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <Image
-        source={getAsset('appLogoWordmark')}
-        style={styles.logo}
-        resizeMode="contain"
-        accessibilityLabel={`${config.appName} logo`}
+        source={getAsset('onboardingIntro')}
+        style={{ width: '100%', height: Math.round(height * 0.48) }}
+        resizeMode="cover"
+        accessibilityLabel="A beaver watching the sunrise over the mountains"
       />
-      <Text style={[textStyles.body, styles.tagline]}>
-        Do hard things. Together.
-      </Text>
 
-      <View style={styles.buttons}>
-        {Platform.OS === 'ios' && (
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-            cornerRadius={radii.pill}
-            style={styles.appleButton}
-            onPress={() => runSocial(signInWithApple)}
+      <View style={[styles.content, { paddingBottom: Math.max(insets.bottom + 8, 26) }]}>
+        <View>
+          <Text style={[obText.brand, styles.brand]}>Seek</Text>
+          <Text style={[obText.body, styles.tagline]}>Do hard things. Together.</Text>
+        </View>
+
+        <View style={styles.buttons}>
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={obRadii.button}
+              style={styles.appleButton}
+              onPress={() => runSocial(signInWithApple)}
+            />
+          )}
+          <OnboardingButton
+            label="Continue with Google"
+            variant="google"
+            disabled={busy}
+            onPress={() => runSocial(signInWithGoogle)}
           />
-        )}
-        <PressButton
-          label="CONTINUE WITH GOOGLE"
-          variant="info"
-          disabled={busy}
-          onPress={() => runSocial(signInWithGoogle)}
-        />
-        <PressButton
-          label="CONTINUE WITH EMAIL"
-          disabled={busy}
-          onPress={() => router.push('/(auth)/email')}
-        />
+          <OnboardingButton
+            label="Continue with email"
+            disabled={busy}
+            onPress={() => router.push('/(auth)/email')}
+          />
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: { flex: 1, backgroundColor: obColors.screen },
+  content: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-    padding: spacing.lg,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: 22,
+    gap: 20,
   },
-  // The old 96px square held the padded master (visible mark ≈ 96px wide);
-  // the tight wordmark at 170×115 shows the mark ~20% larger, no dead space.
-  logo: {
-    width: 170,
-    height: 115,
-    marginBottom: spacing.md,
-  },
-  tagline: {
-    marginTop: spacing.xs,
-    color: colors.textSecondary,
-  },
-  buttons: {
-    marginTop: spacing.xl,
-    alignSelf: 'stretch',
-    gap: spacing.sm,
-  },
-  appleButton: {
-    height: 52,
-  },
+  brand: { color: obColors.text },
+  tagline: { color: obColors.textMuted, marginTop: 6 },
+  buttons: { gap: 10 },
+  appleButton: { height: 52 },
 });

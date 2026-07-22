@@ -1,14 +1,15 @@
 import { router, type Href } from 'expo-router';
 
 /**
- * Ordered onboarding flow (spec §5 — the visual-first beaver rework).
+ * Ordered onboarding flow — the founder's Claude Design prototype
+ * (`Seek Onboarding Prototype.dc.html`, 2026-07-22). Eight dot-tracked steps
+ * after auth:
+ *   Claim your name → Don't miss your shot (notifications) → Built for doers
+ *   (social proof) → Meet your beaver → Name your beaver → Show up. Stay happy.
+ *   (care loop) → You need a rival (invite) → The mountain is waiting (begin).
  *
- * A `username`/display-name identity step is prepended (profiles need a handle
- * before anything social — leaderboards, @-search, friend requests). The eight
- * steps after it are the spec §5 order:
- *   Enable Notifications → Why we're great → Meet your beaver →
- *   Name your beaver → Customize your beaver → Care-loop explainer →
- *   Invite → Hook/Begin.
+ * The prototype drops the standalone "Customize your beaver" step; sex/body
+ * colour stays editable later in Settings → Edit beaver.
  */
 export const ONBOARDING_STEPS = [
   'username',
@@ -16,7 +17,6 @@ export const ONBOARDING_STEPS = [
   'social-proof',
   'meet-beaver',
   'name-beaver',
-  'customize-beaver',
   'care-loop',
   'invite',
   'begin',

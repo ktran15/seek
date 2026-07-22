@@ -1,13 +1,15 @@
 import { Stack } from 'expo-router';
 
-import { colors } from '@/theme';
+import { obColors } from '@/features/onboarding/theme';
 
 export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
+        // First-run screens adopt the onboarding prototype's warm fill.
+        contentStyle: { backgroundColor: obColors.screen },
+        animation: 'slide_from_right',
       }}
     />
   );

@@ -1,67 +1,97 @@
-import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { BeaverPreview } from '@/features/beaver/BeaverPreview';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { getAsset } from '@/assets/registry';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { obColors, obRadii, obText } from '@/features/onboarding/theme';
 
-/**
- * Onboarding "Meet your beaver" (spec §5 step 3, §10.6) — the visual intro
- * beat that introduces the beaver concept (replaces the old text "how Seek
- * works" screen). Graphic-first, minimal text.
- */
+/** "Meet your beaver" (prototype screen 6) — graphic-first intro to the beaver. */
 export default function MeetBeaverStep() {
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="meet-beaver"
       title="Meet your beaver"
-      ctaLabel="LET’S GO"
+      titleStyle={obText.title29}
+      ctaLabel="Let’s go"
       onCta={() => goToNextStep('meet-beaver')}
     >
       <View style={styles.stage}>
-        <BeaverPreview config={undefined} height={200} />
+        <Image
+          source={getAsset('onboardingBeaver')}
+          style={styles.beaver}
+          resizeMode="contain"
+          accessibilityLabel="Your beaver"
+        />
       </View>
 
-      <Text style={[textStyles.body, styles.lead]}>
-        This little builder is yours. It climbs the mountain with you.
+      <Text style={[obText.helper, styles.helper]}>
+        This little builder is yours. Bring it to the summit.
       </Text>
 
-      <View style={styles.row}>
-        <Ionicons name="pencil" size={24} color={colors.info} />
-        <Text style={[textStyles.body, styles.rowText]}>Name it</Text>
+      <View style={styles.rows}>
+        <MeetRow squareColor={obColors.surfacePeach} dotColor={obColors.dotOrange} label="Name it" />
+        <MeetRow squareColor={obColors.surfaceGreen} dotColor={obColors.dotGreen} label="Make it yours" />
+        <MeetRow
+          squareColor={obColors.surfacePeach}
+          dotColor={obColors.dotTan}
+          label="Keep it happy by showing up"
+        />
       </View>
-      <View style={styles.row}>
-        <Ionicons name="color-palette" size={24} color={colors.primary} />
-        <Text style={[textStyles.body, styles.rowText]}>Make it yours</Text>
+    </OnboardingScaffold>
+  );
+}
+
+function MeetRow({
+  squareColor,
+  dotColor,
+  label,
+}: {
+  squareColor: string;
+  dotColor: string;
+  label: string;
+}) {
+  return (
+    <View style={styles.row}>
+      <View style={[styles.square, { backgroundColor: squareColor }]}>
+        <View style={[styles.squareDot, { backgroundColor: dotColor }]} />
       </View>
-      <View style={styles.row}>
-        <Ionicons name="heart" size={24} color={colors.primaryPressed} />
-        <Text style={[textStyles.body, styles.rowText]}>
-          Keep it happy by showing up
-        </Text>
-      </View>
-    </OnboardingScreen>
+      <Text style={[obText.rowLabel, styles.rowLabel]}>{label}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   stage: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    paddingVertical: spacing.lg,
+    marginTop: 14,
+    backgroundColor: obColors.surface,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.cardLg,
+    height: 170,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  lead: {
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
+  beaver: { height: 144, width: '70%' },
+  helper: { color: obColors.textMuted, textAlign: 'center', marginTop: 12, marginBottom: 14 },
+  rows: { gap: 9 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: spacing.md,
+    gap: 12,
+    backgroundColor: obColors.surface,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.chip,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
   },
-  rowText: { color: colors.textPrimary, flex: 1 },
+  square: {
+    width: 28,
+    height: 28,
+    borderRadius: obRadii.iconSquare,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  squareDot: { width: 9, height: 9, borderRadius: 5 },
+  rowLabel: { color: obColors.text, flex: 1 },
 });

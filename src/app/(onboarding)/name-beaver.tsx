@@ -1,21 +1,17 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { FormTextInput } from '@/components/ui/FormTextInput';
+import { getAsset } from '@/assets/registry';
 import { useSession } from '@/features/auth/useSession';
-import { BeaverPreview } from '@/features/beaver/BeaverPreview';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
+import { obColors, obText } from '@/features/onboarding/theme';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
-import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
- * Onboarding "Name your beaver" (spec §5 step 4, §10). Sets
- * `profiles.beaver_name` — distinct from the username/handle.
- *
- * Deliberately offers NO suggested/default name: "Bucky" is the rival NPC's
- * name (§7.9) and any prefilled example risks steering the player toward the
- * opponent's identity. The field starts empty with a neutral prompt.
+ * "Name your beaver" (prototype screen 7) — sets `profiles.beaver_name`
+ * (distinct from the username/handle). Starts empty with a neutral prompt.
  */
 export default function NameBeaverStep() {
   const { session } = useSession();
@@ -46,39 +42,50 @@ export default function NameBeaverStep() {
   };
 
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="name-beaver"
       title="Name your beaver"
-      ctaLabel="CONTINUE"
+      titleStyle={obText.title29}
+      ctaLabel="Continue"
       onCta={submit}
       ctaDisabled={busy || name.trim().length === 0}
     >
       <View style={styles.stage}>
-        <BeaverPreview config={profile?.avatar_config} height={160} />
+        <Image
+          source={getAsset('onboardingBeaver')}
+          style={styles.beaver}
+          resizeMode="contain"
+          accessibilityLabel="Your beaver"
+        />
       </View>
 
-      <Text style={[textStyles.body, styles.copy]}>
+      <Text style={[obText.body, styles.copy]}>
         What should we call your beaver? You can change it later.
       </Text>
-      <FormTextInput
-        label="Beaver name"
-        value={name}
-        onChangeText={setName}
-        placeholder="Give your beaver a name"
-        autoCapitalize="words"
-        autoCorrect={false}
-        maxLength={20}
-        errorText={error}
-      />
-    </OnboardingScreen>
+
+      <View style={styles.field}>
+        <OnboardingField
+          label="Beaver name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Give your beaver a name"
+          autoCapitalize="words"
+          autoCorrect={false}
+          maxLength={20}
+          errorText={error}
+        />
+      </View>
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
   stage: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    paddingVertical: spacing.md,
+    marginTop: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  copy: { color: colors.textSecondary },
+  beaver: { height: 240, width: '100%' },
+  copy: { color: obColors.textMuted, marginTop: 4 },
+  field: { marginTop: 14 },
 });
