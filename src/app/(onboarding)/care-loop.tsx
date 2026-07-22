@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 
 /**
  * "Show up. Stay happy." (prototype screen 8) — teaches the care loop: finish →
@@ -23,7 +23,7 @@ export default function CareLoopStep() {
       <View style={styles.cards}>
         <View style={[styles.card, styles.cardGood]}>
           <View style={[styles.icon, { backgroundColor: obColors.dotGreen }]}>
-            <Ionicons name="checkmark" size={15} color={obColors.white} />
+            <Ionicons name="checkmark" size={sc(15)} color={obColors.white} />
           </View>
           <View style={styles.text}>
             <Text style={[obText.cardTitle, styles.title]}>Finish the day</Text>
@@ -62,26 +62,26 @@ export default function CareLoopStep() {
 }
 
 const styles = StyleSheet.create({
-  cards: { marginTop: 22, gap: 12 },
+  cards: { marginTop: sc(22), gap: sc(12) },
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: sc(12),
     borderWidth: 1,
-    borderRadius: 15,
-    padding: 14,
+    borderRadius: sc(15),
+    padding: sc(14),
   },
   cardGood: { backgroundColor: obColors.surfaceGreen, borderColor: obColors.borderGreen },
   cardSkip: { backgroundColor: obColors.surface, borderColor: obColors.border },
   cardBoost: { backgroundColor: obColors.surfacePeach, borderColor: obColors.borderPeach },
   icon: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: sc(26),
+    height: sc(26),
+    borderRadius: sc(13),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  innerDot: { width: 9, height: 9, borderRadius: 5 },
-  text: { flex: 1, gap: 3 },
+  innerDot: { width: sc(9), height: sc(9), borderRadius: sc(5) },
+  text: { flex: 1, gap: sc(3) },
   title: { color: obColors.text },
 });

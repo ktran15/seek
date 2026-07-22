@@ -4,7 +4,7 @@ import { useSession } from '@/features/auth/useSession';
 import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obRadii, obText } from '@/features/onboarding/theme';
+import { obColors, obRadii, obText, sc } from '@/features/onboarding/theme';
 import { useProfile } from '@/features/profile/useProfile';
 
 /** "Meet your beaver" (prototype screen 6) — graphic-first intro to the beaver. */
@@ -21,7 +21,7 @@ export default function MeetBeaverStep() {
       onCta={() => goToNextStep('meet-beaver')}
     >
       <View style={styles.stage}>
-        <BeaverPreview config={profile?.avatar_config} height={148} />
+        <BeaverPreview config={profile?.avatar_config} height={sc(148)} />
       </View>
 
       <Text style={[obText.helper, styles.helper]}>
@@ -62,35 +62,40 @@ function MeetRow({
 
 const styles = StyleSheet.create({
   stage: {
-    marginTop: 14,
+    marginTop: sc(14),
     backgroundColor: obColors.surface,
     borderWidth: 1,
     borderColor: obColors.border,
     borderRadius: obRadii.cardLg,
-    height: 170,
+    height: sc(170),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  helper: { color: obColors.textMuted, textAlign: 'center', marginTop: 12, marginBottom: 14 },
-  rows: { gap: 9 },
+  helper: {
+    color: obColors.textMuted,
+    textAlign: 'center',
+    marginTop: sc(12),
+    marginBottom: sc(14),
+  },
+  rows: { gap: sc(9) },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: sc(12),
     backgroundColor: obColors.surface,
     borderWidth: 1,
     borderColor: obColors.border,
     borderRadius: obRadii.chip,
-    paddingVertical: 11,
-    paddingHorizontal: 13,
+    paddingVertical: sc(11),
+    paddingHorizontal: sc(13),
   },
   square: {
-    width: 28,
-    height: 28,
+    width: sc(28),
+    height: sc(28),
     borderRadius: obRadii.iconSquare,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  squareDot: { width: 9, height: 9, borderRadius: 5 },
+  squareDot: { width: sc(9), height: sc(9), borderRadius: sc(5) },
   rowLabel: { color: obColors.text, flex: 1 },
 });

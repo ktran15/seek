@@ -12,7 +12,7 @@ import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obRadii, obText } from '@/features/onboarding/theme';
+import { obColors, obRadii, obText, sc } from '@/features/onboarding/theme';
 import type { BeaverBodyColor, BeaverSex } from '@/lib/database.types';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
 
@@ -73,7 +73,7 @@ export default function NameBeaverStep() {
       ctaDisabled={busy || name.trim().length === 0}
     >
       <View style={styles.window}>
-        <BeaverPreview config={{ sex, bodyColor }} height={172} />
+        <BeaverPreview config={{ sex, bodyColor }} height={sc(172)} />
 
         <GenderSlider value={sex} onChange={setSex} />
         <ColorSwatches value={bodyColor} onChange={setBodyColor} />
@@ -166,15 +166,15 @@ function ColorSwatches({
 
 const styles = StyleSheet.create({
   window: {
-    marginTop: 8,
+    marginTop: sc(8),
     backgroundColor: obColors.surface,
     borderWidth: 1,
     borderColor: obColors.border,
     borderRadius: obRadii.cardLg,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: sc(16),
+    paddingHorizontal: sc(16),
     alignItems: 'center',
-    gap: 14,
+    gap: sc(14),
   },
   // Gender slider
   track: {
@@ -184,11 +184,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: obColors.border,
     borderRadius: obRadii.pill,
-    padding: 3,
+    padding: sc(3),
   },
   segment: {
     flex: 1,
-    minHeight: 40,
+    minHeight: sc(40),
     borderRadius: obRadii.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -196,17 +196,18 @@ const styles = StyleSheet.create({
   segmentOn: { backgroundColor: obColors.primary },
   segText: { color: obColors.textMuted },
   segTextOn: { color: obColors.onPrimary },
-  // Colour swatches
-  swatchRow: { flexDirection: 'row', gap: 16 },
-  swatchWrap: { padding: 3 },
+  // Colour swatches — a constant border keeps the WHITE option visible on the
+  // cream card (it used to blend in); the selected swatch rings in orange.
+  swatchRow: { flexDirection: 'row', gap: sc(16) },
+  swatchWrap: { padding: sc(3) },
   swatch: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 3,
-    borderColor: 'transparent',
+    width: sc(34),
+    height: sc(34),
+    borderRadius: sc(17),
+    borderWidth: sc(3),
+    borderColor: obColors.borderStrong,
   },
   swatchOn: { borderColor: obColors.primary },
-  copy: { color: obColors.textMuted, marginTop: 16 },
-  field: { marginTop: 14 },
+  copy: { color: obColors.textMuted, marginTop: sc(16) },
+  field: { marginTop: sc(14) },
 });

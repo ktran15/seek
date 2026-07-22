@@ -3,7 +3,7 @@ import { Alert, StyleSheet, Text } from 'react-native';
 
 import { useSession } from '@/features/auth/useSession';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 import { useUpdateProfile } from '@/features/profile/useProfile';
 
 /**
@@ -34,7 +34,7 @@ export default function BeginStep() {
     <OnboardingScaffold
       step="begin"
       hero="onboardingSummit"
-      heroRatio={0.4}
+      heroRatio={290 / 648}
       title="The mountain is waiting."
       titleStyle={obText.title28}
       subtitle="Seven days. Seven challenges. One attempt each. Your first challenge is already up there."
@@ -50,5 +50,5 @@ export default function BeginStep() {
 }
 
 const styles = StyleSheet.create({
-  note: { color: obColors.note, marginTop: 16 },
+  note: { color: obColors.note, marginTop: sc(16) },
 });

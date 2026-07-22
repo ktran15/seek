@@ -6,7 +6,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { obColors, obRadii, obText } from '../theme';
+import { obColors, obRadii, obText, sc } from '../theme';
 
 type Variant = 'primary' | 'apple' | 'google';
 
@@ -60,19 +60,19 @@ export function OnboardingButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 52,
+    minHeight: sc(52),
     borderRadius: obRadii.button,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
+    paddingVertical: sc(16),
+    paddingHorizontal: sc(18),
     alignItems: 'center',
     justifyContent: 'center',
   },
   // Approximates `box-shadow: 0 12px 22px -12px #DE6B2F`.
   primaryShadow: {
     shadowColor: obColors.primary,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: sc(10) },
     shadowOpacity: 0.45,
-    shadowRadius: 12,
+    shadowRadius: sc(12),
     elevation: 6,
   },
   pressed: { opacity: 0.9 },

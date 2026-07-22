@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
 import { registerPushToken } from '@/features/push/registerPush';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 
 /**
  * "Don't miss your shot" (prototype screen 4) — notification permission with
@@ -61,17 +61,17 @@ function PingRow({ color, label }: { color: string; label: string }) {
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: 22,
+    marginTop: sc(22),
     backgroundColor: obColors.surface,
     borderWidth: 1,
     borderColor: obColors.border,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    gap: 15,
+    borderRadius: sc(16),
+    paddingVertical: sc(18),
+    paddingHorizontal: sc(16),
+    gap: sc(15),
   },
   cardTitle: { color: obColors.text },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: sc(12) },
+  dot: { width: sc(10), height: sc(10), borderRadius: sc(5) },
   rowLabel: { color: obColors.text, flex: 1 },
 });

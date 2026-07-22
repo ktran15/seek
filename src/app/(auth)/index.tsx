@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getAsset } from '@/assets/registry';
 import { OnboardingButton } from '@/features/onboarding/components/OnboardingButton';
-import { obColors, obRadii, obText } from '@/features/onboarding/theme';
+import { obColors, obRadii, obText, sc } from '@/features/onboarding/theme';
 import {
   AuthCancelled,
   signInWithApple,
@@ -49,12 +49,12 @@ export default function WelcomeScreen() {
     <View style={styles.root}>
       <Image
         source={getAsset('onboardingIntro')}
-        style={{ width: '100%', height: Math.round(height * 0.48) }}
+        style={{ width: '100%', height: Math.round((height * 326) / 648) }}
         resizeMode="cover"
         accessibilityLabel="A beaver watching the sunrise over the mountains"
       />
 
-      <View style={[styles.content, { paddingBottom: Math.max(insets.bottom + 8, 26) }]}>
+      <View style={[styles.content, { paddingBottom: insets.bottom + sc(26) }]}>
         <View>
           <Text style={[obText.brand, styles.brand]}>Seek</Text>
           <Text style={[obText.body, styles.tagline]}>Do hard things. Together.</Text>
@@ -92,12 +92,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingHorizontal: 24,
-    paddingTop: 22,
-    gap: 20,
+    paddingHorizontal: sc(24),
+    paddingTop: sc(22),
+    gap: sc(20),
   },
   brand: { color: obColors.text },
-  tagline: { color: obColors.textMuted, marginTop: 6 },
-  buttons: { gap: 10 },
-  appleButton: { height: 52 },
+  tagline: { color: obColors.textMuted, marginTop: sc(6) },
+  buttons: { gap: sc(10) },
+  appleButton: { height: sc(52) },
 });

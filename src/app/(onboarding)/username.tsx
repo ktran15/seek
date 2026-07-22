@@ -5,7 +5,7 @@ import { useSession } from '@/features/auth/useSession';
 import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obText } from '@/features/onboarding/theme';
+import { obText, sc } from '@/features/onboarding/theme';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
@@ -84,5 +84,5 @@ export default function UsernameStep() {
 }
 
 const styles = StyleSheet.create({
-  fields: { marginTop: 24, gap: 16 },
+  fields: { marginTop: sc(24), gap: sc(16) },
 });

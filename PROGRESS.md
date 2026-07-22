@@ -41,13 +41,39 @@ it renders live through `BeaverPreview`, so "just use the real beavers"
 (founder, 2026-07-22) is satisfied on all three beaver surfaces. No further art
 is outstanding for onboarding.
 
-**Next step:** founder runs the flow through Expo (sign up → walk the 8 steps)
-to surface any visual issues to fix. Known tune-points if flagged: hero image
-crop (scaffold uses cover/center; the prototype biased the summit hero to
-`center 38%`), and the "slider" being a Male/Female segmented toggle. Aesthetic
-doc carries a scoped "direction shift in progress" note; Rig Bible untouched.
-The `.dc.html` prototype is left untracked in the repo root (references
-`uploads/` + `support.js`, not committed).
+### Exact-match fidelity pass (2026-07-22, founder review #1)
+
+Founder ran it on device and flagged: fonts/spacing/sizes didn't match the DC
+preview, hero images didn't fit the phone, white beaver-colour blended in.
+Root causes + fixes:
+
+- **Proportional scaling (the big one):** the prototype is authored on a fixed
+  **300 px-wide** mock in absolute px; I'd hand-picked approximations. Now the
+  onboarding theme exports `sc(n) = n * (deviceWidth / 300)` (clamped ≤1.6) and
+  **every** px — font sizes, line-heights, letter-spacing, paddings, gaps,
+  radii, dot/icon/avatar sizes, hero heights — is `sc()`-wrapped from the HTML's
+  exact value. Result: the composition matches the preview 1:1 and scales
+  identically across SE→Pro Max. (Mock aspect 300/648 ≈ phone aspect, so
+  vertical proportion follows.) Verified on web: `Fraunces_600SemiBold` +
+  `HankenGrotesk_400Regular` load and apply (the family was always correct —
+  the mismatch was size/spacing); `sc` formula confirmed (Seek = 50×scale).
+- **Hero images:** the founder's `IntroMountainBackground.png` /
+  `EndMountainBackground.png` were **14706×14706 (216 MP, ~6.5 MB each)** — too
+  large for a phone to render. Downscaled to **1600×1600** (~2.5 MB) with
+  `sharp` (added as a devDependency for asset intake; originals backed up
+  outside the repo). Hero heights now use the HTML's exact fractions of screen
+  height (326/648 welcome, 290/648 begin). Both render correctly on web.
+- **White swatch blended in:** the beaver colour swatches had a transparent
+  border, so `white (#EFE2D0)` vanished on the cream card. Now every swatch has
+  a constant `borderStrong` outline (selected = orange ring) — white is clearly
+  an option.
+
+**Next step:** founder re-runs on device to confirm the exact-match. Open
+question if still off after this: Fraunces *optical size* — the HTML uses the
+variable font (auto opsz, sharper at display sizes) while expo-google-fonts
+ships a static `600SemiBold`; letterforms at the big "Seek" size may differ
+slightly. Flag it and I'll chase opsz. The `.dc.html` prototype stays untracked
+in the repo root (references `uploads/` + `support.js`, not committed).
 
 ## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
 

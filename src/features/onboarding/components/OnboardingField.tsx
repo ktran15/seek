@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { obColors, obRadii, obText } from '../theme';
+import { obColors, obRadii, obText, sc } from '../theme';
 
 interface OnboardingFieldProps extends TextInputProps {
   label: string;
@@ -25,12 +25,12 @@ export function OnboardingField({ label, errorText, ...inputProps }: OnboardingF
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 7 },
+  container: { gap: sc(7) },
   label: { color: obColors.text },
   input: {
-    minHeight: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    minHeight: sc(48),
+    paddingHorizontal: sc(14),
+    paddingVertical: sc(13),
     borderRadius: obRadii.input,
     backgroundColor: obColors.input,
     color: obColors.text,

@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 
 /** "Built for doers" (prototype screen 5) — social proof / why we're great. */
 export default function SocialProofStep() {
@@ -34,15 +34,15 @@ export default function SocialProofStep() {
 }
 
 const styles = StyleSheet.create({
-  cards: { marginTop: 22, gap: 14 },
+  cards: { marginTop: sc(22), gap: sc(14) },
   card: {
     borderWidth: 1,
     borderColor: obColors.border,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: sc(16),
+    padding: sc(16),
   },
   cardTan: { backgroundColor: obColors.surface },
   cardPeach: { backgroundColor: obColors.surfacePeach },
   quote: { color: obColors.text },
-  by: { color: obColors.textMuted, marginTop: 8 },
+  by: { color: obColors.textMuted, marginTop: sc(8) },
 });

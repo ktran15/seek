@@ -5,7 +5,7 @@ import { useSession } from '@/features/auth/useSession';
 import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 import { sendInvite } from '@/features/invites/sendInvite';
 import { useProfile } from '@/features/profile/useProfile';
 
@@ -50,7 +50,7 @@ export default function InviteStep() {
       <View style={styles.versus}>
         <View style={styles.avatarBlock}>
           <View style={styles.youRing}>
-            <BeaverPreview config={profile?.avatar_config} height={72} />
+            <BeaverPreview config={profile?.avatar_config} height={sc(72)} />
           </View>
           <Text style={[obText.caption, styles.avatarLabel]}>You</Text>
         </View>
@@ -88,28 +88,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 22,
-    marginTop: 28,
-    marginBottom: 26,
+    gap: sc(22),
+    marginTop: sc(28),
+    marginBottom: sc(26),
   },
-  avatarBlock: { alignItems: 'center', gap: 9 },
+  avatarBlock: { alignItems: 'center', gap: sc(9) },
   youRing: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+    width: sc(82),
+    height: sc(82),
+    borderRadius: sc(41),
     backgroundColor: obColors.youRingFill,
-    borderWidth: 2.5,
+    borderWidth: sc(2.5),
     borderColor: obColors.youRingBorder,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   rivalRing: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+    width: sc(82),
+    height: sc(82),
+    borderRadius: sc(41),
     backgroundColor: obColors.rivalFill,
-    borderWidth: 2.5,
+    borderWidth: sc(2.5),
     borderColor: obColors.rivalBorder,
     borderStyle: 'dashed',
     alignItems: 'center',
@@ -117,20 +117,20 @@ const styles = StyleSheet.create({
   },
   rivalMark: {
     fontFamily: obText.title30.fontFamily,
-    fontSize: 34,
+    fontSize: sc(34),
     color: obColors.rivalMark,
   },
-  vs: { color: obColors.vs, fontSize: 20 },
+  vs: { color: obColors.vs, fontSize: sc(20) },
   avatarLabel: { color: obColors.textMuted },
   card: {
     backgroundColor: obColors.surfacePeach,
     borderWidth: 1.5,
     borderColor: obColors.primary,
     borderStyle: 'dashed',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: sc(16),
+    padding: sc(16),
   },
-  cardTitle: { color: obColors.link, marginBottom: 6 },
+  cardTitle: { color: obColors.link, marginBottom: sc(6) },
   cardBody: { color: obColors.textBrown },
-  confirm: { color: obColors.link, textAlign: 'center', marginTop: 16 },
+  confirm: { color: obColors.link, textAlign: 'center', marginTop: sc(16) },
 });

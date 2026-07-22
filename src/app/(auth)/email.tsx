@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OnboardingButton } from '@/features/onboarding/components/OnboardingButton';
 import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 import { supabase } from '@/lib/supabase';
 
 type Mode = 'signIn' | 'signUp';
@@ -74,7 +74,7 @@ export default function EmailAuthScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.container,
-          { paddingTop: Math.max(insets.top + 8, 24) },
+          { paddingTop: insets.top + sc(8) },
         ]}
         keyboardShouldPersistTaps="handled"
       >
@@ -142,16 +142,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: obColors.screen },
   container: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 26,
-    gap: 16,
+    paddingHorizontal: sc(24),
+    paddingBottom: sc(26),
+    gap: sc(16),
   },
-  backHit: { minHeight: 44, justifyContent: 'center' },
+  backHit: { minHeight: sc(44), justifyContent: 'center' },
   back: { color: obColors.textMuted, textAlign: 'left' },
-  title: { color: obColors.text, marginBottom: 6 },
+  title: { color: obColors.text, marginBottom: sc(6) },
   error: { color: obColors.link },
   info: { color: obColors.google },
-  submit: { marginTop: 10 },
-  switchHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  submit: { marginTop: sc(10) },
+  switchHit: { minHeight: sc(44), alignItems: 'center', justifyContent: 'center' },
   switchText: { color: obColors.link },
 });

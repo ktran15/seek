@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { obColors, obText } from '../theme';
+import { obColors, obText, sc } from '../theme';
 
 interface TextLinkProps {
   label: string;
@@ -25,7 +25,7 @@ export function TextLink({ label, onPress, disabled = false }: TextLinkProps) {
 }
 
 const styles = StyleSheet.create({
-  hit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  hit: { minHeight: sc(44), alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.6 },
   text: { color: obColors.link, textAlign: 'center' },
 });

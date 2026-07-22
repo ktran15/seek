@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getAsset, type AssetSlot } from '@/assets/registry';
 
 import { type OnboardingStep } from '../steps';
-import { obColors, obText } from '../theme';
+import { obColors, obText, sc } from '../theme';
 import { OnboardingButton } from './OnboardingButton';
 import { ProgressDots } from './ProgressDots';
 import { TextLink } from './TextLink';
@@ -82,8 +82,8 @@ export function OnboardingScaffold({
         style={[
           styles.content,
           {
-            paddingTop: hero ? 16 : Math.max(insets.top + 8, 24),
-            paddingBottom: Math.max(insets.bottom + 8, 26),
+            paddingTop: hero ? sc(8) : insets.top + sc(8),
+            paddingBottom: insets.bottom + sc(26),
           },
         ]}
       >
@@ -114,10 +114,10 @@ export function OnboardingScaffold({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: obColors.screen },
   flex: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: 24 },
-  scrollBody: { flexGrow: 1, paddingTop: 22 },
-  flexBody: { paddingTop: 22 },
+  content: { flex: 1, paddingHorizontal: sc(24) },
+  scrollBody: { flexGrow: 1, paddingTop: sc(22) },
+  flexBody: { paddingTop: sc(22) },
   title: { color: obColors.text },
-  subtitle: { color: obColors.textMuted, marginTop: 10 },
-  footer: { paddingTop: 14 },
+  subtitle: { color: obColors.textMuted, marginTop: sc(10) },
+  footer: { paddingTop: sc(14) },
 });

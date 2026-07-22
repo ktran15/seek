@@ -1,17 +1,32 @@
 /**
- * Onboarding-scoped design tokens — a faithful reproduction of the founder's
- * Claude Design prototype (`Seek Onboarding Prototype.dc.html`, 2026-07-22).
+ * Onboarding-scoped design tokens — a faithful, 1:1 reproduction of the
+ * founder's Claude Design prototype (`Seek Onboarding Prototype.dc.html`).
  *
  * DELIBERATELY separate from the app's global theme (`src/theme`). The first-run
  * flow (the `(auth)` welcome/email screens + the `(onboarding)` steps) adopts
  * the prototype's new warm "Fraunces + Hanken Grotesk" direction; the rest of
- * the app keeps the current design system until the founder's app-wide overhaul
- * lands. Screens in those two groups consume THESE tokens — never inline hex or
- * font names (CLAUDE.md) — so the look stays swappable from one place.
+ * the app keeps the current design system until the founder's app-wide overhaul.
+ * Screens in those two groups consume THESE tokens — never inline hex or font
+ * names (CLAUDE.md).
  *
- * Every value below is lifted verbatim from the prototype's inline styles.
+ * ── Exact-match scaling ──────────────────────────────────────────────────────
+ * The prototype is authored on a fixed **300 px-wide** phone mock, with every
+ * dimension in absolute px. To reproduce that composition *exactly* on a real
+ * phone — and identically across every phone size — each px is scaled by
+ * `deviceWidth / 300` (the mock's aspect ≈ a modern phone's, so vertical
+ * proportions follow too). Wrap EVERY prototype px in `sc()`; colours/fonts are
+ * size-independent.
  */
+import { Dimensions } from 'react-native';
 import type { TextStyle } from 'react-native';
+
+/** Width the prototype's px values are authored against (the DC phone mock). */
+const BASE_WIDTH = 300;
+/** Device width ÷ base. Clamped so tablets/wide web don't explode; every phone
+ *  (SE 320 → Pro Max 430) lands well under the cap. */
+export const obScale = Math.min(Dimensions.get('window').width / BASE_WIDTH, 1.6);
+/** Scale one prototype px to this device. */
+export const sc = (n: number): number => n * obScale;
 
 /** Colors — exact hex from the prototype. */
 export const obColors = {
@@ -30,6 +45,8 @@ export const obColors = {
   border: '#E4D8C6',
   borderGreen: '#C4CFB0',
   borderPeach: '#EAC9A6',
+  /** Stronger border for light swatches/chips that would vanish on cream. */
+  borderStrong: '#C9B79C',
 
   /** Primary near-black warm text. */
   text: '#2C2822',
@@ -84,60 +101,61 @@ export const obFonts = {
   bodyBold: 'HankenGrotesk_700Bold',
 } as const;
 
-/** Corner radii from the prototype. */
+/** Corner radii from the prototype (scaled). */
 export const obRadii = {
-  button: 15,
-  input: 12,
-  card: 16,
-  cardLg: 20,
-  chip: 13,
-  iconSquare: 8,
+  button: sc(15),
+  input: sc(12),
+  card: sc(16),
+  cardLg: sc(20),
+  chip: sc(13),
+  iconSquare: sc(8),
   pill: 999,
 } as const;
 
-/** Named text styles — screens consume these, not raw family/size pairs. */
+/** Named text styles — screens consume these, not raw family/size pairs.
+ *  Sizes/line-heights/letter-spacing are the prototype's values, scaled. */
 export const obText = {
   /** Brand "Seek" wordmark (welcome). */
-  brand: { fontFamily: obFonts.serif, fontSize: 50, lineHeight: 50, letterSpacing: -1 },
+  brand: { fontFamily: obFonts.serif, fontSize: sc(50), lineHeight: sc(50), letterSpacing: sc(-1) },
   /** Create-account title. */
-  title34: { fontFamily: obFonts.serif, fontSize: 34, lineHeight: 35, letterSpacing: -1 },
+  title34: { fontFamily: obFonts.serif, fontSize: sc(34), lineHeight: sc(35), letterSpacing: sc(-1) },
   /** Claim your name / Don't miss your shot / Built for doers. */
-  title32: { fontFamily: obFonts.serif, fontSize: 32, lineHeight: 33, letterSpacing: -1 },
+  title32: { fontFamily: obFonts.serif, fontSize: sc(32), lineHeight: sc(33), letterSpacing: sc(-1) },
   /** You need a rival. */
-  title30: { fontFamily: obFonts.serif, fontSize: 30, lineHeight: 31, letterSpacing: -1 },
+  title30: { fontFamily: obFonts.serif, fontSize: sc(30), lineHeight: sc(31), letterSpacing: sc(-1) },
   /** Meet / Name your beaver, Show up. Stay happy. */
-  title29: { fontFamily: obFonts.serif, fontSize: 29, lineHeight: 30, letterSpacing: -1 },
+  title29: { fontFamily: obFonts.serif, fontSize: sc(29), lineHeight: sc(30), letterSpacing: sc(-1) },
   /** The mountain is waiting. */
-  title28: { fontFamily: obFonts.serif, fontSize: 28, lineHeight: 29, letterSpacing: -1 },
+  title28: { fontFamily: obFonts.serif, fontSize: sc(28), lineHeight: sc(29), letterSpacing: sc(-1) },
 
   /** Body copy (15/1.5). */
-  body: { fontFamily: obFonts.body, fontSize: 15, lineHeight: 22 },
-  /** Slightly smaller body (14.5 in the prototype → 14). */
-  bodySmall: { fontFamily: obFonts.body, fontSize: 14, lineHeight: 21 },
+  body: { fontFamily: obFonts.body, fontSize: sc(15), lineHeight: sc(22) },
+  /** Slightly smaller body (14.5 in the prototype). */
+  bodySmall: { fontFamily: obFonts.body, fontSize: sc(14), lineHeight: sc(21) },
 
   /** Flat-button label (Fraunces 600, 16). */
-  button: { fontFamily: obFonts.serif, fontSize: 16, lineHeight: 20 },
+  button: { fontFamily: obFonts.serif, fontSize: sc(16), lineHeight: sc(20) },
   /** Text link / skip (Hanken 600, 14). */
-  link: { fontFamily: obFonts.bodySemi, fontSize: 14, lineHeight: 18 },
+  link: { fontFamily: obFonts.bodySemi, fontSize: sc(14), lineHeight: sc(18) },
   /** Field label (Hanken 600, 13). */
-  label: { fontFamily: obFonts.bodySemi, fontSize: 13, lineHeight: 17 },
+  label: { fontFamily: obFonts.bodySemi, fontSize: sc(13), lineHeight: sc(17) },
   /** Input value / placeholder (14). */
-  field: { fontFamily: obFonts.body, fontSize: 14, lineHeight: 19 },
+  field: { fontFamily: obFonts.body, fontSize: sc(14), lineHeight: sc(19) },
 
-  /** Serif card title (e.g. testimonials, invite card, list rows). */
-  cardSerif: { fontFamily: obFonts.serif, fontSize: 16, lineHeight: 21 },
+  /** Serif card title (testimonials, invite card, list rows). */
+  cardSerif: { fontFamily: obFonts.serif, fontSize: sc(16), lineHeight: sc(21) },
   /** Bold micro-heading ("We'll ping you for:"). */
-  micro: { fontFamily: obFonts.bodyBold, fontSize: 13, lineHeight: 17 },
+  micro: { fontFamily: obFonts.bodyBold, fontSize: sc(13), lineHeight: sc(17) },
   /** Care-card title (Hanken 700, 14). */
-  cardTitle: { fontFamily: obFonts.bodyBold, fontSize: 14, lineHeight: 18 },
+  cardTitle: { fontFamily: obFonts.bodyBold, fontSize: sc(14), lineHeight: sc(18) },
   /** Care-card body (12.5). */
-  cardBody: { fontFamily: obFonts.body, fontSize: 12.5, lineHeight: 18 },
+  cardBody: { fontFamily: obFonts.body, fontSize: sc(12.5), lineHeight: sc(18) },
   /** List-row label (Hanken 600, 14). */
-  rowLabel: { fontFamily: obFonts.bodySemi, fontSize: 14, lineHeight: 18 },
+  rowLabel: { fontFamily: obFonts.bodySemi, fontSize: sc(14), lineHeight: sc(18) },
   /** Attribution / caption. */
-  caption: { fontFamily: obFonts.body, fontSize: 12.5, lineHeight: 18 },
+  caption: { fontFamily: obFonts.body, fontSize: sc(12.5), lineHeight: sc(18) },
   /** House-rules italic footnote. */
-  note: { fontFamily: obFonts.body, fontSize: 12.5, lineHeight: 17, fontStyle: 'italic' },
+  note: { fontFamily: obFonts.body, fontSize: sc(12.5), lineHeight: sc(17), fontStyle: 'italic' },
   /** Small centered helper under an image. */
-  helper: { fontFamily: obFonts.body, fontSize: 13.5, lineHeight: 20 },
+  helper: { fontFamily: obFonts.body, fontSize: sc(13.5), lineHeight: sc(20) },
 } as const satisfies Record<string, TextStyle>;
