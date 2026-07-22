@@ -1,23 +1,38 @@
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { getAsset } from '@/assets/registry';
 import { useSession } from '@/features/auth/useSession';
+import {
+  BEAVER_BODY_COLORS,
+  BEAVER_SEXES,
+  beaverBodyColor,
+  beaverSex,
+} from '@/features/beaver/catalog';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
 import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
 import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { obColors, obText } from '@/features/onboarding/theme';
+import { obColors, obRadii, obText } from '@/features/onboarding/theme';
+import type { BeaverBodyColor, BeaverSex } from '@/lib/database.types';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
 
 /**
- * "Name your beaver" (prototype screen 7) — sets `profiles.beaver_name`
- * (distinct from the username/handle). Starts empty with a neutral prompt.
+ * "Name your beaver" (prototype screen 7) — now also the base-body customiser
+ * (founder-directed, 2026-07-22): the beaver window carries a Male/Female
+ * selector + colour swatches (the beaver updates live), with the name field
+ * below. Writes `profiles.beaver_name` + `avatar_config` (sex + bodyColor).
+ * Starts plain — cosmetics are earned from crates (§18); editable later in
+ * Settings → Edit beaver.
  */
 export default function NameBeaverStep() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
   const updateProfile = useUpdateProfile(session?.user.id);
 
+  const [sex, setSex] = useState<BeaverSex>(beaverSex(profile?.avatar_config));
+  const [bodyColor, setBodyColor] = useState<BeaverBodyColor>(
+    beaverBodyColor(profile?.avatar_config),
+  );
   const [name, setName] = useState(profile?.beaver_name ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +47,14 @@ export default function NameBeaverStep() {
 
     setBusy(true);
     try {
-      await updateProfile({ beaver_name: trimmed });
+      await updateProfile({
+        beaver_name: trimmed,
+        avatar_config: {
+          sex,
+          bodyColor,
+          equipped: profile?.avatar_config.equipped ?? {},
+        },
+      });
       goToNextStep('name-beaver');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save. Try again.');
@@ -50,17 +72,15 @@ export default function NameBeaverStep() {
       onCta={submit}
       ctaDisabled={busy || name.trim().length === 0}
     >
-      <View style={styles.stage}>
-        <Image
-          source={getAsset('onboardingBeaver')}
-          style={styles.beaver}
-          resizeMode="contain"
-          accessibilityLabel="Your beaver"
-        />
+      <View style={styles.window}>
+        <BeaverPreview config={{ sex, bodyColor }} height={172} />
+
+        <GenderSlider value={sex} onChange={setSex} />
+        <ColorSwatches value={bodyColor} onChange={setBodyColor} />
       </View>
 
       <Text style={[obText.body, styles.copy]}>
-        What should we call your beaver? You can change it later.
+        Make it yours, then give it a name — you can change both later.
       </Text>
 
       <View style={styles.field}>
@@ -79,13 +99,114 @@ export default function NameBeaverStep() {
   );
 }
 
+/** Two-position sliding selector (the "slider") for Male / Female. */
+function GenderSlider({
+  value,
+  onChange,
+}: {
+  value: BeaverSex;
+  onChange: (s: BeaverSex) => void;
+}) {
+  return (
+    <View style={styles.track}>
+      {BEAVER_SEXES.map((option) => {
+        const selected = option.id === value;
+        return (
+          <Pressable
+            key={option.id}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.id)}
+            style={[styles.segment, selected && styles.segmentOn]}
+          >
+            <Text style={[obText.rowLabel, selected ? styles.segTextOn : styles.segText]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Body-colour swatches (brown / white / black). */
+function ColorSwatches({
+  value,
+  onChange,
+}: {
+  value: BeaverBodyColor;
+  onChange: (c: BeaverBodyColor) => void;
+}) {
+  return (
+    <View style={styles.swatchRow}>
+      {BEAVER_BODY_COLORS.map((option) => {
+        const selected = option.id === value;
+        return (
+          <Pressable
+            key={option.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Colour: ${option.label}`}
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.id)}
+            style={styles.swatchWrap}
+          >
+            <View
+              style={[
+                styles.swatch,
+                { backgroundColor: option.swatch },
+                selected && styles.swatchOn,
+              ]}
+            />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  stage: {
-    marginTop: 4,
+  window: {
+    marginTop: 8,
+    backgroundColor: obColors.surface,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.cardLg,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 14,
+  },
+  // Gender slider
+  track: {
+    flexDirection: 'row',
+    alignSelf: 'stretch',
+    backgroundColor: obColors.input,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.pill,
+    padding: 3,
+  },
+  segment: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: obRadii.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  beaver: { height: 240, width: '100%' },
-  copy: { color: obColors.textMuted, marginTop: 4 },
+  segmentOn: { backgroundColor: obColors.primary },
+  segText: { color: obColors.textMuted },
+  segTextOn: { color: obColors.onPrimary },
+  // Colour swatches
+  swatchRow: { flexDirection: 'row', gap: 16 },
+  swatchWrap: { padding: 3 },
+  swatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  swatchOn: { borderColor: obColors.primary },
+  copy: { color: obColors.textMuted, marginTop: 16 },
   field: { marginTop: 14 },
 });

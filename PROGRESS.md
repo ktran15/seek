@@ -23,14 +23,16 @@ no inline hex/fonts (CLAUDE.md). Fonts added: `@expo-google-fonts/fraunces` +
 |---|----------|--------|
 | 1 | Scoped design module + fonts + flat primitives (`OnboardingButton`, `TextLink`, `OnboardingField`, `ProgressDots`, `OnboardingScaffold`) | ✅ done |
 | 2 | All 10 prototype screens rebuilt: `(auth)` welcome (sunrise hero + serif Seek + Apple/Google/email) & create-account, then the 8 dot-tracked steps. Backend wiring preserved verbatim | ✅ done |
-| 3 | Flow trimmed to the prototype's **8 steps** — the standalone **`customize-beaver` step is removed** (route deleted; sex/colour still editable in Settings → Edit beaver). Old `OnboardingScreen.tsx` scaffold deleted | ✅ done |
+| 3 | Flow is the prototype's **8 steps**. The standalone `customize-beaver` route is deleted, but its function is **folded into "Name your beaver"** (founder-directed 2026-07-22): the beaver window carries a Male/Female slider + colour swatches (live `BeaverPreview` updates as you pick), with the name field below. That screen now writes `beaver_name` **and** `avatar_config` (sex + bodyColor). Old `OnboardingScreen.tsx` scaffold deleted | ✅ done |
 | 4 | Registry slots `onboardingIntro` / `onboardingSummit` / `onboardingBeaver` (placeholder art until founder finals land) | ✅ done |
 | 5 | Verified: tsc clean, 209 tests green; rendered welcome + create-account on expo-web (fonts/palette/layout correct, no runtime errors) | ✅ done |
 
 **Onboarding flow now (8 steps):** Claim your name (username+display) → Don't
 miss your shot (notifications+push register) → Built for doers (social proof) →
-Meet your beaver → Name your beaver → Show up. Stay happy. (care loop) → You
-need a rival (invite) → The mountain is waiting (begin → `onboarding_completed_at`).
+Meet your beaver → Name your beaver (**customise sex/colour in the window +
+name**, writes `beaver_name` + `avatar_config`) → Show up. Stay happy. (care
+loop) → You need a rival (invite) → The mountain is waiting (begin →
+`onboarding_completed_at`).
 
 **⚠️ FOUNDER ACTION — supply 3 images (flow runs on placeholders until then):**
 drop the prototype's finals into a new `assets/art/onboarding/` folder; the
