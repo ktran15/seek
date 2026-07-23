@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react';
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
   type StyleProp,
   type TextStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getAsset, type AssetSlot } from '@/assets/registry';
+import { type AssetSlot } from '@/assets/registry';
 
 import { type OnboardingStep } from '../steps';
 import { obColors, obText, sc } from '../theme';
+import { HeroImage } from './HeroImage';
 import { OnboardingButton } from './OnboardingButton';
 import { ProgressDots } from './ProgressDots';
 import { TextLink } from './TextLink';
@@ -23,8 +22,10 @@ interface OnboardingScaffoldProps {
   step: OnboardingStep;
   /** Full-bleed hero image slot at the very top (bleeds under the status bar). */
   hero?: AssetSlot;
-  /** Hero height as a fraction of the window (default 0.42). */
-  heroRatio?: number;
+  /** Hero banner aspect (width ÷ height) — see {@link HeroImage}. Default 1.5. */
+  heroAspect?: number;
+  /** Hero vertical crop focus 0…1 — see {@link HeroImage}. Default 0.5. */
+  heroFocusY?: number;
   title: string;
   /** One of `obText.title*` — the prototype uses a different size per screen. */
   titleStyle: StyleProp<TextStyle>;
@@ -44,7 +45,8 @@ interface OnboardingScaffoldProps {
 export function OnboardingScaffold({
   step,
   hero,
-  heroRatio = 0.42,
+  heroAspect,
+  heroFocusY,
   title,
   titleStyle,
   subtitle,
@@ -57,7 +59,6 @@ export function OnboardingScaffold({
   skipLabel = 'Skip for now',
 }: OnboardingScaffoldProps) {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
 
   const heading = (
     <>
@@ -70,12 +71,7 @@ export function OnboardingScaffold({
   return (
     <View style={styles.root}>
       {hero ? (
-        <Image
-          source={getAsset(hero)}
-          style={{ width: '100%', height: Math.round(height * heroRatio) }}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-        />
+        <HeroImage slot={hero} aspect={heroAspect} focusY={heroFocusY} />
       ) : null}
 
       <View

@@ -1,18 +1,10 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  Alert,
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getAsset } from '@/assets/registry';
+import { HeroImage } from '@/features/onboarding/components/HeroImage';
 import { OnboardingButton } from '@/features/onboarding/components/OnboardingButton';
 import { obColors, obRadii, obText, sc } from '@/features/onboarding/theme';
 import {
@@ -26,7 +18,6 @@ import {
 export default function WelcomeScreen() {
   const [busy, setBusy] = useState(false);
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
 
   const runSocial = async (method: () => Promise<void>) => {
     setBusy(true);
@@ -47,10 +38,11 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.root}>
-      <Image
-        source={getAsset('onboardingIntro')}
-        style={{ width: '100%', height: Math.round((height * 326) / 648) }}
-        resizeMode="cover"
+      <HeroImage
+        slot="onboardingIntro"
+        // Focus low on the square so the sun + beaver + mountains fill the strip
+        // and the empty top sky is what's trimmed.
+        focusY={0.62}
         accessibilityLabel="A beaver watching the sunrise over the mountains"
       />
 

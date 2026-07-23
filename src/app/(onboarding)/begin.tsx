@@ -34,7 +34,10 @@ export default function BeginStep() {
     <OnboardingScaffold
       step="begin"
       hero="onboardingSummit"
-      heroRatio={290 / 648}
+      // Focus the crop high on the square so the flag + beaver + sun stay framed
+      // and the heavy mountain foreground is what's trimmed (prototype's old
+      // `object-position: center 38%`).
+      heroFocusY={0.36}
       title="The mountain is waiting."
       titleStyle={obText.title28}
       subtitle="Seven days. Seven challenges. One attempt each. Your first challenge is already up there."
