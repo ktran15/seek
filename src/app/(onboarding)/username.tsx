@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { FormTextInput } from '@/components/ui/FormTextInput';
 import { useSession } from '@/features/auth/useSession';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
+import { obText, sc } from '@/features/onboarding/theme';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
-import { colors, textStyles } from '@/theme';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
+/** "Claim your name" (prototype screen 3) — username + display name. */
 export default function UsernameStep() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
@@ -37,10 +38,7 @@ export default function UsernameStep() {
 
     setBusy(true);
     try {
-      await updateProfile({
-        username,
-        display_name: displayName.trim(),
-      });
+      await updateProfile({ username, display_name: displayName.trim() });
       goToNextStep('username');
     } catch (e) {
       const message = e instanceof Error ? e.message : '';
@@ -55,37 +53,36 @@ export default function UsernameStep() {
   };
 
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="username"
       title="Claim your name"
-      ctaLabel="CONTINUE"
+      titleStyle={obText.title32}
+      subtitle="This is you on the mountain and on your friends’ leaderboards."
+      ctaLabel="Continue"
       onCta={submit}
       ctaDisabled={busy}
     >
-      <Text style={[textStyles.body, styles.copy]}>
-        This is you on the mountain and on your friends’ leaderboards.
-      </Text>
-      <FormTextInput
-        label="Username"
-        value={username}
-        onChangeText={(t) => setUsername(t.trim())}
-        autoCapitalize="none"
-        autoCorrect={false}
-        placeholder="trail_blazer"
-        errorText={error}
-      />
-      <FormTextInput
-        label="Display name"
-        value={displayName}
-        onChangeText={setDisplayName}
-        placeholder="Alex Rivera"
-      />
-    </OnboardingScreen>
+      <View style={styles.fields}>
+        <OnboardingField
+          label="Username"
+          value={username}
+          onChangeText={(t) => setUsername(t.trim())}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="trail_blazer"
+          errorText={error}
+        />
+        <OnboardingField
+          label="Display name"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Alex Rivera"
+        />
+      </View>
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  copy: {
-    color: colors.textSecondary,
-  },
+  fields: { marginTop: sc(24), gap: sc(16) },
 });

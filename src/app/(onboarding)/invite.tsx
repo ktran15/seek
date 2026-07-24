@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/features/auth/useSession';
-import { sendInvite } from '@/features/invites/sendInvite';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { BeaverPreview } from '@/features/beaver/BeaverPreview';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
+import { sendInvite } from '@/features/invites/sendInvite';
+import { useProfile } from '@/features/profile/useProfile';
 
 /**
- * Onboarding step 5 (spec §5, §7.8) — inviteGate is LOCKED to 'soft' for this
- * beta: strong encouragement, always skippable, never a wall.
+ * "You need a rival" (prototype screen 9, spec §7.8) — inviteGate is LOCKED to
+ * 'soft' for this beta: strong encouragement, always skippable, never a wall.
  */
 export default function InviteStep() {
   const { session } = useSession();
+  const { data: profile } = useProfile(session?.user.id);
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
 
@@ -21,9 +24,7 @@ export default function InviteStep() {
     setBusy(true);
     try {
       const didShare = await sendInvite();
-      if (didShare) {
-        setShared(true);
-      }
+      if (didShare) setShared(true);
     } catch (e) {
       Alert.alert(
         'Could not open the share sheet',
@@ -35,54 +36,101 @@ export default function InviteStep() {
   };
 
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="invite"
       title="You need a rival"
-      ctaLabel={shared ? 'INVITE ANOTHER' : 'INVITE A FRIEND'}
+      titleStyle={obText.title30}
+      subtitle="Seek is head-to-head. Climbing up the mountain can be lonely — invite a friend to join you on the trail."
+      ctaLabel={shared ? 'Invite another' : 'Invite a friend'}
       onCta={invite}
       ctaDisabled={busy}
       onSkip={() => goToNextStep('invite')}
       skipLabel={shared ? 'Continue' : 'Skip for now'}
     >
-      <Text style={[textStyles.body, styles.copy]}>
-        Seek is head-to-head. Without a rival, you’re racing our mascot — and
-        honestly, it wants to lose to a friend of yours.
-      </Text>
+      <View style={styles.versus}>
+        <View style={styles.avatarBlock}>
+          <View style={styles.youRing}>
+            <BeaverPreview config={profile?.avatar_config} height={sc(72)} />
+          </View>
+          <Text style={[obText.caption, styles.avatarLabel]}>You</Text>
+        </View>
+
+        <Text style={[obText.title30, styles.vs]}>vs</Text>
+
+        <View style={styles.avatarBlock}>
+          <View style={styles.rivalRing}>
+            <Text style={styles.rivalMark}>?</Text>
+          </View>
+          <Text style={[obText.caption, styles.avatarLabel]}>Your rival</Text>
+        </View>
+      </View>
+
       <View style={styles.card}>
-        <Text style={[textStyles.headerS, styles.cardTitle]}>
+        <Text style={[obText.cardSerif, styles.cardTitle]}>
           Invite a friend, earn 50 coins
         </Text>
-        <Text style={[textStyles.body, styles.cardCopy]}>
+        <Text style={[obText.cardBody, styles.cardBody]}>
           They get a code, you get coins, and your leaderboard gets interesting.
         </Text>
       </View>
-      {shared && (
-        <Text style={[textStyles.bodyEmphasis, styles.shared]}>
+
+      {shared ? (
+        <Text style={[obText.link, styles.confirm]}>
           Invite sent! Add more rivals or continue.
         </Text>
-      )}
-    </OnboardingScreen>
+      ) : null}
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  copy: {
-    color: colors.textSecondary,
+  versus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: sc(22),
+    marginTop: sc(28),
+    marginBottom: sc(26),
   },
+  avatarBlock: { alignItems: 'center', gap: sc(9) },
+  youRing: {
+    width: sc(82),
+    height: sc(82),
+    borderRadius: sc(41),
+    backgroundColor: obColors.youRingFill,
+    borderWidth: sc(2.5),
+    borderColor: obColors.youRingBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rivalRing: {
+    width: sc(82),
+    height: sc(82),
+    borderRadius: sc(41),
+    backgroundColor: obColors.rivalFill,
+    borderWidth: sc(2.5),
+    borderColor: obColors.rivalBorder,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rivalMark: {
+    fontFamily: obText.title30.fontFamily,
+    fontSize: sc(34),
+    color: obColors.rivalMark,
+  },
+  vs: { color: obColors.vs, fontSize: sc(20) },
+  avatarLabel: { color: obColors.textMuted },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: spacing.md,
-    gap: spacing.xxs,
+    backgroundColor: obColors.surfacePeach,
+    borderWidth: 1.5,
+    borderColor: obColors.primary,
+    borderStyle: 'dashed',
+    borderRadius: sc(16),
+    padding: sc(16),
   },
-  cardTitle: {
-    color: colors.celebration,
-  },
-  cardCopy: {
-    color: colors.textPrimary,
-  },
-  shared: {
-    color: colors.info,
-    textAlign: 'center',
-  },
+  cardTitle: { color: obColors.link, marginBottom: sc(6) },
+  cardBody: { color: obColors.textBrown },
+  confirm: { color: obColors.link, textAlign: 'center', marginTop: sc(16) },
 });

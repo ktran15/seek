@@ -1,56 +1,48 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
-import { colors, radii, spacing, textStyles } from '@/theme';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 
-/** Onboarding step 2 (spec §5): why we're great / social proof. */
+/** "Built for doers" (prototype screen 5) — social proof / why we're great. */
 export default function SocialProofStep() {
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="social-proof"
       title="Built for doers"
-      ctaLabel="CONTINUE"
+      titleStyle={obText.title32}
+      subtitle="No endless scrolling. No highlight reels. Just you, your friends, and one real thing to do every day."
+      ctaLabel="Continue"
       onCta={() => goToNextStep('social-proof')}
     >
-      <Text style={[textStyles.body, styles.copy]}>
-        No endless scrolling. No highlight reels. Just you, your friends, and
-        one real thing to do every day.
-      </Text>
-      <View style={styles.card}>
-        <Text style={[textStyles.headerL, styles.quote]}>
-          “The only app that gets me off my phone.”
-        </Text>
-        <Text style={[textStyles.caption, styles.attribution]}>
-          — an early Seeker
-        </Text>
+      <View style={styles.cards}>
+        <View style={[styles.card, styles.cardTan]}>
+          <Text style={[obText.cardSerif, styles.quote]}>
+            “The only app that gets me off my phone.”
+          </Text>
+          <Text style={[obText.caption, styles.by]}>— an early Seeker</Text>
+        </View>
+        <View style={[styles.card, styles.cardPeach]}>
+          <Text style={[obText.cardSerif, styles.quote]}>
+            “My friends and I finally have a reason to compete again.”
+          </Text>
+          <Text style={[obText.caption, styles.by]}>— beta tester #7</Text>
+        </View>
       </View>
-      <View style={styles.card}>
-        <Text style={[textStyles.headerL, styles.quote]}>
-          “My friends and I finally have a reason to compete again.”
-        </Text>
-        <Text style={[textStyles.caption, styles.attribution]}>
-          — beta tester #7
-        </Text>
-      </View>
-    </OnboardingScreen>
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  copy: {
-    color: colors.textSecondary,
-  },
+  cards: { marginTop: sc(22), gap: sc(14) },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: spacing.md,
-    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: sc(16),
+    padding: sc(16),
   },
-  quote: {
-    color: colors.textPrimary,
-  },
-  attribution: {
-    color: colors.textSecondary,
-  },
+  cardTan: { backgroundColor: obColors.surface },
+  cardPeach: { backgroundColor: obColors.surfacePeach },
+  quote: { color: obColors.text },
+  by: { color: obColors.textMuted, marginTop: sc(8) },
 });

@@ -8,15 +8,18 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FormTextInput } from '@/components/ui/FormTextInput';
-import { PressButton } from '@/components/ui/PressButton';
+import { OnboardingButton } from '@/features/onboarding/components/OnboardingButton';
+import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 import { supabase } from '@/lib/supabase';
-import { colors, spacing, textStyles } from '@/theme';
 
 type Mode = 'signIn' | 'signUp';
 
+/** Create account / sign in (prototype screen 2). Auth backend unchanged. */
 export default function EmailAuthScreen() {
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('signUp');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,10 +48,8 @@ export default function EmailAuthScreen() {
         });
         if (signUpError) throw signUpError;
         if (!data.session) {
-          // Email confirmation is enabled in the Supabase project.
           setInfo('Check your email for a confirmation link, then sign in.');
         }
-        // With a session, the root guard moves us into onboarding.
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -63,20 +64,33 @@ export default function EmailAuthScreen() {
     }
   };
 
+  const isSignUp = mode === 'signUp';
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + sc(8) },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[textStyles.hero, styles.title]}>
-          {mode === 'signUp' ? 'Create account' : 'Welcome back'}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.back()}
+          style={styles.backHit}
+        >
+          <Text style={[obText.link, styles.back]}>← Back</Text>
+        </Pressable>
+
+        <Text style={[obText.title34, styles.title]}>
+          {isSignUp ? 'Create account' : 'Welcome back'}
         </Text>
 
-        <FormTextInput
+        <OnboardingField
           label="Email"
           value={email}
           onChangeText={setEmail}
@@ -85,46 +99,39 @@ export default function EmailAuthScreen() {
           keyboardType="email-address"
           placeholder="you@example.com"
         />
-        <FormTextInput
+        <OnboardingField
           label="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'}
+          autoComplete={isSignUp ? 'new-password' : 'current-password'}
           placeholder="At least 8 characters"
         />
 
-        {!!error && <Text style={[textStyles.bodySmall, styles.error]}>{error}</Text>}
-        {!!info && <Text style={[textStyles.bodySmall, styles.info]}>{info}</Text>}
+        {!!error && <Text style={[obText.caption, styles.error]}>{error}</Text>}
+        {!!info && <Text style={[obText.caption, styles.info]}>{info}</Text>}
 
-        <PressButton
-          label={mode === 'signUp' ? 'SIGN UP' : 'SIGN IN'}
+        <OnboardingButton
+          label={isSignUp ? 'Sign up' : 'Sign in'}
           onPress={submit}
           disabled={busy}
+          style={styles.submit}
         />
 
         <Pressable
           accessibilityRole="button"
           onPress={() => {
-            setMode(mode === 'signUp' ? 'signIn' : 'signUp');
+            setMode(isSignUp ? 'signIn' : 'signUp');
             setError(null);
             setInfo(null);
           }}
-          style={styles.switchMode}
+          style={styles.switchHit}
         >
-          <Text style={[textStyles.bodyEmphasis, styles.link]}>
-            {mode === 'signUp'
+          <Text style={[obText.link, styles.switchText]}>
+            {isSignUp
               ? 'Already have an account? Sign in'
               : 'New here? Create an account'}
           </Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.back()}
-          style={styles.back}
-        >
-          <Text style={[textStyles.bodySmall, styles.backText]}>← Back</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -132,38 +139,19 @@ export default function EmailAuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, backgroundColor: obColors.screen },
   container: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-    backgroundColor: colors.background,
+    paddingHorizontal: sc(24),
+    paddingBottom: sc(26),
+    gap: sc(16),
   },
-  title: {
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  error: {
-    color: colors.danger,
-  },
-  info: {
-    color: colors.info,
-  },
-  switchMode: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  link: {
-    color: colors.info,
-  },
-  back: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    color: colors.textSecondary,
-  },
+  backHit: { minHeight: sc(44), justifyContent: 'center' },
+  back: { color: obColors.textMuted, textAlign: 'left' },
+  title: { color: obColors.text, marginBottom: sc(6) },
+  error: { color: obColors.link },
+  info: { color: obColors.google },
+  submit: { marginTop: sc(10) },
+  switchHit: { minHeight: sc(44), alignItems: 'center', justifyContent: 'center' },
+  switchText: { color: obColors.link },
 });

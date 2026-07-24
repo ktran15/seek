@@ -4,6 +4,77 @@
 > re-read CLAUDE.md + the current milestone in `SEEK_MVP_BUILD_SPEC_V2.md` §15,
 > run `git log` / `git status`, then continue from the "Next step" pointer below.
 
+## Onboarding overhaul — rebuilt to the Claude Design prototype (2026-07-22) — branch `beaver-onboarding-rework`
+
+Founder-directed **complete overhaul of the onboarding/first-run flow** to a new
+Claude Design prototype (`Seek Onboarding Prototype.dc.html`, in repo root),
+reproduced faithfully ("to a tea"). **Scoped to onboarding only** — the founder
+has a separate app-wide overhaul prototype coming; the global theme and every
+other screen are deliberately untouched. Committed `89a7f8c`.
+
+**New visual direction (scoped):** warmer/lighter cream `#FBF4EA`, **Fraunces**
+(serif display) + **Hanken Grotesk** (body) Google Fonts, flat soft-shadow
+buttons (no 3D lip), rust `#B4551F` text links. All token-driven via a dedicated
+`src/features/onboarding/theme.ts` (`obColors`/`obFonts`/`obRadii`/`obText`) —
+no inline hex/fonts (CLAUDE.md). Fonts added: `@expo-google-fonts/fraunces` +
+`hanken-grotesk`, loaded in the root layout.
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Scoped design module + fonts + flat primitives (`OnboardingButton`, `TextLink`, `OnboardingField`, `ProgressDots`, `OnboardingScaffold`) | ✅ done |
+| 2 | All 10 prototype screens rebuilt: `(auth)` welcome (sunrise hero + serif Seek + Apple/Google/email) & create-account, then the 8 dot-tracked steps. Backend wiring preserved verbatim | ✅ done |
+| 3 | Flow is the prototype's **8 steps**. The standalone `customize-beaver` route is deleted, but its function is **folded into "Name your beaver"** (founder-directed 2026-07-22): the beaver window carries a Male/Female slider + colour swatches (live `BeaverPreview` updates as you pick), with the name field below. That screen now writes `beaver_name` **and** `avatar_config` (sex + bodyColor). Old `OnboardingScreen.tsx` scaffold deleted | ✅ done |
+| 4 | Registry slots `onboardingIntro` / `onboardingSummit` → founder finals `IntroMountainBackground.png` / `EndMountainBackground.png` (delivered + wired 2026-07-21). Beaver renders through the **real `BeaverPreview` compositor on every onboarding surface** (meet / name / invite) — no flat placeholder | ✅ done |
+| 5 | Verified: tsc clean, 209 tests green; rendered welcome + create-account on expo-web (fonts/palette/layout correct, no runtime errors) | ✅ done |
+
+**Onboarding flow now (8 steps):** Claim your name (username+display) → Don't
+miss your shot (notifications+push register) → Built for doers (social proof) →
+Meet your beaver → Name your beaver (**customise sex/colour in the window +
+name**, writes `beaver_name` + `avatar_config`) → Show up. Stay happy. (care
+loop) → You need a rival (invite) → The mountain is waiting (begin →
+`onboarding_completed_at`).
+
+**Assets — DELIVERED (founder, 2026-07-21):** the two hero backgrounds are in
+`assets/art/` and wired: `IntroMountainBackground.png` (welcome hero) +
+`EndMountainBackground.png` (begin hero). The beaver is **not** a flat image —
+it renders live through `BeaverPreview`, so "just use the real beavers"
+(founder, 2026-07-22) is satisfied on all three beaver surfaces. No further art
+is outstanding for onboarding.
+
+### Exact-match fidelity pass (2026-07-22, founder review #1)
+
+Founder ran it on device and flagged: fonts/spacing/sizes didn't match the DC
+preview, hero images didn't fit the phone, white beaver-colour blended in.
+Root causes + fixes:
+
+- **Proportional scaling (the big one):** the prototype is authored on a fixed
+  **300 px-wide** mock in absolute px; I'd hand-picked approximations. Now the
+  onboarding theme exports `sc(n) = n * (deviceWidth / 300)` (clamped ≤1.6) and
+  **every** px — font sizes, line-heights, letter-spacing, paddings, gaps,
+  radii, dot/icon/avatar sizes, hero heights — is `sc()`-wrapped from the HTML's
+  exact value. Result: the composition matches the preview 1:1 and scales
+  identically across SE→Pro Max. (Mock aspect 300/648 ≈ phone aspect, so
+  vertical proportion follows.) Verified on web: `Fraunces_600SemiBold` +
+  `HankenGrotesk_400Regular` load and apply (the family was always correct —
+  the mismatch was size/spacing); `sc` formula confirmed (Seek = 50×scale).
+- **Hero images:** the founder's `IntroMountainBackground.png` /
+  `EndMountainBackground.png` were **14706×14706 (216 MP, ~6.5 MB each)** — too
+  large for a phone to render. Downscaled to **1600×1600** (~2.5 MB) with
+  `sharp` (added as a devDependency for asset intake; originals backed up
+  outside the repo). Hero heights now use the HTML's exact fractions of screen
+  height (326/648 welcome, 290/648 begin). Both render correctly on web.
+- **White swatch blended in:** the beaver colour swatches had a transparent
+  border, so `white (#EFE2D0)` vanished on the cream card. Now every swatch has
+  a constant `borderStrong` outline (selected = orange ring) — white is clearly
+  an option.
+
+**Next step:** founder re-runs on device to confirm the exact-match. Open
+question if still off after this: Fraunces *optical size* — the HTML uses the
+variable font (auto opsz, sharper at display sizes) while expo-google-fonts
+ships a static `600SemiBold`; letterforms at the big "Seek" size may differ
+slightly. Flag it and I'll chase opsz. The `.dc.html` prototype stays untracked
+in the repo root (references `uploads/` + `support.js`, not committed).
+
 ## Beaver character pivot — decisions + onboarding rework + M8 beaver systems (2026-07-16) — branch `beaver-onboarding-rework`
 
 Founder resolved the 5 open §18 character decisions as **final**, directed the §5 onboarding rework, reviewed it, then gave the go-ahead for the **M8 beaver systems** (care loop, render rework, cosmetics reschema, snack). All built below.

@@ -5,6 +5,8 @@
 > **Status:** Sections 1–4 (vibe, color, type, UI feel) are **locked** and govern the app from M0. Sections 5–8 (illustration, the beaver character, crate/reward, motion) are art-direction for the founder-curated asset set and polish (M13); locked in direction, refined against real output.
 > **Companion:** pairs with `SEEK_MVP_BUILD_SPEC_V2.md` (the build spec). Where the spec says "style bible," it means this document. Referenced fonts/colors here override the placeholder defaults in the spec.
 
+> **⚠️ Direction shift in progress (founder, 2026-07-22):** the founder is moving the app to a new visual direction via Claude Design HTML prototypes — warmer/lighter cream, **Fraunces** (serif display) + **Hanken Grotesk** (body) fonts, and flat soft-shadow buttons instead of the 3D "press" lip. The **onboarding + first-run flow is the first surface rebuilt to it** (`Seek Onboarding Prototype.dc.html`). Because the rest of the app still runs the LOCKED system in §§1–4, the new look is **scoped to a dedicated token module** — `src/features/onboarding/theme.ts` (`obColors` / `obFonts` / `obRadii` / `obText`) — consumed only by the `(auth)` + `(onboarding)` screens. §§1–4 below still govern every other screen **until the founder delivers the app-wide overhaul prototype**, at which point this direction is promoted into the global tokens and this note is resolved. See PROGRESS.md → "Onboarding overhaul".
+
 ---
 
 ## 1. Overall Vibe / Mood (the north star)

@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { useSession } from '@/features/auth/useSession';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
+import { obColors, obText, sc } from '@/features/onboarding/theme';
 import { useUpdateProfile } from '@/features/profile/useProfile';
-import { colors, spacing, textStyles } from '@/theme';
 
-/** Onboarding step 6 (spec §5): the hook. Completing flips the root guard home. */
+/**
+ * "The mountain is waiting." (prototype screen 10) — the hook. Completing flips
+ * the root guard into the main app.
+ */
 export default function BeginStep() {
   const { session } = useSession();
   const updateProfile = useUpdateProfile(session?.user.id);
@@ -28,30 +31,27 @@ export default function BeginStep() {
   };
 
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="begin"
-      title="The mountain is waiting"
-      ctaLabel="BEGIN"
+      hero="onboardingSummit"
+      // Focus the crop high on the square so the flag + beaver + sun stay framed
+      // and the heavy mountain foreground is what's trimmed (prototype's old
+      // `object-position: center 38%`).
+      heroFocusY={0.36}
+      title="The mountain is waiting."
+      titleStyle={obText.title28}
+      subtitle="Seven days. Seven challenges. One attempt each. Your first challenge is already up there."
+      ctaLabel="Begin"
       onCta={begin}
       ctaDisabled={busy}
     >
-      <Text style={[textStyles.body, styles.copy]}>
-        Seven days. Seven challenges. One attempt each. Your first challenge is
-        already up there.
-      </Text>
-      <Text style={[textStyles.caption, styles.guidelines]}>
+      <Text style={[obText.note, styles.note]}>
         House rules: keep proof real, keep it kind.
       </Text>
-    </OnboardingScreen>
+    </OnboardingScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  copy: {
-    color: colors.textSecondary,
-  },
-  guidelines: {
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-  },
+  note: { color: obColors.note, marginTop: sc(16) },
 });

@@ -1,27 +1,38 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FormTextInput } from '@/components/ui/FormTextInput';
 import { useSession } from '@/features/auth/useSession';
+import {
+  BEAVER_BODY_COLORS,
+  BEAVER_SEXES,
+  beaverBodyColor,
+  beaverSex,
+} from '@/features/beaver/catalog';
 import { BeaverPreview } from '@/features/beaver/BeaverPreview';
-import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { OnboardingField } from '@/features/onboarding/components/OnboardingField';
+import { OnboardingScaffold } from '@/features/onboarding/components/OnboardingScaffold';
 import { goToNextStep } from '@/features/onboarding/steps';
+import { obColors, obRadii, obText, sc } from '@/features/onboarding/theme';
+import type { BeaverBodyColor, BeaverSex } from '@/lib/database.types';
 import { useProfile, useUpdateProfile } from '@/features/profile/useProfile';
-import { colors, radii, spacing, textStyles } from '@/theme';
 
 /**
- * Onboarding "Name your beaver" (spec §5 step 4, §10). Sets
- * `profiles.beaver_name` — distinct from the username/handle.
- *
- * Deliberately offers NO suggested/default name: "Bucky" is the rival NPC's
- * name (§7.9) and any prefilled example risks steering the player toward the
- * opponent's identity. The field starts empty with a neutral prompt.
+ * "Name your beaver" (prototype screen 7) — now also the base-body customiser
+ * (founder-directed, 2026-07-22): the beaver window carries a Male/Female
+ * selector + colour swatches (the beaver updates live), with the name field
+ * below. Writes `profiles.beaver_name` + `avatar_config` (sex + bodyColor).
+ * Starts plain — cosmetics are earned from crates (§18); editable later in
+ * Settings → Edit beaver.
  */
 export default function NameBeaverStep() {
   const { session } = useSession();
   const { data: profile } = useProfile(session?.user.id);
   const updateProfile = useUpdateProfile(session?.user.id);
 
+  const [sex, setSex] = useState<BeaverSex>(beaverSex(profile?.avatar_config));
+  const [bodyColor, setBodyColor] = useState<BeaverBodyColor>(
+    beaverBodyColor(profile?.avatar_config),
+  );
   const [name, setName] = useState(profile?.beaver_name ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +47,14 @@ export default function NameBeaverStep() {
 
     setBusy(true);
     try {
-      await updateProfile({ beaver_name: trimmed });
+      await updateProfile({
+        beaver_name: trimmed,
+        avatar_config: {
+          sex,
+          bodyColor,
+          equipped: profile?.avatar_config.equipped ?? {},
+        },
+      });
       goToNextStep('name-beaver');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save. Try again.');
@@ -46,39 +64,150 @@ export default function NameBeaverStep() {
   };
 
   return (
-    <OnboardingScreen
+    <OnboardingScaffold
       step="name-beaver"
       title="Name your beaver"
-      ctaLabel="CONTINUE"
+      titleStyle={obText.title29}
+      ctaLabel="Continue"
       onCta={submit}
       ctaDisabled={busy || name.trim().length === 0}
     >
-      <View style={styles.stage}>
-        <BeaverPreview config={profile?.avatar_config} height={160} />
+      <View style={styles.window}>
+        <BeaverPreview config={{ sex, bodyColor }} height={sc(172)} />
+
+        <GenderSlider value={sex} onChange={setSex} />
+        <ColorSwatches value={bodyColor} onChange={setBodyColor} />
       </View>
 
-      <Text style={[textStyles.body, styles.copy]}>
-        What should we call your beaver? You can change it later.
+      <Text style={[obText.body, styles.copy]}>
+        Make it yours, then give it a name — you can change both later.
       </Text>
-      <FormTextInput
-        label="Beaver name"
-        value={name}
-        onChangeText={setName}
-        placeholder="Give your beaver a name"
-        autoCapitalize="words"
-        autoCorrect={false}
-        maxLength={20}
-        errorText={error}
-      />
-    </OnboardingScreen>
+
+      <View style={styles.field}>
+        <OnboardingField
+          label="Beaver name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Give your beaver a name"
+          autoCapitalize="words"
+          autoCorrect={false}
+          maxLength={20}
+          errorText={error}
+        />
+      </View>
+    </OnboardingScaffold>
+  );
+}
+
+/** Two-position sliding selector (the "slider") for Male / Female. */
+function GenderSlider({
+  value,
+  onChange,
+}: {
+  value: BeaverSex;
+  onChange: (s: BeaverSex) => void;
+}) {
+  return (
+    <View style={styles.track}>
+      {BEAVER_SEXES.map((option) => {
+        const selected = option.id === value;
+        return (
+          <Pressable
+            key={option.id}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.id)}
+            style={[styles.segment, selected && styles.segmentOn]}
+          >
+            <Text style={[obText.rowLabel, selected ? styles.segTextOn : styles.segText]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Body-colour swatches (brown / white / black). */
+function ColorSwatches({
+  value,
+  onChange,
+}: {
+  value: BeaverBodyColor;
+  onChange: (c: BeaverBodyColor) => void;
+}) {
+  return (
+    <View style={styles.swatchRow}>
+      {BEAVER_BODY_COLORS.map((option) => {
+        const selected = option.id === value;
+        return (
+          <Pressable
+            key={option.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Colour: ${option.label}`}
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.id)}
+            style={styles.swatchWrap}
+          >
+            <View
+              style={[
+                styles.swatch,
+                { backgroundColor: option.swatch },
+                selected && styles.swatchOn,
+              ]}
+            />
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stage: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    paddingVertical: spacing.md,
+  window: {
+    marginTop: sc(8),
+    backgroundColor: obColors.surface,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.cardLg,
+    paddingVertical: sc(16),
+    paddingHorizontal: sc(16),
+    alignItems: 'center',
+    gap: sc(14),
   },
-  copy: { color: colors.textSecondary },
+  // Gender slider
+  track: {
+    flexDirection: 'row',
+    alignSelf: 'stretch',
+    backgroundColor: obColors.input,
+    borderWidth: 1,
+    borderColor: obColors.border,
+    borderRadius: obRadii.pill,
+    padding: sc(3),
+  },
+  segment: {
+    flex: 1,
+    minHeight: sc(40),
+    borderRadius: obRadii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentOn: { backgroundColor: obColors.primary },
+  segText: { color: obColors.textMuted },
+  segTextOn: { color: obColors.onPrimary },
+  // Colour swatches — a constant border keeps the WHITE option visible on the
+  // cream card (it used to blend in); the selected swatch rings in orange.
+  swatchRow: { flexDirection: 'row', gap: sc(16) },
+  swatchWrap: { padding: sc(3) },
+  swatch: {
+    width: sc(34),
+    height: sc(34),
+    borderRadius: sc(17),
+    borderWidth: sc(3),
+    borderColor: obColors.borderStrong,
+  },
+  swatchOn: { borderColor: obColors.primary },
+  copy: { color: obColors.textMuted, marginTop: sc(16) },
+  field: { marginTop: sc(14) },
 });
